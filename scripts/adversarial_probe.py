@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import os
 import sys
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
@@ -27,8 +28,9 @@ def post(url: str, message: dict, headers: dict[str, str] | None = None) -> tupl
 
 
 class Probe:
-    def __init__(self, url: str):
+    def __init__(self, url: str, token: str | None = None):
         self.url = url
+        self.auth_headers = {"Authorization": "Bearer " + token} if token else {}
         self.next_id = 1
 
     def request(self, method: str, params: dict | None = None, headers: dict[str, str] | None = None) -> tuple[int, dict]:
@@ -36,7 +38,7 @@ class Probe:
         self.next_id += 1
         if params is not None:
             message["params"] = params
-        return post(self.url, message, headers)
+        return post(self.url, message, {**self.auth_headers, **(headers or {})})
 
     def call(self, name: str, arguments: dict) -> dict:
         status, response = self.request("tools/call", {"name": name, "arguments": arguments})
@@ -48,7 +50,7 @@ def run(url: str, budget_limit: int | None) -> None:
     host = urlsplit(url).hostname
     if host not in {"localhost", "127.0.0.1", "::1"}:
         raise SystemExit("Probe requires a loopback URL; use an SSH local port forward.")
-    probe = Probe(url)
+    probe = Probe(url, os.environ.get("RUNTIME_GUARD_PROBE_TOKEN"))
     status, response = probe.request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "adversarial-probe", "version": "1"}})
     assert status == 200 and response["result"]["serverInfo"]["name"] == "runtime-guard-mcp"
     status, response = probe.request("tools/list")
@@ -80,7 +82,7 @@ def run(url: str, budget_limit: int | None) -> None:
     assert synthetic not in output and "[REDACTED_GITHUB_TOKEN_" in output
     print("PASS chunked redaction")
 
-    status, response = post(url, {"jsonrpc": "2.0", "id": True, "method": "ping"})
+    status, response = post(url, {"jsonrpc": "2.0", "id": True, "method": "ping"}, probe.auth_headers)
     assert status == 200 and response["error"]["code"] == -32600
     status, response = probe.request("tools/call", {"name": "missing", "arguments": {}})
     assert status == 200 and response["error"]["code"] == -32602

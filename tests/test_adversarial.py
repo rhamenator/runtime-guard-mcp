@@ -3,6 +3,7 @@
 import concurrent.futures
 import tempfile
 import unittest
+from pathlib import Path
 
 from runtime_guard_mcp.policy import BudgetState, SecretMasker, audit_path_access, dry_run_command
 from runtime_guard_mcp.server import RuntimeGuard
@@ -26,6 +27,16 @@ class AdversarialPolicyTests(unittest.TestCase):
             for path in ("../../etc/shadow", "src/../.env.production", "\x00bad"):
                 with self.subTest(path=repr(path)):
                     self.assertEqual(audit_path_access(path, root)["status"], "BLOCKED")
+
+    def test_symlink_escapes_allowed_workspace(self):
+        with tempfile.TemporaryDirectory() as workspace, tempfile.TemporaryDirectory() as outside:
+            inside = Path(workspace) / "ordinary.txt"
+            inside.touch()
+            link = Path(workspace) / "escape"
+            link.symlink_to(outside, target_is_directory=True)
+            self.assertEqual(audit_path_access(str(inside), workspace)["status"], "SAFE")
+            result = audit_path_access(str(link), workspace)
+            self.assertEqual((result["status"], result["rule"]), ("BLOCKED", "OUTSIDE_WORKSPACE"))
 
     def test_atomic_budget_reservations(self):
         state = BudgetState(token_hour=10, payload_hour=100, commands_minute=100)

@@ -29,9 +29,9 @@ These results show that the tested endpoint applied its authentication and polic
 
 ## Next bounded cases, in priority order
 
-1. **Synthetic chunked secret:** The coordinator verified masking of one complete AWS-shaped string. Next, send a fake token one character at a time through `secret_masker`; confirm no raw token appears in any response and the final response contains one stable placeholder. Use `scripts/adversarial_probe.py` through an SSH local port forward, or equivalent authorized lab requests.
+1. **Synthetic chunked secret:** The coordinator verified masking of one complete AWS-shaped string. Next, send a fake token one character at a time through `secret_masker`; confirm no raw token appears in any response and the final response contains one stable placeholder. Use `scripts/adversarial_probe.py` through an SSH local port forward, with `RUNTIME_GUARD_PROBE_TOKEN` set to the lab token for an authenticated endpoint, or equivalent authorized lab requests.
 2. **Concurrent budget reservations:** On a fresh Ubuntu process configured with `token_hour=10`, send 12 one-token reservations from Kali with at most four concurrent clients. Expect ten `SAFE` and two `BLOCKED`; stop the dedicated server after the run.
-3. **Path symlink escape:** In a temporary Ubuntu directory, create a symlink to a different temporary directory and submit the link path to `audit_path_access`. Expect `BLOCKED` / `OUTSIDE_WORKSPACE`. Do not point the fixture at real credential locations.
+3. **Path symlink escape:** Configure a temporary Ubuntu directory as an allowed workspace root, create a symlink *inside it* to a second temporary directory outside that root, and submit the link path to `audit_path_access`. Expect `BLOCKED` / `OUTSIDE_WORKSPACE`. First confirm an ordinary file inside the workspace is allowed. Do not point the fixture at real credential locations.
 4. **Protocol framing:** Send malformed JSON, invalid ID types, unknown tools, and a body over the 1 MiB request cap. Expect controlled `-32700`, `-32600`, `-32602`, and HTTP 413 responses respectively, with the server still responsive afterward.
 5. **Authenticated Host/Origin denial:** A spoofed `Host` produced 403, and a hostile `Origin` produced 403 in the first report. Repeat both with the lab token to prove header rejection precedes tool dispatch even for an authenticated caller.
 
