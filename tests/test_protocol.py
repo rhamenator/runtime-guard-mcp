@@ -5,11 +5,13 @@ import sys
 import socket
 import time
 import unittest
+import threading
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-from runtime_guard_mcp.server import RuntimeGuard, TOOLS
+from runtime_guard_mcp.server import BoundedHTTPServer, RuntimeGuard, TOOLS
 
 
 class ProtocolTests(unittest.TestCase):
@@ -71,6 +73,72 @@ class ProtocolTests(unittest.TestCase):
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def test_http_handler_cap_and_recovery(self):
+        entered = threading.Event()
+        release = threading.Event()
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_GET(self):
+                if self.path == "/hold":
+                    entered.set()
+                    release.wait(timeout=2)
+                self.send_response(200)
+                self.send_header("Content-Length", "2")
+                self.end_headers()
+                self.wfile.write(b"ok")
+
+        server = BoundedHTTPServer(("127.0.0.1", 0), Handler, max_handlers=1, socket_timeout=1)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        held = socket.create_connection(server.server_address, timeout=2)
+        held.settimeout(2)
+        try:
+            held.sendall(b"GET /hold HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+            self.assertTrue(entered.wait(timeout=1))
+            with self.assertRaises(HTTPError) as error:
+                urlopen(f"http://127.0.0.1:{server.server_port}/", timeout=2)
+            self.assertEqual(error.exception.code, 503)
+            error.exception.close()
+            release.set()
+            self.assertIn(b"200 OK", held.recv(1024))
+            for _ in range(50):
+                try:
+                    with urlopen(f"http://127.0.0.1:{server.server_port}/", timeout=2) as response:
+                        self.assertEqual(response.status, 200)
+                    break
+                except HTTPError as error:
+                    error.close()
+                    time.sleep(0.02)
+            else:
+                self.fail("Handler slot was not released")
+        finally:
+            release.set()
+            held.close()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
+    def test_http_idle_connection_times_out(self):
+        class QuietHandler(BaseHTTPRequestHandler):
+            def log_error(self, *_args):
+                pass
+
+        server = BoundedHTTPServer(("127.0.0.1", 0), QuietHandler, max_handlers=1, socket_timeout=0.1)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with socket.create_connection(server.server_address, timeout=2) as idle:
+                idle.settimeout(2)
+                idle.sendall(b"GET / HTTP/1.1\r\nHost: localhost\r\n")
+                self.assertEqual(idle.recv(1), b"")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
 
 
 if __name__ == "__main__":
