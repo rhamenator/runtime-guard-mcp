@@ -17,6 +17,7 @@ Status: acceptance criteria, not a completion claim. Every stable-release gate n
 
 ## Security and reliability evidence
 
+- A repeatable adversarial test against the actual exposed MCP transport is the principal production-readiness gate. The release record must include the exact revision and commands, tool versions, bounded targets and traffic, pass/fail evidence, findings and fixes, and remaining limits. Cover authentication and origin boundaries, malformed MCP/JSON-RPC, injection attempts, resource exhaustion, secret exposure, and recovery after failure. Run the automated loopback probe in CI and an authorized pentesting-toolset review before a release candidate. A green unit suite alone does not satisfy this gate.
 - Adversarial fixtures and fuzz/property tests cover parsers, schemas, path edges, command syntax, secret formats, caller isolation, budgets, audit integrity, and malformed JSON-RPC. Stress tests show bounded memory, file descriptors, threads, CPU, and disk usage.
 - The threat model maps each security claim to a code path and test, identifies bypass routes via other MCP servers and host tools, and records residual risks and false positives. No real secret appears in logs, errors, or audit resources.
 - Configuration is schema-validated with safe defaults and clear startup errors. Non-loopback serving requires tested authentication, origin handling, TLS deployment guidance, and abuse limits.

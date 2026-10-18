@@ -12,6 +12,14 @@ PYTHONPATH=src python3 -m unittest discover -s tests -q
 
 The suite creates temporary directories, a local SQLite file, and a short-lived loopback HTTP process. It makes no external network requests. Record Python version, operating system, commit SHA, pass/fail count, peak RSS, and any warnings. On Kali and the Ubuntu VM, run the same command separately; no shared mutable state is needed. Keep the Kali VM powered down outside the test window.
 
+Run the actual HTTP MCP boundary probe from the repository root:
+
+```bash
+PYTHONPATH=src python3 scripts/live_adversarial_test.py
+```
+
+It launches its own authenticated server on a random `127.0.0.1` port, sends fewer than 100 synthetic requests, opens at most 32 temporary slow connections, and removes its temporary workspace and audit database. If Nmap is installed, it scans only that ephemeral loopback port with `nmap -sT -Pn -p PORT 127.0.0.1`. The script reports pass/fail labels and never prints the generated bearer token or synthetic secret. The core checks run in CI on Python 3.11 and 3.13; the optional Nmap check is recorded separately when available.
+
 ## Cases and expected results
 
 | Area | Synthetic input | Expected |
@@ -32,4 +40,4 @@ For cross-VM tests, keep Runtime Guard bound to `127.0.0.1:8765` on Ubuntu. Crea
 
 ## Exit criteria and limits
 
-All tests must pass on both hosts with no crashes, leaked synthetic tokens, unexpected disk growth, or thread accumulation. The suite is an advisory-policy test, not proof that another shell or filesystem tool is contained. The current server still needs MCP 2026-07-28 protocol work and client-specific Codex, Claude Code, and Cursor validation before a stable release.
+All tests must pass on both hosts with no crashes, leaked synthetic tokens, unexpected disk growth, or thread accumulation. The live probe is a principal release gate, and its evidence must be reviewed with authorized pentesting-toolset results and residual risks. It is an advisory-policy test, not proof that another shell or filesystem tool is contained. The current server still needs MCP 2026-07-28 protocol work and client-specific Codex, Claude Code, and Cursor validation before a stable release.
