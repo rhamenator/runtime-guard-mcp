@@ -42,4 +42,4 @@ Blocked tool calls return an MCP tool result with `isError: true`, structured JS
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 
-See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [support](SUPPORT.md), [the changelog](CHANGELOG.md), and [architecture and roadmap](docs/architecture.md), [security model](docs/security.md), and the [draft agent skill](skills/runtime-guard/SKILL.md). The skill is for client integration after the user has configured this server; it does not grant permission for tool execution.
+See [release quality gates](docs/QUALITY_BAR.md), [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [support](SUPPORT.md), [the changelog](CHANGELOG.md), and [architecture and roadmap](docs/architecture.md), [security model](docs/security.md), and the [draft agent skill](skills/runtime-guard/SKILL.md). The skill is for client integration after the user has configured this server; it does not grant permission for tool execution.
