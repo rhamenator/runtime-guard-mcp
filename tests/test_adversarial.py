@@ -4,6 +4,7 @@ import concurrent.futures
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from runtime_guard_mcp.policy import BudgetState, SecretMasker, audit_path_access, dry_run_command
 from runtime_guard_mcp.server import RuntimeGuard
@@ -44,6 +45,36 @@ class AdversarialPolicyTests(unittest.TestCase):
             results = list(pool.map(lambda _: state.check("caller", "session", 1, 0, 0, "", True)["status"], range(64)))
         self.assertEqual(results.count("SAFE"), 10)
         self.assertEqual(results.count("BLOCKED"), 54)
+
+    def test_budget_history_cap_blocks_without_partial_reservation(self):
+        state = BudgetState(token_hour=100, payload_hour=100, commands_minute=100, max_events_per_metric=2)
+        for _ in range(2):
+            self.assertEqual(state.check("caller", "session", 1, 0, 0, "", True)["status"], "SAFE")
+        result = state.check("caller", "session", 1, 1, 0, "", True)
+        self.assertEqual((result["status"], result["rule"]), ("BLOCKED", "BUDGET_STATE_LIMIT"))
+        self.assertEqual(len(state._events[("caller", "payload")]), 0)
+
+    def test_budget_history_cap_is_atomic_and_expires(self):
+        state = BudgetState(token_hour=100, max_events_per_metric=10)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+            outcomes = list(pool.map(lambda _: state.check("caller", "session", 1, 0, 0, "", True)["status"], range(32)))
+        self.assertEqual((outcomes.count("SAFE"), outcomes.count("BLOCKED")), (10, 22))
+        self.assertEqual(len(state._events[("caller", "tokens")]), 10)
+        with patch("runtime_guard_mcp.policy.time.monotonic", return_value=state._events[("caller", "tokens")][-1][0] + 3601):
+            self.assertEqual(state.check("caller", "session", 1, 0, 0, "", True)["status"], "SAFE")
+        self.assertEqual(len(state._events[("caller", "tokens")]), 1)
+
+    def test_fingerprint_history_cap_expires_across_sessions(self):
+        state = BudgetState(max_fingerprint_events=2)
+        with patch("runtime_guard_mcp.policy.time.monotonic", side_effect=[100.0, 101.0, 102.0, 402.0]):
+            self.assertEqual(state.check("caller", "one", 0, 0, 0, "a", True)["status"], "SAFE")
+            self.assertEqual(state.check("caller", "two", 0, 0, 0, "b", True)["status"], "SAFE")
+            result = state.check("caller", "three", 0, 0, 0, "c", True)
+            self.assertEqual(result["rule"], "FINGERPRINT_STATE_LIMIT")
+            self.assertEqual(len(state._fingerprint_order), 2)
+            self.assertEqual(state.check("caller", "three", 0, 0, 0, "c", True)["status"], "SAFE")
+            self.assertEqual(len(state._fingerprint_order), 1)
+            self.assertEqual(len(state._fingerprints), 1)
 
     def test_split_synthetic_secret_never_emitted_raw(self):
         token = "ghp_" + "A" * 24

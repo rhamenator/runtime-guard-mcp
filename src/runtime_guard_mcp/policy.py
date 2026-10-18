@@ -84,13 +84,16 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
 class BudgetState:
     """Per-caller limits; session IDs cannot reset caller-wide windows."""
 
-    def __init__(self, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120):
+    def __init__(self, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, max_events_per_metric: int = 8192, max_fingerprint_events: int = 4096):
         self.token_hour = token_hour
         self.payload_hour = payload_hour
         self.commands_minute = commands_minute
+        self.max_events_per_metric = max_events_per_metric
+        self.max_fingerprint_events = max_fingerprint_events
         self._lock = threading.Lock()
         self._events: dict[tuple[str, str], deque[tuple[float, int]]] = defaultdict(deque)
         self._fingerprints: dict[tuple[str, str], deque[tuple[float, str]]] = defaultdict(deque)
+        self._fingerprint_order: deque[tuple[float, tuple[str, str]]] = deque()
 
     def check(self, caller: str, session: str, tokens: int, payload_bytes: int, commands: int, fingerprint: str, consume: bool) -> dict[str, Any]:
         if min(tokens, payload_bytes, commands) < 0 or max(tokens, payload_bytes, commands) > 10_000_000:
@@ -107,17 +110,27 @@ class BudgetState:
                 if totals[metric] + amount > limit:
                     return verdict("BLOCKED", f"{metric.upper()}_BUDGET", "Reduce work or wait for the budget window to reset.", remaining=max(0, limit - totals[metric]))
             if fingerprint:
-                q = self._fingerprints[(caller, session)]
-                while q and q[0][0] <= now - 300:
-                    q.popleft()
+                while self._fingerprint_order and self._fingerprint_order[0][0] <= now - 300:
+                    _, old_key = self._fingerprint_order.popleft()
+                    old_queue = self._fingerprints[old_key]
+                    old_queue.popleft()
+                    if not old_queue:
+                        del self._fingerprints[old_key]
+                q = self._fingerprints.get((caller, session), ())
                 if sum(value == fingerprint for _, value in q) >= 5:
                     return verdict("BLOCKED", "REPEATED_LOOP", "Stop the repeated action and inspect its prior results.")
             if consume:
+                if any(amount and len(self._events[(caller, metric)]) >= self.max_events_per_metric for metric, (_, _, amount) in limits.items()):
+                    return verdict("BLOCKED", "BUDGET_STATE_LIMIT", "Wait for an older reservation to expire before consuming more budget.")
+                if fingerprint and len(self._fingerprint_order) >= self.max_fingerprint_events:
+                    return verdict("BLOCKED", "FINGERPRINT_STATE_LIMIT", "Wait for an older fingerprint to expire before recording more actions.")
                 for metric, (_, _, amount) in limits.items():
                     if amount:
                         self._events[(caller, metric)].append((now, amount))
                 if fingerprint:
-                    self._fingerprints[(caller, session)].append((now, fingerprint))
+                    key = (caller, session)
+                    self._fingerprints[key].append((now, fingerprint))
+                    self._fingerprint_order.append((now, key))
             return verdict("SAFE", "WITHIN_BUDGET", "No remediation needed.", remaining={m: limits[m][1] - totals[m] - limits[m][2] for m in limits})
 
 
