@@ -13,6 +13,8 @@ class AdversarialPolicyTests(unittest.TestCase):
         for command in ("find . -delete", "find . -exec rm {} \\;", "find . -exec sh -c 'touch /tmp/x' \\;"):
             with self.subTest(command=command):
                 self.assertNotEqual(dry_run_command(command)["status"], "SAFE")
+        self.assertEqual(dry_run_command("find . -exec rm -rf /tmp/example {} +")["status"], "BLOCKED")
+        self.assertEqual(dry_run_command("find . -exec git push --force {} +")["status"], "BLOCKED")
 
     def test_sensitive_virtual_paths_never_safe(self):
         for command in ("cat /proc/self/environ", "cat ~/.config/gcloud/application_default_credentials.json"):
