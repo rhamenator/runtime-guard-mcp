@@ -84,6 +84,32 @@ class AuditTests(unittest.TestCase):
                 row = connection.execute("SELECT caller_hash, tool, status, rule FROM decisions").fetchone()
             self.assertEqual(row[1:], ("dry_run_command", "SAFE", "READ_ONLY_COMMAND"))
             self.assertNotIn("caller", row[0])
+            self.assertTrue(guard.audit.verify_integrity()["valid"])
+
+    def test_audit_detects_mutation_and_interior_deletion(self):
+        with tempfile.TemporaryDirectory() as root:
+            db = os.path.join(root, "audit.sqlite3")
+            guard = RuntimeGuard(root, audit_db=db)
+            for command in ("git status", "git diff", "git log"):
+                guard.call("dry_run_command", {"command": command}, "caller")
+            self.assertTrue(guard.audit.verify_integrity()["valid"])
+            with sqlite3.connect(db) as connection:
+                connection.execute("UPDATE decisions SET rule='altered' WHERE rowid=2")
+            self.assertFalse(guard.audit.verify_integrity()["valid"])
+            with sqlite3.connect(db) as connection:
+                connection.execute("DELETE FROM decisions WHERE rowid=2")
+            self.assertFalse(guard.audit.verify_integrity()["valid"])
+
+    def test_legacy_audit_migrates(self):
+        with tempfile.TemporaryDirectory() as root:
+            db = os.path.join(root, "audit.sqlite3")
+            with sqlite3.connect(db) as connection:
+                connection.execute("CREATE TABLE decisions (time_utc INTEGER NOT NULL, caller_hash TEXT NOT NULL, tool TEXT NOT NULL, status TEXT NOT NULL, rule TEXT NOT NULL)")
+                connection.execute("INSERT INTO decisions VALUES (1, 'caller-hash', 'dry_run_command', 'SAFE', 'READ_ONLY_COMMAND')")
+            guard = RuntimeGuard(root, audit_db=db)
+            self.assertTrue(guard.audit.verify_integrity()["valid"])
+            guard.call("dry_run_command", {"command": "git status"}, "caller")
+            self.assertEqual(guard.audit.verify_integrity()["records_checked"], 2)
 
 
 if __name__ == "__main__":

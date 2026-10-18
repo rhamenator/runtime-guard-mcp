@@ -8,7 +8,7 @@
 
 * `server.py`: stdio and local HTTP JSON-RPC transport, tool discovery, validation, and structured results.
 * `policy.py`: lexical and resolved path checks; conservative shell classification; caller budget windows and repeated action tracking; bounded secret masking.
-* `audit.py`: optional SQLite decision metadata. No raw paths, commands, payloads, or secret values are persisted.
+* `audit.py`: optional SQLite decision metadata with a hash chain. No raw paths, commands, payloads, or secret values are persisted.
 
 State is scoped by authenticated caller (HTTP bearer token, if configured) or local stdio process. Current HTTP deployments support a single configured bearer credential and one shared budget scope. In memory state resets on restart; only redacted audits persist when `audit_db` is configured. A multi-tenant or multi-replica service would need authenticated caller identities and atomic shared state.
 
@@ -34,6 +34,8 @@ The [registry metadata example](server.json.example) is a template for a future 
 ## Reuse and economy
 
 This project reuses the established MCP pattern from the user's Rust servers: declared tools, per-caller state, structured decisions, and redacted telemetry. It keeps the same privacy rule of never logging raw credentials. The repository's `AGENTS.md` instructs future Codex work to search narrowly, reuse helpers, run focused tests before the full suite, and avoid repeated large logs. That keeps maintenance efficient without weakening verification.
+
+The local `trade-guard-mcp` code informed the stdio JSON-RPC boundary and audit hash-chain invariant. This server implements those concepts independently in Python and tests them against its own threat model. The `ai-scraping-defense-rust` tarpit generator was also inspected; its page generation is relevant to Request Guard's outbound trap tests, not to this server's file, shell, budget, or masking tools.
 
 ## Protocol references
 
