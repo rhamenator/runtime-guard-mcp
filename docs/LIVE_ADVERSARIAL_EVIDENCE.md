@@ -35,3 +35,7 @@ This is a bounded host-side protocol/API test. It does not prove full MCP 2026-0
 ## Masker state follow-up, 2026-10-18
 
 The live probe was extended to open 128 unfinished `secret_masker` streams through the authenticated HTTP API. A 129th stream returned `BLOCKED` / `STREAM_LIMIT`; finishing one stream allowed a new one to return `SAFE`. The final host run of `PYTHONPATH=src python3 scripts/live_adversarial_test.py` reported **21 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused policy tests also verified the 4096-secret mapping limit using a smaller configured test limit, blocked-stream reset, and controlled rejection of malformed Unicode. These bounds do not replace a sustained memory and CPU profile.
+
+## Budget state follow-up, 2026-10-18
+
+The live HTTP probe sent 12 one-token reservations against a fresh server configured with a ten-token hourly budget. It observed ten `SAFE` and two `BLOCKED` decisions, then completed the other adversarial cases for **22 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests used lower internal state caps to verify that reservation and fingerprint histories fail closed, concurrent reservations remain atomic, and expired records release capacity. The default 8192/4096 record caps were not saturated in the live run; sustained resource profiling remains open.
