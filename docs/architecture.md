@@ -27,7 +27,7 @@ State is scoped by authenticated caller (HTTP bearer token, if configured) or lo
 | 3. Local operations | HTTP POST transport, config, redacted SQLite audit | HTTP smoke test, Origin/Host denial, config checks, audit content test |
 | 4. Release | client recipes, package publishing, Agensi listing and MCP Registry metadata | fresh-machine install, client SDK compatibility, security review, registry validation before publication |
 
-Milestones 1–3 are implemented locally. Milestone 4 remains open until distribution and client validation are complete. No external listing or repository publication is implied by these local files.
+Milestones 1–3 are implemented locally. In addition to the standard-library tests, the official Python MCP SDK 2.3.0 completed initialize, `tools/list`, and `tools/call` over both stdio and Streamable HTTP on 2026-10-18. Milestone 4 remains open until distribution and Codex, Claude Code, and Cursor validation are complete. No external listing or repository publication is implied by these local files.
 
 The [registry metadata example](server.json.example) is a template for a future published PyPI package and GitHub repository; its URLs and package ownership must be verified before validation or submission. Agensi lists `SKILL.md` workflows separately from the official MCP Registry. The local skill documents the integration workflow but has not been submitted.
 

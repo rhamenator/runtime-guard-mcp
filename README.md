@@ -19,7 +19,7 @@ For a local HTTP endpoint:
 runtime-guard-mcp --transport http --host 127.0.0.1 --port 8765
 ```
 
-The HTTP endpoint is `/mcp`. It handles JSON-RPC POST requests and returns JSON responses; GET streaming is unsupported. Non-loopback binding requires `RUNTIME_GUARD_AUTH_TOKEN`, and public deployment also needs TLS termination and explicit network controls. The server checks `Origin` and `Host`. This transport has been smoke tested locally, but has not yet been tested against every client SDK.
+The HTTP endpoint is `/mcp`. It handles JSON-RPC POST requests and returns JSON responses; GET streaming is unsupported. Non-loopback binding requires `RUNTIME_GUARD_AUTH_TOKEN`, and public deployment also needs TLS termination and explicit network controls. The server checks `Origin` and `Host`. Both transports passed local initialize, list, and call probes with the official Python MCP SDK 2.3.0; Codex, Claude Code, and Cursor remain to be checked individually.
 
 Copy [the config example](runtime-guard.example.json), set `RUNTIME_GUARD_CONFIG` to its path, and adjust budgets using the [config schema](schemas/config.schema.json). `allowed_roots` are operator configured extra roots; no MCP call can change them. `audit_db` enables SQLite decision metadata only (timestamp, hashed caller, tool, status, rule). Leave it null to disable audit persistence. Set `enabled_tools` to hide tools your environment does not need.
 
