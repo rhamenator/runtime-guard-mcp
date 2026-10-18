@@ -16,6 +16,7 @@ import sys
 import tempfile
 import time
 
+from runtime_guard_mcp.policy import MAX_MASKER_STREAMS
 from runtime_guard_mcp.server import MAX_HTTP_HANDLERS, MAX_MESSAGE
 
 
@@ -101,6 +102,15 @@ def run() -> dict:
             output = "".join(emitted)
             expect("stream secret redaction", (synthetic in output, "[REDACTED_GITHUB_TOKEN_1]" in output), (False, True), results)
             expect("audit excludes synthetic secret", synthetic.encode() in audit.read_bytes(), False, results)
+            for index in range(MAX_MASKER_STREAMS):
+                _, response = send(port, rpc(210 + index, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": f"stream-{index}", "chunk": "", "final": False}}), token)
+                if response["result"]["structuredContent"]["status"] != "SAFE":
+                    raise AssertionError("masker stream capacity failed early")
+            _, response = send(port, rpc(400, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": "overflow", "chunk": "", "final": False}}), token)
+            expect("masker stream limit", response["result"]["structuredContent"]["rule"], "STREAM_LIMIT", results)
+            send(port, rpc(401, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": "stream-0", "chunk": "", "final": True}}), token)
+            _, response = send(port, rpc(402, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": "overflow", "chunk": "", "final": False}}), token)
+            expect("masker stream recovery", response["result"]["structuredContent"]["status"], "SAFE", results)
             for _ in range(MAX_HTTP_HANDLERS):
                 sock = socket.create_connection(("127.0.0.1", port), timeout=2)
                 sock.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n")
