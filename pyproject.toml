@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "runtime-guard-mcp"
+version = "0.1.0"
+description = "Advisory runtime safety tools for coding agents over MCP"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+authors = [{name = "rhamenator"}]
+keywords = ["mcp", "agent", "runtime-safety", "security"]
+
+[project.scripts]
+runtime-guard-mcp = "runtime_guard_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

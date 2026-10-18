@@ -1,0 +1,262 @@
+[
+  {
+    "name": "audit_path_access",
+    "description": "Advisory path containment check; follows existing symlinks but does not authorize a later filesystem operation.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "read",
+            "write",
+            "delete"
+          ]
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "SAFE",
+            "NEEDS_CONFIRMATION",
+            "BLOCKED"
+          ]
+        },
+        "rule": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "resolved_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "rule",
+        "remediation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "dry_run_command",
+    "description": "Classify shell text without executing it. SAFE is heuristic, not permission to execute.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "shell": {
+          "type": "string",
+          "enum": [
+            "bash",
+            "sh",
+            "pwsh"
+          ]
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "SAFE",
+            "NEEDS_CONFIRMATION",
+            "BLOCKED"
+          ]
+        },
+        "rule": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "rule",
+        "remediation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "budget_guard",
+    "description": "Check or atomically consume caller-wide token, payload, and command budgets; detects repeated session actions.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payload_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commands": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fingerprint": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "consume": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "SAFE",
+            "NEEDS_CONFIRMATION",
+            "BLOCKED"
+          ]
+        },
+        "rule": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "remaining": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tokens": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "payload": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "commands": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "tokens",
+                "payload",
+                "commands"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "rule",
+        "remediation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "secret_masker",
+    "description": "Mask common credentials in output chunks using stable placeholders within a caller; final=true flushes buffered text.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "stream_id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "chunk": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "final": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session_id",
+        "stream_id",
+        "chunk",
+        "final"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "SAFE",
+            "NEEDS_CONFIRMATION",
+            "BLOCKED"
+          ]
+        },
+        "rule": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "secret_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "status",
+        "rule",
+        "remediation"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

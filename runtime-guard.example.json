@@ -1,0 +1,9 @@
+{
+  "workspace_root": "/path/to/workspace",
+  "allowed_roots": [],
+  "enabled_tools": ["audit_path_access", "dry_run_command", "budget_guard", "secret_masker"],
+  "token_hour": 100000,
+  "payload_hour": 50000000,
+  "commands_minute": 120,
+  "audit_db": null
+}

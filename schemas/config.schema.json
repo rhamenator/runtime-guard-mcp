@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Runtime Guard configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_root": {"type": "string", "minLength": 1, "description": "Default root for relative path checks."},
+    "allowed_roots": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}, "description": "Operator-owned additional roots for path checks."},
+    "enabled_tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["audit_path_access", "dry_run_command", "budget_guard", "secret_masker"]}},
+    "token_hour": {"type": "integer", "minimum": 1},
+    "payload_hour": {"type": "integer", "minimum": 1},
+    "commands_minute": {"type": "integer", "minimum": 1},
+    "audit_db": {"type": ["string", "null"], "description": "Optional SQLite file for redacted decision metadata."}
+  }
+}
