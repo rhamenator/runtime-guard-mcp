@@ -2,7 +2,7 @@
 
 ## Host run, 2026-10-18
 
-Target: an ephemeral Runtime Guard child process bound to `127.0.0.1` with a generated bearer token, a temporary workspace, a ten-token hourly budget, and a temporary SQLite audit file. No third-party server, real secret, or external network target was used. Base revision before the probe change: `7a73ef8`; the probe and this record are reviewed together in the linked PR.
+Target: an ephemeral Runtime Guard child process bound to `127.0.0.1` with a generated bearer token, a temporary workspace, a ten-token hourly budget, and a temporary SQLite audit file. No third-party server, real secret, or external network target was used. The host run exercised the content committed as `17bf19ccf8aec23238fb33b0324ad3d9435b1aa7` in [PR #13](https://github.com/rhamenator/runtime-guard-mcp/pull/13), merged to main as `a1fcb28c4bb18ff462bcf7bad00e0ca735c009b4`. The base revision was `7a73ef8`.
 
 Commands from the repository root:
 
@@ -13,6 +13,8 @@ python3 -m pip wheel --no-deps --no-build-isolation . -w /tmp/runtime-guard-whee
 ```
 
 The script optionally ran Nmap 7.98 with `nmap -sT -Pn -p PORT 127.0.0.1`, where `PORT` was the child server's ephemeral loopback port. Host Python was 3.14.4 on Linux. It generated and discarded all authentication and secret fixtures.
+
+The merged revision's [CI run](https://github.com/rhamenator/runtime-guard-mcp/actions/runs/39168504699) passed the unit suite, live HTTP probe, and package build on Python 3.11 and 3.13. Nmap is optional in CI, so the host's scanner result below is the recorded scanner evidence.
 
 | Area | Live result |
 | --- | --- |
