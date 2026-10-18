@@ -39,3 +39,7 @@ The live probe was extended to open 128 unfinished `secret_masker` streams throu
 ## Budget state follow-up, 2026-10-18
 
 The live HTTP probe sent 12 one-token reservations against a fresh server configured with a ten-token hourly budget. It observed ten `SAFE` and two `BLOCKED` decisions, then completed the other adversarial cases for **22 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests used lower internal state caps to verify that reservation and fingerprint histories fail closed, concurrent reservations remain atomic, and expired records release capacity. The default 8192/4096 record caps were not saturated in the live run; sustained resource profiling remains open.
+
+## Stdio framing follow-up, 2026-10-18
+
+The live probe now starts an additional stdio server process and sends a synthetic line twice the 1 MiB request cap followed by a valid `ping`. It observes one controlled `-32600` error and one successful response with the expected request ID, for **23 PASS checks** overall on Python 3.14.4 with Nmap 7.98. A focused subprocess test sends a line three times the cap and verifies the same recovery. This bounds memory used to frame a line; it does not measure peak RSS under sustained input.
