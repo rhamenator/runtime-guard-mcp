@@ -1,0 +1,6 @@
+Runtime Guard MCP
+Copyright (C) 2026 rhamenator and contributors
+
+Licensed under the GNU General Public License, version 3 or (at your option) any later version. See LICENSE.
+
+The MCP tools are advisory. They do not execute shell commands, read target files, meter unreported activity, or enforce policy on other clients and tools. Effective enforcement requires client routing and, where needed, host-level controls.

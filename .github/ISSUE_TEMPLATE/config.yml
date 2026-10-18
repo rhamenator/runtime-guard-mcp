@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/rhamenator/runtime-guard-mcp/discussions
+    about: Ask usage questions or discuss ideas.
+  - name: Private vulnerability report
+    url: https://github.com/rhamenator/runtime-guard-mcp/security/advisories/new
+    about: Report a security vulnerability privately.

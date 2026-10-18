@@ -1,0 +1,29 @@
+name: Release artifacts
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13'
+      - name: Test and package
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -q
+          python -m pip wheel --no-deps . -w dist
+          python -m pip download --no-deps --no-binary=:all: . -d dist
+          cd dist && sha256sum * > SHA256SUMS
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runtime-guard-mcp-packages
+          path: dist/

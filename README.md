@@ -1,5 +1,7 @@
 # runtime-guard-mcp
 
+[![CI](https://github.com/rhamenator/runtime-guard-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/rhamenator/runtime-guard-mcp/actions/workflows/ci.yml) [![License: GPL v3+](https://img.shields.io/badge/License-GPLv3%2B-blue.svg)](LICENSE)
+
 An MCP server for **advisory** runtime safety checks in coding agents. It inspects proposed file paths and shell commands, tracks caller budgets, detects repeated actions, and masks common credentials in output. It never executes shell commands or opens the target files. It is separate from [request-guard-mcp](https://github.com/rhamenator/request-guard-mcp), which handles request classification and is being extended for HTTP egress.
 
 ## Run locally
@@ -40,4 +42,4 @@ Blocked tool calls return an MCP tool result with `isError: true`, structured JS
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 
-See [architecture and roadmap](docs/architecture.md), [security model](docs/security.md), and the [draft agent skill](skills/runtime-guard/SKILL.md). The skill is for client integration after the user has configured this server; it does not grant permission for tool execution.
+See [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [support](SUPPORT.md), [the changelog](CHANGELOG.md), and [architecture and roadmap](docs/architecture.md), [security model](docs/security.md), and the [draft agent skill](skills/runtime-guard/SKILL.md). The skill is for client integration after the user has configured this server; it does not grant permission for tool execution.
