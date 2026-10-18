@@ -28,6 +28,8 @@ The suite creates temporary directories, a local SQLite file, and a short-lived 
 
 Use an MCP SDK or Inspector on each host to initialize, list four tools, and call `dry_run_command` with `git status`. Repeat over stdio and loopback HTTP. Test hostile `Origin` and `Host` headers against the HTTP endpoint; expect HTTP 403. Do not bind the server outside loopback for this plan.
 
+For cross-VM tests, keep Runtime Guard bound to `127.0.0.1:8765` on Ubuntu. Create an SSH local port forward from Kali to Ubuntu's loopback port, then run `python3 scripts/adversarial_probe.py` on Kali against `http://127.0.0.1:8765/mcp`. The probe uses only the standard library and prints pass/fail labels without response bodies or synthetic token values. For the optional concurrency check, launch a fresh Ubuntu server with `token_hour` set to 10 and run `python3 scripts/adversarial_probe.py --budget-limit 10`; stop that server after the run. Keep the tunnel and VM lifecycle under the test coordinator's control.
+
 ## Exit criteria and limits
 
 All tests must pass on both hosts with no crashes, leaked synthetic tokens, unexpected disk growth, or thread accumulation. The suite is an advisory-policy test, not proof that another shell or filesystem tool is contained. The current server still needs MCP 2026-07-28 protocol work and client-specific Codex, Claude Code, and Cursor validation before a stable release.
