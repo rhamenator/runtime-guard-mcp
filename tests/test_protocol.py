@@ -63,6 +63,11 @@ class ProtocolTests(unittest.TestCase):
                 urlopen(denied, timeout=1)
             self.assertEqual(error.exception.code, 403)
             error.exception.close()
+            bad_host = Request(url, data=b'{"jsonrpc":"2.0","id":3,"method":"ping"}', headers={"Host": "evil.example"})
+            with self.assertRaises(HTTPError) as error:
+                urlopen(bad_host, timeout=1)
+            self.assertEqual(error.exception.code, 403)
+            error.exception.close()
         finally:
             process.terminate()
             process.wait(timeout=5)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -77,6 +78,8 @@ class RuntimeGuard:
         if "id" not in message:
             return None
         identifier = message["id"]
+        if type(identifier) not in {str, int, float, type(None)} or (type(identifier) is float and not math.isfinite(identifier)):
+            return rpc_error(None, -32600, "Invalid Request")
         method = message["method"]
         if method == "initialize":
             result = {"protocolVersion": PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "runtime-guard-mcp", "version": __version__}}

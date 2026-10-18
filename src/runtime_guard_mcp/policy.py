@@ -56,8 +56,10 @@ BLOCKED_RE = [
 def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
     if shell not in {"bash", "sh", "pwsh"} or len(command) > 8192 or "\x00" in command:
         return verdict("BLOCKED", "INVALID_COMMAND", "Use a supported shell and a command under 8192 characters.")
-    if re.search(r"(?:~|/home/[^/\s]+)/(?:\.ssh|\.aws|\.gnupg|\.kube)(?:/|\b)|/etc/(?:shadow|gshadow)\b|(?:^|[/\s])\.env(?:\.[\w-]+)?(?:\s|$)", command, re.I):
+    if re.search(r"(?:~|/home/[^/\s]+)/(?:\.ssh|\.aws|\.gnupg|\.kube|\.config/gcloud)(?:/|\b)|/etc/(?:shadow|gshadow)\b|/proc/(?:self|\d+)/(?:environ|mem)\b|(?:^|[/\s])\.env(?:\.[\w-]+)?(?:\s|$)", command, re.I):
         return verdict("BLOCKED", "SENSITIVE_PATH", "Do not read or modify credential files through shell commands.")
+    if re.search(r"\bfind\b[^\n]*(?:-delete\b|-exec\b|-execdir\b|-ok\b|-okdir\b)", command, re.I):
+        return verdict("NEEDS_CONFIRMATION", "FIND_SIDE_EFFECT", "Review find actions and each target before execution.")
     for pattern, rule in BLOCKED_RE:
         if pattern.search(command):
             return verdict("BLOCKED", rule, "Use a narrowly scoped alternative or obtain an explicit reviewed exception.")
