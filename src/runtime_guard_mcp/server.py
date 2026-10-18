@@ -149,8 +149,14 @@ class RuntimeGuard:
 
 
 def serve_stdio(guard: RuntimeGuard) -> None:
-    for line in sys.stdin.buffer:
+    while True:
+        line = sys.stdin.buffer.readline(MAX_MESSAGE + 1)
+        if not line:
+            break
         if len(line) > MAX_MESSAGE:
+            # Discard the rest of this frame in bounded pieces before parsing the next one.
+            while line and not line.endswith(b"\n"):
+                line = sys.stdin.buffer.readline(65536)
             response = rpc_error(None, -32600, "Request too large")
         else:
             try:

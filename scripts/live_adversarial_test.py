@@ -135,7 +135,12 @@ def run() -> dict:
             else:
                 raise AssertionError("server did not recover after saturation")
             results.append("recovery after saturation")
-            return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC", "target": "ephemeral child process"}
+            stdio = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "stdio", "--config", str(config)], input=b"x" * (MAX_MESSAGE * 2) + b"\n" + rpc(500, "ping") + b"\n", capture_output=True, env=environment, timeout=5, check=True)
+            responses = [json.loads(line) for line in stdio.stdout.splitlines()]
+            if len(responses) != 2:
+                raise AssertionError("stdio returned an unexpected number of frames")
+            expect("stdio oversized frame recovery", (len(responses), responses[0]["error"]["code"], responses[1]["id"], responses[1]["result"]), (2, -32600, 500, {}), results)
+            return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "ephemeral child process"}
         finally:
             for sock in slow:
                 sock.close()

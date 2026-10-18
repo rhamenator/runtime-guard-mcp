@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-from runtime_guard_mcp.server import BoundedHTTPServer, RuntimeGuard, TOOLS
+from runtime_guard_mcp.server import BoundedHTTPServer, MAX_MESSAGE, RuntimeGuard, TOOLS
 
 
 class ProtocolTests(unittest.TestCase):
@@ -40,6 +40,17 @@ class ProtocolTests(unittest.TestCase):
         process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--workspace-root", "/tmp/work"], input=b'{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n', stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=5)
         self.assertEqual(process.returncode, 0, process.stderr)
         self.assertEqual(len(json.loads(process.stdout)["result"]["tools"]), 4)
+
+    def test_stdio_oversized_line_is_drained_before_next_request(self):
+        env = dict(os.environ, PYTHONPATH="src")
+        oversized = b"x" * (MAX_MESSAGE * 3) + b"\n"
+        valid = b'{"jsonrpc":"2.0","id":7,"method":"ping"}\n'
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=oversized + valid, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=5)
+        self.assertEqual(process.returncode, 0, process.stderr)
+        responses = [json.loads(line) for line in process.stdout.splitlines()]
+        self.assertEqual(len(responses), 2)
+        self.assertEqual(responses[0]["error"]["code"], -32600)
+        self.assertEqual((responses[1]["id"], responses[1]["result"]), (7, {}))
 
     def test_http_process(self):
         with socket.socket() as sock:
