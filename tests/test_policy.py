@@ -65,6 +65,14 @@ class MaskTests(unittest.TestCase):
         self.assertNotIn("AKIA", first["text"])
         self.assertIn("[REDACTED_AWS_ACCESS_KEY_1]", second["text"][-100:])
 
+    def test_private_identifiers(self):
+        masker = SecretMasker()
+        result = masker.mask("caller", "s", "x", "Reach a.person@example.com or 123-45-6789", True)
+        self.assertNotIn("a.person@example.com", result["text"])
+        self.assertNotIn("123-45-6789", result["text"])
+        self.assertIn("[REDACTED_EMAIL_ADDRESS_1]", result["text"])
+        self.assertIn("[REDACTED_US_SSN_1]", result["text"])
+
 
 class AuditTests(unittest.TestCase):
     def test_redacted_audit(self):
