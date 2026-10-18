@@ -9,6 +9,7 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import BoundedSemaphore
 from typing import Any
 from urllib.parse import urlparse
 
@@ -18,6 +19,40 @@ from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_comman
 
 PROTOCOL_VERSION = "2025-06-18"
 MAX_MESSAGE = 1_048_576
+MAX_HTTP_HANDLERS = 32
+HTTP_SOCKET_TIMEOUT = 5.0
+
+
+class BoundedHTTPServer(ThreadingHTTPServer):
+    """Reject excess connections before creating handler threads."""
+
+    daemon_threads = True
+
+    def __init__(self, server_address: tuple[str, int], handler: type[BaseHTTPRequestHandler], max_handlers: int = MAX_HTTP_HANDLERS, socket_timeout: float = HTTP_SOCKET_TIMEOUT):
+        self._slots = BoundedSemaphore(max_handlers)
+        self.socket_timeout = socket_timeout
+        super().__init__(server_address, handler)
+
+    def process_request(self, request: Any, client_address: Any) -> None:
+        if not self._slots.acquire(blocking=False):
+            try:
+                request.sendall(b"HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            except OSError:
+                pass
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request: Any, client_address: Any) -> None:
+        try:
+            request.settimeout(self.socket_timeout)
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
 
 
 def obj(properties: dict[str, Any], required: list[str]) -> dict[str, Any]:
@@ -183,7 +218,7 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
             response = guard.handle(message, "http")
             self._json(202 if response is None else 200, response)
 
-    ThreadingHTTPServer((host, port), Handler).serve_forever()
+    BoundedHTTPServer((host, port), Handler).serve_forever()
 
 
 def main() -> None:
