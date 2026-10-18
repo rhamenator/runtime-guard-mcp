@@ -55,6 +55,33 @@ class AdversarialPolicyTests(unittest.TestCase):
         self.assertNotIn(token, "".join(emitted))
         self.assertIn("[REDACTED_GITHUB_TOKEN_1]", "".join(emitted))
 
+    def test_masker_limits_active_streams_and_recovers_after_final(self):
+        masker = SecretMasker(max_streams=2)
+        for stream in ("one", "two"):
+            self.assertEqual(masker.mask("caller", "session", stream, "", False)["status"], "SAFE")
+        self.assertEqual(masker.mask("caller", "session", "three", "", False)["rule"], "STREAM_LIMIT")
+        self.assertEqual(masker.mask("caller", "session", "one", "", True)["status"], "SAFE")
+        self.assertEqual(masker.mask("caller", "session", "three", "", False)["status"], "SAFE")
+
+    def test_masker_secret_limit_fails_closed(self):
+        masker = SecretMasker(max_secrets_per_caller=1)
+        first = "ghp_" + "A" * 24
+        second = "ghp_" + "B" * 24
+        result = masker.mask("caller", "session", "one", first, True)
+        self.assertIn("[REDACTED_GITHUB_TOKEN_1]", result["text"])
+        result = masker.mask("caller", "session", "two", second, True)
+        self.assertEqual((result["status"], result["rule"]), ("BLOCKED", "SECRET_STATE_LIMIT"))
+        self.assertNotIn("text", result)
+        self.assertIn("[REDACTED_GITHUB_TOKEN_1]", masker.mask("caller", "session", "three", first, True)["text"])
+        result = masker.mask("caller", "session", "split", second + " " + "x" * 16384, False)
+        self.assertEqual((result["status"], result["rule"]), ("BLOCKED", "SECRET_STATE_LIMIT"))
+        self.assertEqual(masker.mask("caller", "session", "split", "tail", False)["rule"], "STREAM_RESET_REQUIRED")
+        self.assertEqual(masker.mask("caller", "session", "split", "", True)["rule"], "STREAM_RESET_REQUIRED")
+
+    def test_masker_invalid_unicode_returns_controlled_block(self):
+        result = SecretMasker().mask("caller", "session", "stream", "password=abcdefgh\ud800", True)
+        self.assertEqual((result["status"], result["rule"]), ("BLOCKED", "INVALID_UNICODE"))
+
 
 class AdversarialProtocolTests(unittest.TestCase):
     def test_malformed_messages_have_controlled_results(self):

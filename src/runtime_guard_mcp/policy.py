@@ -130,19 +130,36 @@ SECRET_PATTERNS = [
     ("EMAIL_ADDRESS", re.compile(r"(?<![\w.+-])[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,24}\b")),
     ("US_SSN", re.compile(r"\b(?!000|666|9\d\d)\d{3}[- ](?!00)\d{2}[- ](?!0000)\d{4}\b")),
 ]
+MAX_MASKER_STREAMS = 128
+MAX_MASKER_SECRETS_PER_CALLER = 4096
 
 
 class SecretMasker:
-    def __init__(self):
+    def __init__(self, max_streams: int = MAX_MASKER_STREAMS, max_secrets_per_caller: int = MAX_MASKER_SECRETS_PER_CALLER):
         self._lock = threading.Lock()
         self._secrets: dict[str, dict[str, str]] = defaultdict(dict)
-        self._buffers: dict[tuple[str, str], str] = {}
+        self._indices: dict[str, dict[str, int]] = defaultdict(dict)
+        self._buffers: dict[tuple[str, str], str | None] = {}
+        self.max_streams = max_streams
+        self.max_secrets_per_caller = max_secrets_per_caller
 
-    def _mask(self, caller: str, text: str) -> tuple[str, list[str]]:
+    def _mask(self, caller: str, text: str) -> tuple[str, list[str]] | None:
         matches = []
         for kind, pattern in SECRET_PATTERNS:
             matches.extend((m.start(), m.end(), kind, m.group()) for m in pattern.finditer(text))
         matches.sort(key=lambda m: (m[0], -m[1]))
+        mapping = self._secrets[caller]
+        new_digests = set()
+        cursor = 0
+        for start, end, kind, value in matches:
+            if start < cursor:
+                continue
+            digest = hashlib.sha256((kind + "\0" + value).encode()).hexdigest()
+            if digest not in mapping:
+                new_digests.add(digest)
+            cursor = end
+        if len(mapping) + len(new_digests) > self.max_secrets_per_caller:
+            return None
         output = []
         kinds = []
         cursor = 0
@@ -150,10 +167,11 @@ class SecretMasker:
             if start < cursor:
                 continue
             output.append(text[cursor:start])
-            mapping = self._secrets[caller]
             digest = hashlib.sha256((kind + "\0" + value).encode()).hexdigest()
             if digest not in mapping:
-                mapping[digest] = f"[REDACTED_{kind}_{sum(v.startswith('[REDACTED_'+kind+'_') for v in mapping.values()) + 1}]"
+                indices = self._indices[caller]
+                indices[kind] = indices.get(kind, 0) + 1
+                mapping[digest] = f"[REDACTED_{kind}_{indices[kind]}]"
             output.append(mapping[digest])
             kinds.append(kind)
             cursor = end
@@ -165,12 +183,28 @@ class SecretMasker:
             return verdict("BLOCKED", "CHUNK_TOO_LARGE", "Send smaller chunks.")
         key = (caller + ":" + session, stream)
         with self._lock:
-            raw = self._buffers.get(key, "") + chunk
+            if key in self._buffers and self._buffers[key] is None:
+                if final:
+                    self._buffers.pop(key)
+                return verdict("BLOCKED", "STREAM_RESET_REQUIRED", "Discard this stream and start a new one.")
+            if key not in self._buffers and not final and len(self._buffers) >= self.max_streams:
+                return verdict("BLOCKED", "STREAM_LIMIT", "Finish an existing stream before starting another.")
+            raw = (self._buffers.get(key) or "") + chunk
             if len(raw) > 1_064_960:
+                if final:
+                    self._buffers.pop(key, None)
+                else:
+                    self._buffers[key] = None
                 return verdict("BLOCKED", "STREAM_BUFFER_TOO_LARGE", "Finish or reset the stream.")
             if final:
                 self._buffers.pop(key, None)
-                masked, kinds = self._mask(caller, raw)
+                try:
+                    result = self._mask(caller, raw)
+                except UnicodeEncodeError:
+                    return verdict("BLOCKED", "INVALID_UNICODE", "Remove invalid Unicode from the stream.")
+                if result is None:
+                    return verdict("BLOCKED", "SECRET_STATE_LIMIT", "Start a fresh process before masking more distinct secrets.")
+                masked, kinds = result
                 return verdict("SAFE", "MASKED", "No remediation needed.", text=masked, secret_types=kinds)
             # Hold a conservative tail so a token split across chunks is not emitted early.
             cutoff = max(0, len(raw) - 16384)
@@ -178,6 +212,15 @@ class SecretMasker:
                 for match in pattern.finditer(raw):
                     if match.start() < cutoff < match.end():
                         cutoff = match.start()
-            prefix, self._buffers[key] = raw[:cutoff], raw[cutoff:]
-            masked, kinds = self._mask(caller, prefix)
+            prefix, tail = raw[:cutoff], raw[cutoff:]
+            try:
+                result = self._mask(caller, prefix)
+            except UnicodeEncodeError:
+                self._buffers[key] = None
+                return verdict("BLOCKED", "INVALID_UNICODE", "Remove invalid Unicode from the stream.")
+            if result is None:
+                self._buffers[key] = None
+                return verdict("BLOCKED", "SECRET_STATE_LIMIT", "Start a fresh process before masking more distinct secrets.")
+            self._buffers[key] = tail
+            masked, kinds = result
             return verdict("SAFE", "MASKED", "No remediation needed.", text=masked, secret_types=kinds)

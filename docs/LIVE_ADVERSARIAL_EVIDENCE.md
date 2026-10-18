@@ -31,3 +31,7 @@ The final local run reported **19 PASS checks**. The first draft of the probe re
 ## Limits and release decision
 
 This is a bounded host-side protocol/API test. It does not prove full MCP 2026-07-28 conformance, TLS deployment, per-client isolation, resistance to sustained flooding, or containment of agent actions through other tools. Nmap scanned one authorized loopback port; it was not a broad vulnerability scan. A separate authorized pentesting-toolset review, fresh client probes, resource measurements, and human review remain required before a stable release.
+
+## Masker state follow-up, 2026-10-18
+
+The live probe was extended to open 128 unfinished `secret_masker` streams through the authenticated HTTP API. A 129th stream returned `BLOCKED` / `STREAM_LIMIT`; finishing one stream allowed a new one to return `SAFE`. The final host run of `PYTHONPATH=src python3 scripts/live_adversarial_test.py` reported **21 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused policy tests also verified the 4096-secret mapping limit using a smaller configured test limit, blocked-stream reset, and controlled rejection of malformed Unicode. These bounds do not replace a sustained memory and CPU profile.
