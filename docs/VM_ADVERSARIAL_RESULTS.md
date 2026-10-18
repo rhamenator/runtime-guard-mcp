@@ -1,6 +1,6 @@
 # Kali and Ubuntu adversarial test record
 
-Date: 2026-10-18. Source: test coordinator's report to the Runtime Guard task. These observations are recorded as **coordinator-reported**; the exact guest commit SHA, command transcript, and machine-readable output were not attached to this record. They should be captured for the release-readiness review.
+Date: 2026-10-18. Source: test coordinator's report to the Runtime Guard task and the local MCP adversarial VM lab record saved with the originating task. These observations are recorded as **coordinator-reported**; the exact guest commit SHA, command transcript, and machine-readable output were not attached to this repository record. They should be captured for the release-readiness review.
 
 ## Reported environment
 
