@@ -18,7 +18,7 @@ import tempfile
 import time
 
 from runtime_guard_mcp.policy import MAX_MASKER_STREAMS
-from runtime_guard_mcp.server import MAX_HTTP_HANDLERS, MAX_MESSAGE
+from runtime_guard_mcp.server import HTTP_CONNECTION_DEADLINE, MAX_HTTP_HANDLERS, MAX_MESSAGE
 
 
 def rpc(identifier: object, method: str, params: dict | None = None) -> bytes:
@@ -155,6 +155,25 @@ def run() -> dict:
             else:
                 raise AssertionError("server did not recover after saturation")
             results.append("recovery after saturation")
+            with socket.create_connection(("127.0.0.1", port), timeout=2) as drip:
+                drip.settimeout(0.05)
+                drip.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer " + token.encode() + b"\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\nx")
+                closed = False
+                until = time.monotonic() + HTTP_CONNECTION_DEADLINE + 1
+                while time.monotonic() < until:
+                    try:
+                        drip.sendall(b"x")
+                        if drip.recv(1) == b"":
+                            closed = True
+                            break
+                    except socket.timeout:
+                        pass
+                    except OSError:
+                        closed = True
+                        break
+                    time.sleep(0.15)
+            expect("byte-drip absolute deadline", closed, True, results)
+            expect("byte-drip recovery", send(port, rpc(450, "ping"), token)[0], 200, results)
             stdio = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "stdio", "--config", str(config)], input=b"x" * (MAX_MESSAGE * 2) + b"\n" + rpc(500, "ping") + b"\n", capture_output=True, env=environment, timeout=5, check=True)
             responses = [json.loads(line) for line in stdio.stdout.splitlines()]
             if len(responses) != 2:

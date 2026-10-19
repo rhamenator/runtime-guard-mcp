@@ -180,6 +180,59 @@ class ProtocolTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_http_byte_drip_hits_absolute_deadline(self):
+        reading = threading.Event()
+
+        class DripHandler(BaseHTTPRequestHandler):
+            def log_error(self, *_args):
+                pass
+
+            def log_message(self, *_args):
+                pass
+
+            def do_POST(self):
+                reading.set()
+                self.rfile.read(100)
+
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header("Content-Length", "2")
+                self.end_headers()
+                self.wfile.write(b"ok")
+
+        server = BoundedHTTPServer(("127.0.0.1", 0), DripHandler, max_handlers=1, socket_timeout=1, connection_deadline=0.25)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with socket.create_connection(server.server_address, timeout=2) as drip:
+                drip.settimeout(2)
+                drip.sendall(b"POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 100\r\n\r\nx")
+                self.assertTrue(reading.wait(timeout=1))
+                with self.assertRaises(HTTPError) as error:
+                    urlopen(f"http://127.0.0.1:{server.server_port}/", timeout=2)
+                self.assertEqual(error.exception.code, 503)
+                error.exception.close()
+                for _ in range(5):
+                    time.sleep(0.05)
+                    try:
+                        drip.sendall(b"x")
+                    except OSError:
+                        break
+                for _ in range(30):
+                    try:
+                        with urlopen(f"http://127.0.0.1:{server.server_port}/", timeout=2) as response:
+                            self.assertEqual(response.read(), b"ok")
+                        break
+                    except HTTPError as error:
+                        error.close()
+                        time.sleep(0.02)
+                else:
+                    self.fail("A byte-dripping client held the handler after its absolute deadline")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
 
 if __name__ == "__main__":
     unittest.main()
