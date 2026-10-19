@@ -59,3 +59,7 @@ The authenticated loopback probe held one partial JSON request open and sent bod
 ## Strict JSON wire follow-up, 2026-10-19
 
 The authenticated loopback probe sent `NaN`, duplicate top-level and nested keys, an overflowing `1e999` number, and invalid UTF-8. Each returned JSON-RPC `-32700`; a subsequent valid `ping` succeeded. The full run reported **41 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused stdio and HTTP process tests also rejected those frames and verified recovery. This closes parser ambiguity for these cases; it is not a complete JSON-RPC or MCP conformance certification.
+
+## JSON nesting follow-up, 2026-10-19
+
+The authenticated loopback probe sent a 65-level nested array within the request-size cap. It returned JSON-RPC `-32700` and the next valid `ping` succeeded, for **42 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests checked the 64-level boundary and brackets inside quoted strings, plus stdio and HTTP recovery. This bounds nesting before object construction but does not by itself cap all memory growth from wide JSON objects.

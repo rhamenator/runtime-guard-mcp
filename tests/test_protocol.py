@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-from runtime_guard_mcp.server import BoundedHTTPServer, MAX_MESSAGE, RuntimeGuard, TOOLS
+from runtime_guard_mcp.server import BoundedHTTPServer, MAX_JSON_DEPTH, MAX_MESSAGE, RuntimeGuard, TOOLS, parse_json_request
 
 
 class ProtocolTests(unittest.TestCase):
@@ -60,6 +60,7 @@ class ProtocolTests(unittest.TestCase):
             b'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}',
             b'{"jsonrpc":"2.0","id":1,"method":"ping","x":1e999}',
             b'\xff{"jsonrpc":"2.0","id":1,"method":"ping"}',
+            b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1),
         ]
         valid = b'{"jsonrpc":"2.0","id":7,"method":"ping"}'
         process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"\n".join([*invalid, valid, b""]), capture_output=True, env=env, timeout=5)
@@ -67,6 +68,15 @@ class ProtocolTests(unittest.TestCase):
         responses = [json.loads(line) for line in process.stdout.splitlines()]
         self.assertEqual([reply["error"]["code"] for reply in responses[:-1]], [-32700] * len(invalid))
         self.assertEqual((responses[-1]["id"], responses[-1]["result"]), (7, {}))
+
+    def test_json_nesting_limit_ignores_quoted_brackets(self):
+        at_limit = b'[' * MAX_JSON_DEPTH + b'0' + b']' * MAX_JSON_DEPTH
+        self.assertIsInstance(parse_json_request(at_limit), list)
+        quoted = b'{"text":"' + b'[' * (MAX_JSON_DEPTH + 10) + b'\\\"' + b']' * (MAX_JSON_DEPTH + 10) + b'"}'
+        self.assertIn("text", parse_json_request(quoted))
+        beyond_limit = b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1)
+        with self.assertRaises(ValueError):
+            parse_json_request(beyond_limit)
 
     def test_http_process(self):
         with socket.socket() as sock:
@@ -130,6 +140,7 @@ class ProtocolTests(unittest.TestCase):
                 b'{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}',
                 b'{"jsonrpc":"2.0","id":4,"method":"ping","x":1e999}',
                 b'\xff{"jsonrpc":"2.0","id":4,"method":"ping"}',
+                b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1),
             ):
                 with self.subTest(malformed=malformed):
                     malformed_request = Request(url, data=malformed, headers={"Content-Type": "application/json"})

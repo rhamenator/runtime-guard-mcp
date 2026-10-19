@@ -21,6 +21,7 @@ from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_comman
 
 PROTOCOL_VERSION = "2025-06-18"
 MAX_MESSAGE = 1_048_576
+MAX_JSON_DEPTH = 64
 MAX_HTTP_HANDLERS = 32
 HTTP_SOCKET_TIMEOUT = 5.0
 HTTP_CONNECTION_DEADLINE = 5.0
@@ -99,6 +100,29 @@ def rpc_error(identifier: Any, code: int, message: str) -> dict[str, Any]:
 
 def parse_json_request(raw: bytes) -> Any:
     """Decode one UTF-8 JSON message without ambiguous or non-finite values."""
+    source = raw.decode("utf-8")
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in source:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+        elif character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise ValueError("JSON nesting limit exceeded")
+        elif character in "]}":
+            depth -= 1
+            if depth < 0:
+                raise ValueError("Unbalanced JSON nesting")
+
     def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result = {}
         for key, value in pairs:
@@ -116,7 +140,7 @@ def parse_json_request(raw: bytes) -> Any:
     def reject_constant(_value: str) -> None:
         raise ValueError("Non-finite JSON constant")
 
-    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object, parse_float=finite_float, parse_constant=reject_constant)
+    return json.loads(source, object_pairs_hook=unique_object, parse_float=finite_float, parse_constant=reject_constant)
 
 
 class RuntimeGuard:
