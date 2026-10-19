@@ -1,6 +1,6 @@
 # Client interoperability evidence
 
-This records verified behavior for the installed server at revision `c4a888e` and the CLI versions noted below. The server is advisory and is not yet a stable release.
+This records verified behavior for the installed server at revision `58cc1b7` and the CLI versions noted below. The server is advisory and is not yet a stable release.
 
 ## Reproduce the fresh install
 
@@ -38,8 +38,20 @@ The event stream showed `mcp__runtime-guard__dry_run_command` called with `{"com
 
 ## Codex CLI 0.151.0
 
-An isolated `CODEX_HOME` with a single `[mcp_servers.runtime_guard]` stdio entry appeared in `codex mcp list --json` as enabled. A one-shot `codex exec --ignore-user-config --ephemeral -s read-only` session attempted `dry_run_command`, but the event stream reported `MCP tool call requires approval, but approval policy is never`. No successful Codex tool call is claimed. The agent's final prose incorrectly reported `SAFE` after this denied call; integration code and users must rely on the MCP tool event/result, and treat denied or failed calls as unavailable. The server itself was not called in this Codex attempt.
+An isolated `CODEX_HOME` with a single `[mcp_servers.runtime_guard]` stdio entry appeared in `codex mcp list --json` as enabled. A one-shot `codex exec --ignore-user-config --ephemeral -s read-only` session attempted `dry_run_command`, but the event stream reported `MCP tool call requires approval, but approval policy is never`. The agent's final prose incorrectly reported `SAFE` after this denied call. Integration code and users must rely on the MCP tool event/result, and treat denied or failed calls as unavailable. The server itself was not called in that attempt.
+
+A second isolated Codex session on 2026-10-19 used a temporary workspace and the CLI's `--approve-for-me` review option. The command was:
+
+```bash
+codex exec --ignore-user-config --ephemeral --skip-git-repo-check \
+  --approve-for-me -C /path/to/temporary/workspace \
+  -c 'mcp_servers.runtime_guard={command="/path/to/venv/bin/runtime-guard-mcp",env={RUNTIME_GUARD_WORKSPACE_ROOT="/path/to/temporary/workspace"}}' \
+  --json \
+  'Call the runtime_guard dry_run_command MCP tool exactly once with command git status. Do not run a shell. Report the tool result status and rule only if the MCP call succeeded; otherwise report the call failure.'
+```
+
+The `mcp_tool_call` event had `status: completed`, `error: null`, and `structured_content` containing `status: SAFE`, `rule: READ_ONLY_COMMAND`, and `remediation: No remediation needed.` The approval option was used only for this bounded smoke test; normal client integrations should use their intended permission review policy. This does not establish that Codex automatically intercepts shell commands or enforces the advisory verdict.
 
 ## Limits
 
-Claude Code has one successful local stdio call, while Codex has discovery only and a denied call. Cursor CLI is unavailable on this host. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
+Claude Code and Codex each completed one local stdio call with explicit tool permission. Cursor CLI is unavailable on this host. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
