@@ -30,6 +30,7 @@ It launches its own authenticated server on a random `127.0.0.1` port, sends few
 | Budget | 64 concurrent one-token reservations against a ten-token limit | exactly ten `SAFE`, 54 `BLOCKED` within one process |
 | Masker | synthetic `ghp_` token split one character per chunk | no raw token emitted; one stable placeholder |
 | Protocol | malformed JSON-RPC shapes, invalid ID types, bad tool arguments | controlled JSON-RPC error; no crash |
+| HTTP framing | duplicate security/body headers, transfer encoding, non-JSON POST | 400 or 415; next valid request still works |
 | Audit | modify or delete an interior SQLite row | `verify_integrity()` reports invalid |
 
 ## Manual transport probes

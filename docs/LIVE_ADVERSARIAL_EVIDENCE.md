@@ -43,3 +43,7 @@ The live HTTP probe sent 12 one-token reservations against a fresh server config
 ## Stdio framing follow-up, 2026-10-18
 
 The live probe now starts an additional stdio server process and sends a synthetic line twice the 1 MiB request cap followed by a valid `ping`. It observes one controlled `-32600` error and one successful response with the expected request ID, for **23 PASS checks** overall on Python 3.14.4 with Nmap 7.98. A focused subprocess test sends a line three times the cap and verifies the same recovery. This bounds memory used to frame a line; it does not measure peak RSS under sustained input.
+
+## HTTP framing follow-up, 2026-10-18
+
+The authenticated loopback probe sent duplicate Content-Length, Host, Authorization, and Content-Type headers, a Transfer-Encoding/Content-Length combination, a non-JSON media type, malformed Host port, and invalid Origin scheme. The server returned controlled 400 or 415 responses, then accepted a valid `ping`. The full probe reported **32 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused HTTP-process tests also cover duplicate Origin and very long Content-Length fields. This hardens the legacy JSON-RPC-over-HTTP endpoint; it does not establish MCP 2026-07-28 Streamable HTTP conformance.

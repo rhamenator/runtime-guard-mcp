@@ -42,6 +42,14 @@ def send(port: int, body: bytes, token: str | None = None, extra: dict[str, str]
         connection.close()
 
 
+def raw_status(port: int, token: str, body: bytes, headers: bytes) -> int:
+    request = b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer " + token.encode() + b"\r\n" + headers + b"Connection: close\r\n\r\n" + body
+    with socket.create_connection(("127.0.0.1", port), timeout=2) as connection:
+        connection.settimeout(2)
+        connection.sendall(request)
+        return int(connection.recv(256).split(b"\r\n", 1)[0].split()[1])
+
+
 def expect(label: str, actual: object, expected: object, results: list[str]) -> None:
     if actual != expected:
         raise AssertionError(f"{label}: expected {expected!r}, got {actual!r}")
@@ -81,6 +89,17 @@ def run() -> dict:
             expect("wrong bearer", send(port, rpc(2, "ping"), "wrong")[0], 401, results)
             expect("host rejection", send(port, rpc(3, "ping"), token, {"Host": "evil.example"})[0], 403, results)
             expect("origin rejection", send(port, rpc(4, "ping"), token, {"Origin": "https://evil.example"})[0], 403, results)
+            expect("invalid Host port", send(port, rpc(4, "ping"), token, {"Host": "localhost:bad"})[0], 400, results)
+            expect("invalid Origin scheme", send(port, rpc(4, "ping"), token, {"Origin": "ftp://localhost"})[0], 400, results)
+            frame = rpc(4, "ping")
+            length_header = b"Content-Length: " + str(len(frame)).encode() + b"\r\n"
+            expect("duplicate content length", raw_status(port, token, frame, b"Content-Type: application/json\r\n" + length_header * 2), 400, results)
+            expect("transfer encoding rejection", raw_status(port, token, frame, b"Content-Type: application/json\r\n" + length_header + b"Transfer-Encoding: chunked\r\n"), 400, results)
+            expect("non-JSON media type", raw_status(port, token, frame, b"Content-Type: text/plain\r\n" + length_header), 415, results)
+            expect("duplicate Host rejection", raw_status(port, token, frame, b"Host: evil.example\r\nContent-Type: application/json\r\n" + length_header), 400, results)
+            expect("duplicate Authorization rejection", raw_status(port, token, frame, b"Authorization: Bearer wrong\r\nContent-Type: application/json\r\n" + length_header), 400, results)
+            expect("duplicate media type rejection", raw_status(port, token, frame, b"Content-Type: application/json\r\nContent-Type: text/plain\r\n" + length_header), 415, results)
+            expect("framing recovery", send(port, rpc(4, "ping"), token)[0], 200, results)
             status, response = send(port, rpc(5, "initialize", {"protocolVersion": "2025-06-18"}), token)
             expect("initialize", (status, response["result"]["protocolVersion"]), (200, "2025-06-18"), results)
             status, response = send(port, rpc(6, "tools/list"), token)

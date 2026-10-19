@@ -194,28 +194,75 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
             if self.path != "/mcp":
                 self._json(404, {"error": "Not found"})
                 return
-            request_host = urlparse("http://" + self.headers.get("Host", "")).hostname
+            hosts = self.headers.get_all("Host", [])
+            if len(hosts) != 1:
+                self._json(400, {"error": "Invalid Host header"})
+                return
+            try:
+                parsed_host = urlparse("http://" + hosts[0])
+                request_host = parsed_host.hostname
+                _ = parsed_host.port
+            except ValueError:
+                self._json(400, {"error": "Invalid Host header"})
+                return
+            if parsed_host.username or parsed_host.password or parsed_host.path or parsed_host.query or parsed_host.fragment:
+                self._json(400, {"error": "Invalid Host header"})
+                return
             if request_host not in {"localhost", "127.0.0.1", "::1", host}:
                 self._json(403, {"error": "Host denied"})
                 return
-            origin = self.headers.get("Origin")
+            origins = self.headers.get_all("Origin", [])
+            if len(origins) > 1:
+                self._json(400, {"error": "Invalid Origin header"})
+                return
+            origin = origins[0] if origins else None
             if origin:
-                parsed = urlparse(origin)
-                if parsed.hostname not in {"localhost", "127.0.0.1", "::1", host}:
+                try:
+                    parsed_origin = urlparse(origin)
+                    origin_host = parsed_origin.hostname
+                    _ = parsed_origin.port
+                except ValueError:
+                    self._json(400, {"error": "Invalid Origin header"})
+                    return
+                if parsed_origin.scheme not in {"http", "https"} or parsed_origin.username or parsed_origin.password or parsed_origin.path or parsed_origin.query or parsed_origin.fragment:
+                    self._json(400, {"error": "Invalid Origin header"})
+                    return
+                if origin_host not in {"localhost", "127.0.0.1", "::1", host}:
                     self._json(403, {"error": "Origin denied"})
                     return
-            if auth_token and self.headers.get("Authorization") != "Bearer " + auth_token:
+            auth_headers = self.headers.get_all("Authorization", [])
+            if len(auth_headers) > 1:
+                self._json(400, {"error": "Invalid Authorization header"})
+                return
+            if auth_token and (not auth_headers or auth_headers[0] != "Bearer " + auth_token):
                 self._json(401, {"error": "Unauthorized"})
                 return
-            try:
-                length = int(self.headers.get("Content-Length", "0"))
-            except ValueError:
+            if self.headers.get_all("Transfer-Encoding"):
+                self._json(400, {"error": "Transfer encoding is not supported"})
+                return
+            lengths = self.headers.get_all("Content-Length", [])
+            if len(lengths) != 1 or not lengths[0].strip().isascii() or not lengths[0].strip().isdecimal():
                 self._json(400, {"error": "Invalid length"})
                 return
+            media_types = self.headers.get_all("Content-Type", [])
+            if len(media_types) != 1 or media_types[0].split(";", 1)[0].strip().lower() != "application/json":
+                self._json(415, {"error": "Content type must be application/json"})
+                return
+            if len(lengths[0].strip()) > 10:
+                self._json(413, {"error": "Request too large"})
+                return
+            length = int(lengths[0].strip())
             if not 0 < length <= MAX_MESSAGE:
                 self._json(413, {"error": "Request too large"})
                 return
-            raw = self.rfile.read(length)
+            try:
+                raw = self.rfile.read(length)
+            except OSError:
+                self._json(400, {"error": "Incomplete request body"})
+                return
+            if len(raw) != length:
+                self._json(400, {"error": "Incomplete request body"})
+                return
             try:
                 message = json.loads(raw)
             except (UnicodeDecodeError, json.JSONDecodeError):
