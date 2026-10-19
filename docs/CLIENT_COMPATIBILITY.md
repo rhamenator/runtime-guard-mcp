@@ -1,6 +1,6 @@
 # Client interoperability evidence
 
-This records verified behavior for revision `384df80` plus the client smoke scripts in this branch. The server is advisory and is not yet a stable release.
+This records verified behavior for the installed server at revision `c4a888e` and the CLI versions noted below. The server is advisory and is not yet a stable release.
 
 ## Reproduce the fresh install
 
@@ -16,6 +16,30 @@ python3 scripts/client_smoke.py /tmp/runtime-guard-smoke/bin/runtime-guard-mcp
 
 The installed distribution has no third-party runtime requirements. The MCP SDK is a test-only dependency. Both probes use a temporary workspace, clear `RUNTIME_GUARD_CONFIG`, and launch the installed stdio entry point. They check `initialize` (negotiated `2025-06-18` and tool capability), `tools/list` (four names and input/output schema objects), and `tools/call` (structured result and text fallback). The local probe also checks the initialized notification and a path check. Expected output is a `PASS` line from each command.
 
+## Claude Code 2.1.301
+
+An isolated Claude Code session completed a real stdio call on 2026-10-18. With the installed server executable and a temporary workspace, this MCP config was used (replace the paths with your own virtual environment and workspace):
+
+```json
+{"mcpServers":{"runtime-guard":{"type":"stdio","command":"/path/to/venv/bin/runtime-guard-mcp","args":[],"env":{"RUNTIME_GUARD_WORKSPACE_ROOT":"/path/to/workspace"}}}}
+```
+
+The one-shot command was:
+
+```bash
+claude -p --mcp-config /path/to/config.json --strict-mcp-config \
+  --no-session-persistence --max-turns 3 \
+  --allowedTools 'mcp__runtime-guard__dry_run_command' \
+  --output-format stream-json --verbose \
+  'Call the runtime-guard dry_run_command MCP tool exactly once with command git status. Report only the tool status and rule.'
+```
+
+The event stream showed `mcp__runtime-guard__dry_run_command` called with `{"command":"git status"}` and a tool result of `{"status":"SAFE","rule":"READ_ONLY_COMMAND","remediation":"No remediation needed."}`. Without `--allowedTools`, the client reported a permission denial for that MCP tool; this is a client permission decision, not a server verdict. Grant only the individual advisory tool needed for the session. No other Claude Code workflow or transport was tested.
+
+## Codex CLI 0.151.0
+
+An isolated `CODEX_HOME` with a single `[mcp_servers.runtime_guard]` stdio entry appeared in `codex mcp list --json` as enabled. A one-shot `codex exec --ignore-user-config --ephemeral -s read-only` session attempted `dry_run_command`, but the event stream reported `MCP tool call requires approval, but approval policy is never`. No successful Codex tool call is claimed. The agent's final prose incorrectly reported `SAFE` after this denied call; integration code and users must rely on the MCP tool event/result, and treat denied or failed calls as unavailable. The server itself was not called in this Codex attempt.
+
 ## Limits
 
-The probes do not establish Codex, Claude Code, or Cursor end-to-end integration. No fresh install in those clients has been completed. Cursor CLI is unavailable on this host. They also do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as supported from these probes alone.
+Claude Code has one successful local stdio call, while Codex has discovery only and a denied call. Cursor CLI is unavailable on this host. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
