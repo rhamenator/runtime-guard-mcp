@@ -47,7 +47,9 @@ def secret_stream_review(port: int, token: str, audit: Path) -> None:
             raise AssertionError("secret stream did not complete safely")
         emitted.append(result["text"])
     output = "".join(emitted)
-    if synthetic in output or "[REDACTED_GITHUB_TOKEN_1]" not in output or synthetic.encode() in audit.read_bytes():
+    audit_files = list(audit.parent.glob(audit.name + "*"))
+    leaked_to_audit = any(synthetic.encode() in path.read_bytes() for path in audit_files if path.is_file())
+    if synthetic in output or "[REDACTED_GITHUB_TOKEN_1]" not in output or not audit_files or leaked_to_audit:
         raise AssertionError("installed masker or audit exposed the synthetic token")
 
 
