@@ -22,6 +22,7 @@ from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_comman
 PROTOCOL_VERSION = "2025-06-18"
 MAX_MESSAGE = 1_048_576
 MAX_JSON_DEPTH = 64
+MAX_JSON_STRUCTURE_TOKENS = 8192
 MAX_HTTP_HANDLERS = 32
 HTTP_SOCKET_TIMEOUT = 5.0
 HTTP_CONNECTION_DEADLINE = 5.0
@@ -102,6 +103,7 @@ def parse_json_request(raw: bytes) -> Any:
     """Decode one UTF-8 JSON message without ambiguous or non-finite values."""
     source = raw.decode("utf-8")
     depth = 0
+    structure_tokens = 0
     in_string = False
     escaped = False
     for character in source:
@@ -114,10 +116,14 @@ def parse_json_request(raw: bytes) -> Any:
                 in_string = False
         elif character == '"':
             in_string = True
-        elif character in "[{":
-            depth += 1
-            if depth > MAX_JSON_DEPTH:
-                raise ValueError("JSON nesting limit exceeded")
+        elif character in "[{:,":
+            structure_tokens += 1
+            if structure_tokens > MAX_JSON_STRUCTURE_TOKENS:
+                raise ValueError("JSON structure limit exceeded")
+            if character in "[{":
+                depth += 1
+                if depth > MAX_JSON_DEPTH:
+                    raise ValueError("JSON nesting limit exceeded")
         elif character in "]}":
             depth -= 1
             if depth < 0:

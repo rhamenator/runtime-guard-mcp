@@ -63,3 +63,7 @@ The authenticated loopback probe sent `NaN`, duplicate top-level and nested keys
 ## JSON nesting follow-up, 2026-10-19
 
 The authenticated loopback probe sent a 65-level nested array within the request-size cap. It returned JSON-RPC `-32700` and the next valid `ping` succeeded, for **42 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests checked the 64-level boundary and brackets inside quoted strings, plus stdio and HTTP recovery. This bounds nesting before object construction but does not by itself cap all memory growth from wide JSON objects.
+
+## JSON width follow-up, 2026-10-19
+
+The authenticated loopback probe sent an array of 8193 zero values, occupying roughly 16 KiB on the wire but exceeding the 8192 structural-marker cap. It returned JSON-RPC `-32700`; the next valid request succeeded. The full run reported **43 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests verified the limit boundary, quoted commas, and stdio/HTTP recovery. Large strings remain possible under the one-megabyte frame cap; the cap bounds container count rather than total memory in all cases.

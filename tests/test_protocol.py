@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-from runtime_guard_mcp.server import BoundedHTTPServer, MAX_JSON_DEPTH, MAX_MESSAGE, RuntimeGuard, TOOLS, parse_json_request
+from runtime_guard_mcp.server import BoundedHTTPServer, MAX_JSON_DEPTH, MAX_JSON_STRUCTURE_TOKENS, MAX_MESSAGE, RuntimeGuard, TOOLS, parse_json_request
 
 
 class ProtocolTests(unittest.TestCase):
@@ -61,6 +61,7 @@ class ProtocolTests(unittest.TestCase):
             b'{"jsonrpc":"2.0","id":1,"method":"ping","x":1e999}',
             b'\xff{"jsonrpc":"2.0","id":1,"method":"ping"}',
             b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1),
+            b'[' + b'0,' * MAX_JSON_STRUCTURE_TOKENS + b'0]',
         ]
         valid = b'{"jsonrpc":"2.0","id":7,"method":"ping"}'
         process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"\n".join([*invalid, valid, b""]), capture_output=True, env=env, timeout=5)
@@ -75,6 +76,15 @@ class ProtocolTests(unittest.TestCase):
         quoted = b'{"text":"' + b'[' * (MAX_JSON_DEPTH + 10) + b'\\\"' + b']' * (MAX_JSON_DEPTH + 10) + b'"}'
         self.assertIn("text", parse_json_request(quoted))
         beyond_limit = b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1)
+        with self.assertRaises(ValueError):
+            parse_json_request(beyond_limit)
+
+    def test_json_structure_limit_ignores_quoted_commas(self):
+        at_limit = b'[' + b'0,' * (MAX_JSON_STRUCTURE_TOKENS - 1) + b'0]'
+        self.assertEqual(len(parse_json_request(at_limit)), MAX_JSON_STRUCTURE_TOKENS)
+        quoted = b'{"text":"' + b',' * (MAX_JSON_STRUCTURE_TOKENS + 1) + b'"}'
+        self.assertIn("text", parse_json_request(quoted))
+        beyond_limit = b'[' + b'0,' * MAX_JSON_STRUCTURE_TOKENS + b'0]'
         with self.assertRaises(ValueError):
             parse_json_request(beyond_limit)
 
@@ -141,6 +151,7 @@ class ProtocolTests(unittest.TestCase):
                 b'{"jsonrpc":"2.0","id":4,"method":"ping","x":1e999}',
                 b'\xff{"jsonrpc":"2.0","id":4,"method":"ping"}',
                 b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1),
+                b'[' + b'0,' * MAX_JSON_STRUCTURE_TOKENS + b'0]',
             ):
                 with self.subTest(malformed=malformed):
                     malformed_request = Request(url, data=malformed, headers={"Content-Type": "application/json"})
