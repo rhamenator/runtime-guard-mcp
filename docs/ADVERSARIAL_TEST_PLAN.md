@@ -22,6 +22,8 @@ It launches its own authenticated server on a random `127.0.0.1` port, sends few
 
 The HTTP probe also sends duplicate JSON keys, non-finite values, numeric overflow, invalid UTF-8, a frame exceeding the 64-level nesting cap, and a wide array exceeding the 8192-marker structure cap under valid authentication. Each must return `-32700`, followed by a successful `ping`. The stdio subprocess tests cover the same malformed frames and recovery.
 
+For a bounded installed-package scan with Wfuzz 3.1.0 available on the host, install a fresh wheel into a virtual environment and run `python3 scripts/wfuzz_loopback_review.py --server /path/to/venv/bin/runtime-guard-mcp`. The script creates its own authenticated loopback target and temporary files, sends six serial POSTs across known paths and bearer values, then checks recovery. It prints status summaries without the generated token. This optional toolset check is separate from CI and does not scan external hosts.
+
 ## Cases and expected results
 
 | Area | Synthetic input | Expected |

@@ -67,3 +67,15 @@ The authenticated loopback probe sent a 65-level nested array within the request
 ## JSON width follow-up, 2026-10-19
 
 The authenticated loopback probe sent an array of 8193 zero values, occupying roughly 16 KiB on the wire but exceeding the 8192 structural-marker cap. It returned JSON-RPC `-32700`; the next valid request succeeded. The full run reported **43 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests verified the limit boundary, quoted commas, and stdio/HTTP recovery. Large strings remain possible under the one-megabyte frame cap; the cap bounds container count rather than total memory in all cases.
+
+## Installed HTTP boundary Wfuzz review, 2026-10-19
+
+A bounded host-side Wfuzz 3.1.0 run tested an installed `runtime-guard-mcp` entry point rather than a source-tree import. The review script started a child server on an ephemeral `127.0.0.1` port with a generated bearer token, temporary workspace, and temporary audit database. It sent six serial POST requests (`-t 1`, two-second per-request timeout) across four paths and two bearer values, then checked recovery with a valid `ping`. No external target, real credential, or VM was involved.
+
+Reproduce after installing a wheel into a clean virtual environment:
+
+```bash
+python3 scripts/wfuzz_loopback_review.py --server /path/to/venv/bin/runtime-guard-mcp
+```
+
+Observed statuses: `/mcp` 200; `/admin`, `/metrics`, and `/.env` 404; invalid bearer 401; generated valid bearer 200; post-scan `ping` 200. Wfuzz reported a local Pycurl/OpenSSL mismatch warning; these requests used plain loopback HTTP, and all expected responses were observed. The script prints only sanitized status summaries and deletes its fixtures. This is evidence for those path and authentication cases only. It does not establish TLS behavior, broad route coverage, sustained flood resistance, or a completed independent pentest.
