@@ -91,3 +91,8 @@ This checks these five wire bodies and recovery, not general fuzz coverage or fu
 ## Installed Host and Origin Wfuzz follow-up, 2026-10-19
 
 The installed-endpoint Wfuzz review added seven authenticated header cases. For `Origin`, `http://localhost` returned 200, `https://evil.example` returned 403, and `ftp://localhost` plus `http://localhost:bad` returned 400. For `Host`, `localhost` returned 200, `evil.example` returned 403, and `localhost:bad` returned 400. A valid post-scan `ping` returned 200. The scanner sent **18 serial loopback requests** total across all current sweeps, with one worker and a two-second per-request timeout. The fixed list does not cover every authority parser ambiguity, reverse proxy behavior, or non-loopback deployment.
+
+
+## Installed audit fail-closed follow-up, 2026-10-19
+
+The installed-endpoint review added a post-scan audit integrity check. It calls `dry_run_command` with `git status` through authenticated HTTP, alters the most recent row in its own temporary SQLite audit database, and repeats the call. The Wfuzz 3.1.0 host run observed `isError: true` with `BLOCKED` / `AUDIT_UNAVAILABLE`, no new decision row, no computed `SAFE` verdict, and a successful subsequent `ping`. This test uses only a disposable audit store. Testing was delayed until host full I/O PSI avg10 fell below 1%. This checks direct row mutation in a disposable store; it does not prove protection against deletion of the final row or an attacker recomputing unkeyed hashes.

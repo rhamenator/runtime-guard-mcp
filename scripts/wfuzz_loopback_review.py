@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import secrets
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -31,6 +32,27 @@ def request(port: int, token: str | None, body: bytes = b'{"jsonrpc":"2.0","id":
 
 def status(port: int, token: str | None) -> int:
     return request(port, token)[0]
+
+
+def audit_fail_closed(port: int, token: str, audit: Path) -> None:
+    call = json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "dry_run_command", "arguments": {"command": "git status"}}}).encode()
+    first_status, first_raw = request(port, token, call)
+    first = json.loads(first_raw)
+    if first_status != 200 or first["result"]["structuredContent"]["status"] != "SAFE":
+        raise AssertionError("baseline audited tool call failed")
+    with sqlite3.connect(audit) as database:
+        before = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+        database.execute("UPDATE decisions SET rule='synthetic-tamper' WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
+    blocked_status, blocked_raw = request(port, token, call)
+    blocked = json.loads(blocked_raw)
+    tool = blocked["result"]
+    verdict = tool["structuredContent"]
+    with sqlite3.connect(audit) as database:
+        after = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+    if (blocked_status, tool["isError"], verdict["status"], verdict["rule"], after) != (200, True, "BLOCKED", "AUDIT_UNAVAILABLE", before):
+        raise AssertionError("tampered installed audit did not fail closed")
+    if "READ_ONLY_COMMAND" in blocked_raw.decode() or "SAFE" in blocked_raw.decode():
+        raise AssertionError("blocked audit response exposed its computed verdict")
 
 
 def sweep(wfuzz: str, words: Path, url: str, headers: list[str], body: str = '{"jsonrpc":"2.0","id":1,"method":"ping"}') -> list[dict]:
@@ -119,7 +141,10 @@ def run(executable: str, wfuzz: str) -> dict:
                     raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "recovery": 200}
+            audit_fail_closed(port, token, root / "audit.sqlite")
+            if status(port, token) != 200:
+                raise AssertionError("server did not recover after audit tamper")
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
