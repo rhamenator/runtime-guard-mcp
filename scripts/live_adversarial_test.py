@@ -11,6 +11,7 @@ import platform
 import secrets
 import shutil
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -159,6 +160,13 @@ def run() -> dict:
             if len(responses) != 2:
                 raise AssertionError("stdio returned an unexpected number of frames")
             expect("stdio oversized frame recovery", (len(responses), responses[0]["error"]["code"], responses[1]["id"], responses[1]["result"]), (2, -32600, 500, {}), results)
+            with sqlite3.connect(audit) as database:
+                before = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+                database.execute("UPDATE decisions SET rule='synthetic-tamper' WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
+            _, response = send(port, rpc(501, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+            with sqlite3.connect(audit) as database:
+                after = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+            expect("tampered audit blocks tool result", (response["result"]["structuredContent"]["status"], response["result"]["structuredContent"]["rule"], after), ("BLOCKED", "AUDIT_UNAVAILABLE", before), results)
             return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "ephemeral child process"}
         finally:
             for sock in slow:
