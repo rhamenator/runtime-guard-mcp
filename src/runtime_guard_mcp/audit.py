@@ -9,6 +9,10 @@ import threading
 import time
 
 
+class AuditIntegrityError(RuntimeError):
+    """A previously recorded audit decision has been changed or removed."""
+
+
 class AuditLog:
     def __init__(self, path: str):
         self._lock = threading.Lock()
@@ -28,6 +32,9 @@ class AuditLog:
                 self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
             previous = current_hash
         self._db.commit()
+        if not self.verify_integrity()["valid"]:
+            self._db.close()
+            raise AuditIntegrityError("Audit integrity check failed at startup")
 
     @staticmethod
     def _hash(previous: str, timestamp: int, caller: str, tool: str, status: str, rule: str) -> str:
@@ -37,12 +44,21 @@ class AuditLog:
     def record(self, caller: str, tool: str, status: str, rule: str) -> None:
         digest = hashlib.sha256(caller.encode()).hexdigest()[:16]
         with self._lock:
-            previous = self._db.execute("SELECT content_hash FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
-            previous_hash = previous[0] if previous else "0" * 64
-            timestamp = int(time.time())
-            content_hash = self._hash(previous_hash, timestamp, digest, tool, status, rule)
-            self._db.execute("INSERT INTO decisions (time_utc, caller_hash, tool, status, rule, prev_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?)", (timestamp, digest, tool, status, rule, previous_hash, content_hash))
-            self._db.commit()
+            try:
+                previous = self._db.execute("SELECT time_utc, caller_hash, tool, status, rule, prev_hash, content_hash FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
+                if previous and previous[6] != self._hash(previous[5], *previous[:5]):
+                    raise AuditIntegrityError("Latest audit record failed integrity check")
+                previous_hash = previous[6] if previous else "0" * 64
+                timestamp = int(time.time())
+                content_hash = self._hash(previous_hash, timestamp, digest, tool, status, rule)
+                self._db.execute("INSERT INTO decisions (time_utc, caller_hash, tool, status, rule, prev_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?)", (timestamp, digest, tool, status, rule, previous_hash, content_hash))
+                self._db.commit()
+            except (sqlite3.Error, AuditIntegrityError):
+                try:
+                    self._db.rollback()
+                except sqlite3.Error:
+                    pass
+                raise
 
     def verify_integrity(self) -> dict[str, int | bool | None]:
         with self._lock:

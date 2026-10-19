@@ -6,6 +6,7 @@ import argparse
 import json
 import math
 import os
+import sqlite3
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -14,8 +15,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 from . import __version__
-from .audit import AuditLog
-from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command
+from .audit import AuditIntegrityError, AuditLog
+from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
 
 PROTOCOL_VERSION = "2025-06-18"
 MAX_MESSAGE = 1_048_576
@@ -104,7 +105,10 @@ class RuntimeGuard:
         else:
             raise KeyError(name)
         if self.audit:
-            self.audit.record(caller, name, result["status"], result["rule"])
+            try:
+                self.audit.record(caller, name, result["status"], result["rule"])
+            except (sqlite3.Error, AuditIntegrityError):
+                result = verdict("BLOCKED", "AUDIT_UNAVAILABLE", "Restore audit integrity and storage before using this server.")
         return {"content": [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}], "structuredContent": result, "isError": result["status"] == "BLOCKED"}
 
     def handle(self, message: Any, caller: str = "local") -> dict[str, Any] | None:

@@ -2,8 +2,10 @@ import os
 import sqlite3
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
+from runtime_guard_mcp.audit import AuditIntegrityError, AuditLog
 from runtime_guard_mcp.policy import BudgetState, SecretMasker, audit_path_access, dry_run_command
 from runtime_guard_mcp.server import RuntimeGuard
 
@@ -110,6 +112,29 @@ class AuditTests(unittest.TestCase):
             self.assertTrue(guard.audit.verify_integrity()["valid"])
             guard.call("dry_run_command", {"command": "git status"}, "caller")
             self.assertEqual(guard.audit.verify_integrity()["records_checked"], 2)
+
+    def test_tampered_audit_refuses_restart_and_new_decisions(self):
+        with tempfile.TemporaryDirectory() as root:
+            db = os.path.join(root, "audit.sqlite3")
+            guard = RuntimeGuard(root, audit_db=db)
+            guard.call("dry_run_command", {"command": "git status"}, "caller")
+            with sqlite3.connect(db) as connection:
+                connection.execute("UPDATE decisions SET rule='altered' WHERE rowid=1")
+            response = guard.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "dry_run_command", "arguments": {"command": "git diff"}}})
+            self.assertEqual((response["result"]["structuredContent"]["status"], response["result"]["structuredContent"]["rule"]), ("BLOCKED", "AUDIT_UNAVAILABLE"))
+            with self.assertRaises(AuditIntegrityError):
+                AuditLog(db)
+            with sqlite3.connect(db) as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], 1)
+
+    def test_audit_storage_failure_never_returns_masked_result(self):
+        with tempfile.TemporaryDirectory() as root:
+            guard = RuntimeGuard(root, audit_db=os.path.join(root, "audit.sqlite3"))
+            guard.audit._db.close()
+            synthetic = "ghp_" + "A" * 24
+            response = guard.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "secret_masker", "arguments": {"session_id": "s", "stream_id": "x", "chunk": synthetic, "final": True}}})
+            self.assertEqual((response["result"]["structuredContent"]["status"], response["result"]["structuredContent"]["rule"]), ("BLOCKED", "AUDIT_UNAVAILABLE"))
+            self.assertNotIn(synthetic, json.dumps(response))
 
 
 if __name__ == "__main__":
