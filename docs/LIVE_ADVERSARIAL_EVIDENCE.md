@@ -51,3 +51,7 @@ The authenticated loopback probe sent duplicate Content-Length, Host, Authorizat
 ## Audit failure follow-up, 2026-10-18
 
 After the normal authenticated HTTP probes, the harness changed the final row of its temporary SQLite audit database and called `dry_run_command`. The server returned `BLOCKED` / `AUDIT_UNAVAILABLE` and did not append another decision, for **33 PASS checks** on Python 3.14.4 with Nmap 7.98. Focused tests also confirm that a tampered database refuses restart and a closed audit connection returns a blocked tool result without the computed content. This detects direct row mutation; deletion of the final row still needs an external anchor, and deliberate recomputation of unkeyed hashes remains outside this guarantee.
+
+## HTTP slow-drip follow-up, 2026-10-19
+
+The authenticated loopback probe held one partial JSON request open and sent body bytes every 150 milliseconds, faster than the five-second inactivity timeout. The server closed that connection at its five-second absolute deadline and accepted a fresh authenticated `ping` afterward. The full run reported **35 PASS checks** on Python 3.14.4 with Nmap 7.98. A focused one-slot test also verified that a handler becomes available after the deadline while bytes continue arriving. This is a bounded single-connection result, not a sustained flooding or proxy test; slow legitimate uploads can hit the same deadline.
