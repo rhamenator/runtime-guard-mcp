@@ -18,7 +18,7 @@ import tempfile
 import time
 
 from runtime_guard_mcp.policy import MAX_MASKER_STREAMS
-from runtime_guard_mcp.server import HTTP_CONNECTION_DEADLINE, MAX_HTTP_HANDLERS, MAX_MESSAGE
+from runtime_guard_mcp.server import HTTP_CONNECTION_DEADLINE, MAX_HTTP_HANDLERS, MAX_JSON_DEPTH, MAX_MESSAGE
 
 
 def rpc(identifier: object, method: str, params: dict | None = None) -> bytes:
@@ -112,6 +112,7 @@ def run() -> dict:
                 ("nested duplicate JSON key", b'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}'),
                 ("overflow JSON number", b'{"jsonrpc":"2.0","id":1,"method":"ping","x":1e999}'),
                 ("invalid UTF-8 JSON", b'\xff{"jsonrpc":"2.0","id":1,"method":"ping"}'),
+                ("deep JSON nesting", b'[' * (MAX_JSON_DEPTH + 1) + b'0' + b']' * (MAX_JSON_DEPTH + 1)),
             ):
                 expect(label, send(port, malformed, token)[1]["error"]["code"], -32700, results)
             expect("JSON parser recovery", send(port, rpc(6, "ping"), token)[1]["result"], {}, results)

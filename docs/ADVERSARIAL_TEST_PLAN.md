@@ -20,7 +20,7 @@ PYTHONPATH=src python3 scripts/live_adversarial_test.py
 
 It launches its own authenticated server on a random `127.0.0.1` port, sends fewer than 250 synthetic requests, opens at most 32 temporary slow connections, and removes its temporary workspace and audit database. One additional authenticated connection drips a partial body for at most six seconds to verify the absolute connection deadline and recovery. It also starts one stdio child to send an oversized line followed by a valid MCP request and checks that framing recovers. If Nmap is installed, it scans only the ephemeral loopback port with `nmap -sT -Pn -p PORT 127.0.0.1`. The script reports pass/fail labels and never prints the generated bearer token or synthetic secret. The core checks run in CI on Python 3.11 and 3.13; the optional Nmap check is recorded separately when available.
 
-The HTTP probe also sends duplicate JSON keys, non-finite values, numeric overflow, and invalid UTF-8 under valid authentication. Each must return `-32700`, followed by a successful `ping`. The stdio subprocess tests cover the same malformed frames and recovery.
+The HTTP probe also sends duplicate JSON keys, non-finite values, numeric overflow, invalid UTF-8, and a frame exceeding the 64-level nesting cap under valid authentication. Each must return `-32700`, followed by a successful `ping`. The stdio subprocess tests cover the same malformed frames and recovery.
 
 ## Cases and expected results
 
