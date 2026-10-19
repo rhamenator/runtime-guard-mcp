@@ -97,6 +97,28 @@ def rpc_error(identifier: Any, code: int, message: str) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": identifier, "error": {"code": code, "message": message}}
 
 
+def parse_json_request(raw: bytes) -> Any:
+    """Decode one UTF-8 JSON message without ambiguous or non-finite values."""
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate JSON key")
+            result[key] = value
+        return result
+
+    def finite_float(value: str) -> float:
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("Non-finite JSON number")
+        return number
+
+    def reject_constant(_value: str) -> None:
+        raise ValueError("Non-finite JSON constant")
+
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object, parse_float=finite_float, parse_constant=reject_constant)
+
+
 class RuntimeGuard:
     def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None):
         self.workspace_root = str(Path(workspace_root).expanduser().resolve(strict=False))
@@ -177,8 +199,8 @@ def serve_stdio(guard: RuntimeGuard) -> None:
             response = rpc_error(None, -32600, "Request too large")
         else:
             try:
-                response = guard.handle(json.loads(line), "stdio")
-            except (UnicodeDecodeError, json.JSONDecodeError):
+                response = guard.handle(parse_json_request(line), "stdio")
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
                 response = rpc_error(None, -32700, "Parse error")
         if response is not None:
             sys.stdout.write(json.dumps(response, separators=(",", ":")) + "\n")
@@ -285,8 +307,8 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
                 self._json(400, {"error": "Incomplete request body"})
                 return
             try:
-                message = json.loads(raw)
-            except (UnicodeDecodeError, json.JSONDecodeError):
+                message = parse_json_request(raw)
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
                 self._json(200, rpc_error(None, -32700, "Parse error"))
                 return
             response = guard.handle(message, "http")
