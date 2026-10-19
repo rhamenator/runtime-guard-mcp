@@ -16,31 +16,34 @@ import tempfile
 import time
 
 
-def status(port: int, token: str | None) -> int:
+def request(port: int, token: str | None, body: bytes = b'{"jsonrpc":"2.0","id":1,"method":"ping"}') -> tuple[int, bytes]:
     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
     headers = {"Content-Type": "application/json"}
     if token is not None:
         headers["Authorization"] = "Bearer " + token
     try:
-        connection.request("POST", "/mcp", b'{"jsonrpc":"2.0","id":1,"method":"ping"}', headers)
+        connection.request("POST", "/mcp", body, headers)
         response = connection.getresponse()
-        response.read()
-        return response.status
+        return response.status, response.read()
     finally:
         connection.close()
 
 
-def sweep(wfuzz: str, words: Path, url: str, headers: list[str]) -> dict[str, int]:
+def status(port: int, token: str | None) -> int:
+    return request(port, token)[0]
+
+
+def sweep(wfuzz: str, words: Path, url: str, headers: list[str], body: str = '{"jsonrpc":"2.0","id":1,"method":"ping"}') -> list[dict]:
     command = [wfuzz, "-w", str(words), "-X", "POST", "-H", "Content-Type: application/json"]
     for header in headers:
         command.extend(["-H", header])
-    command.extend(["-d", '{"jsonrpc":"2.0","id":1,"method":"ping"}', "-u", url, "-t", "1", "--req-delay", "2", "-o", "json"])
+    command.extend(["-d", body, "-u", url, "-t", "1", "--req-delay", "2", "-o", "json"])
     run = subprocess.run(command, capture_output=True, text=True, timeout=30)
     if run.returncode:
         raise RuntimeError("Wfuzz scan failed")
     # Wfuzz 3.1.0 writes two 'default' lines before its JSON report.
     report = json.loads(run.stdout[run.stdout.index("["):])
-    return {item["payload"]: item["code"] for item in report}
+    return report
 
 
 def run(executable: str, wfuzz: str) -> dict:
@@ -71,18 +74,40 @@ def run(executable: str, wfuzz: str) -> dict:
                 raise AssertionError("installed server did not start")
             path_words = root / "paths.txt"
             path_words.write_text("mcp\nadmin\nmetrics\n.env\n")
-            paths = sweep(wfuzz, path_words, f"http://127.0.0.1:{port}/FUZZ", ["Authorization: Bearer " + token])
+            paths = {item["payload"]: item["code"] for item in sweep(wfuzz, path_words, f"http://127.0.0.1:{port}/FUZZ", ["Authorization: Bearer " + token])}
             if paths != {"mcp": 200, "admin": 404, "metrics": 404, ".env": 404}:
                 raise AssertionError(f"unexpected path status codes: {paths}")
             auth_words = root / "auth.txt"
             auth_words.write_text("invalid\n" + token + "\n")
-            auth = sweep(wfuzz, auth_words, f"http://127.0.0.1:{port}/mcp", ["Authorization: Bearer FUZZ"])
+            auth = {item["payload"]: item["code"] for item in sweep(wfuzz, auth_words, f"http://127.0.0.1:{port}/mcp", ["Authorization: Bearer FUZZ"])}
             auth_result = {"invalid": auth.get("invalid"), "generated-valid-token": auth.get(token)}
             if auth_result != {"invalid": 401, "generated-valid-token": 200} or len(auth) != 2:
                 raise AssertionError(f"unexpected auth status codes: {auth_result}")
+            rpc_cases = {
+                "truncated JSON": ("{", -32700),
+                "duplicate method": ('{"jsonrpc":"2.0","id":1,"method":"ping","method":"tools/list"}', -32700),
+                "non-finite number": ('{"jsonrpc":"2.0","id":1,"method":"ping","x":NaN}', -32700),
+                "invalid ID type": ('{"jsonrpc":"2.0","id":true,"method":"ping"}', -32600),
+                "valid ping": ('{"jsonrpc":"2.0","id":1,"method":"ping"}', None),
+            }
+            body_words = root / "bodies.txt"
+            body_words.write_text("\n".join(payload for payload, _ in rpc_cases.values()) + "\n")
+            body_report = sweep(wfuzz, body_words, f"http://127.0.0.1:{port}/mcp", ["Authorization: Bearer " + token], "FUZZ")
+            by_payload = {item["payload"]: item for item in body_report}
+            if len(by_payload) != len(rpc_cases):
+                raise AssertionError("Wfuzz did not report every RPC fixture once")
+            for label, (payload, expected_code) in rpc_cases.items():
+                direct_status, raw = request(port, token, payload.encode())
+                decoded = json.loads(raw)
+                actual_code = decoded.get("error", {}).get("code")
+                report = by_payload[payload]
+                if (direct_status, report["code"], report["chars"], actual_code) != (200, 200, len(raw), expected_code):
+                    raise AssertionError(f"RPC fixture failed: {label}")
+                if expected_code is None and decoded.get("result") != {}:
+                    raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "requests": 6, "path_statuses": paths, "auth_statuses": auth_result, "recovery": 200}
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 11, "path_statuses": paths, "auth_statuses": auth_result, "rpc_cases": list(rpc_cases), "recovery": 200}
         finally:
             process.terminate()
             try:

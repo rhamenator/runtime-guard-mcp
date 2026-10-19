@@ -79,3 +79,10 @@ python3 scripts/wfuzz_loopback_review.py --server /path/to/venv/bin/runtime-guar
 ```
 
 Observed statuses: `/mcp` 200; `/admin`, `/metrics`, and `/.env` 404; invalid bearer 401; generated valid bearer 200; post-scan `ping` 200. Wfuzz reported a local Pycurl/OpenSSL mismatch warning; these requests used plain loopback HTTP, and all expected responses were observed. The script prints only sanitized status summaries and deletes its fixtures. This is evidence for those path and authentication cases only. It does not establish TLS behavior, broad route coverage, sustained flood resistance, or a completed independent pentest.
+
+
+## Installed JSON-RPC Wfuzz follow-up, 2026-10-19
+
+The Wfuzz loopback review now sends five additional authenticated POST bodies to the installed entry point: truncated JSON, duplicate `method` keys, a `NaN` number, a boolean request ID, and a valid `ping`. The harness compares Wfuzz's HTTP status and response byte count with a direct request for each identical body. It checks JSON-RPC `-32700` for the first three, `-32600` for the invalid ID, an empty result for the valid call, and a further successful `ping` after the sweep. The scanner sends **11 serial requests** total, all to a generated local target. The direct comparison adds five requests; neither run uses an external service or credential.
+
+This checks these five wire bodies and recovery, not general fuzz coverage or full protocol conformance. Wfuzz does not expose response bodies in this JSON report, so the direct requests establish the structured error codes; equal response lengths and statuses link those outcomes to the scanner observations.
