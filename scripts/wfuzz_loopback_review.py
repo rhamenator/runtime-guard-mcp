@@ -83,6 +83,18 @@ def run(executable: str, wfuzz: str) -> dict:
             auth_result = {"invalid": auth.get("invalid"), "generated-valid-token": auth.get(token)}
             if auth_result != {"invalid": 401, "generated-valid-token": 200} or len(auth) != 2:
                 raise AssertionError(f"unexpected auth status codes: {auth_result}")
+            origin_words = root / "origins.txt"
+            origin_words.write_text("http://localhost\nhttps://evil.example\nftp://localhost\nhttp://localhost:bad\n")
+            origins = {item["payload"]: item["code"] for item in sweep(wfuzz, origin_words, f"http://127.0.0.1:{port}/mcp", ["Authorization: Bearer " + token, "Origin: FUZZ"])}
+            expected_origins = {"http://localhost": 200, "https://evil.example": 403, "ftp://localhost": 400, "http://localhost:bad": 400}
+            if origins != expected_origins:
+                raise AssertionError(f"unexpected Origin status codes: {origins}")
+            host_words = root / "hosts.txt"
+            host_words.write_text("localhost\nevil.example\nlocalhost:bad\n")
+            hosts = {item["payload"]: item["code"] for item in sweep(wfuzz, host_words, f"http://127.0.0.1:{port}/mcp", ["Authorization: Bearer " + token, "Host: FUZZ"])}
+            expected_hosts = {"localhost": 200, "evil.example": 403, "localhost:bad": 400}
+            if hosts != expected_hosts:
+                raise AssertionError(f"unexpected Host status codes: {hosts}")
             rpc_cases = {
                 "truncated JSON": ("{", -32700),
                 "duplicate method": ('{"jsonrpc":"2.0","id":1,"method":"ping","method":"tools/list"}', -32700),
@@ -107,7 +119,7 @@ def run(executable: str, wfuzz: str) -> dict:
                     raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 11, "path_statuses": paths, "auth_statuses": auth_result, "rpc_cases": list(rpc_cases), "recovery": 200}
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "recovery": 200}
         finally:
             process.terminate()
             try:

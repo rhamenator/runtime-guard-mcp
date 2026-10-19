@@ -86,3 +86,8 @@ Observed statuses: `/mcp` 200; `/admin`, `/metrics`, and `/.env` 404; invalid be
 The Wfuzz loopback review now sends five additional authenticated POST bodies to the installed entry point: truncated JSON, duplicate `method` keys, a `NaN` number, a boolean request ID, and a valid `ping`. The harness compares Wfuzz's HTTP status and response byte count with a direct request for each identical body. It checks JSON-RPC `-32700` for the first three, `-32600` for the invalid ID, an empty result for the valid call, and a further successful `ping` after the sweep. The scanner sends **11 serial requests** total, all to a generated local target. The direct comparison adds five requests; neither run uses an external service or credential.
 
 This checks these five wire bodies and recovery, not general fuzz coverage or full protocol conformance. Wfuzz does not expose response bodies in this JSON report, so the direct requests establish the structured error codes; equal response lengths and statuses link those outcomes to the scanner observations.
+
+
+## Installed Host and Origin Wfuzz follow-up, 2026-10-19
+
+The installed-endpoint Wfuzz review added seven authenticated header cases. For `Origin`, `http://localhost` returned 200, `https://evil.example` returned 403, and `ftp://localhost` plus `http://localhost:bad` returned 400. For `Host`, `localhost` returned 200, `evil.example` returned 403, and `localhost:bad` returned 400. A valid post-scan `ping` returned 200. The scanner sent **18 serial loopback requests** total across all current sweeps, with one worker and a two-second per-request timeout. The fixed list does not cover every authority parser ambiguity, reverse proxy behavior, or non-loopback deployment.
