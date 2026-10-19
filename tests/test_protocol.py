@@ -52,6 +52,22 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(responses[0]["error"]["code"], -32600)
         self.assertEqual((responses[1]["id"], responses[1]["result"]), (7, {}))
 
+    def test_stdio_rejects_ambiguous_json_and_recovers(self):
+        env = dict(os.environ, PYTHONPATH="src")
+        invalid = [
+            b'{"jsonrpc":"2.0","id":1,"method":"ping","x":NaN}',
+            b'{"jsonrpc":"2.0","id":1,"method":"ping","method":"tools/list"}',
+            b'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}',
+            b'{"jsonrpc":"2.0","id":1,"method":"ping","x":1e999}',
+            b'\xff{"jsonrpc":"2.0","id":1,"method":"ping"}',
+        ]
+        valid = b'{"jsonrpc":"2.0","id":7,"method":"ping"}'
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"\n".join([*invalid, valid, b""]), capture_output=True, env=env, timeout=5)
+        self.assertEqual(process.returncode, 0, process.stderr)
+        responses = [json.loads(line) for line in process.stdout.splitlines()]
+        self.assertEqual([reply["error"]["code"] for reply in responses[:-1]], [-32700] * len(invalid))
+        self.assertEqual((responses[-1]["id"], responses[-1]["result"]), (7, {}))
+
     def test_http_process(self):
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
@@ -108,6 +124,17 @@ class ProtocolTests(unittest.TestCase):
                         connection.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n" + headers + b"Connection: close\r\n\r\n" + body)
                         status_line = connection.recv(256).split(b"\r\n", 1)[0]
                     self.assertEqual(int(status_line.split()[1]), expected)
+            for malformed in (
+                b'{"jsonrpc":"2.0","id":4,"method":"ping","x":NaN}',
+                b'{"jsonrpc":"2.0","id":4,"method":"ping","method":"tools/list"}',
+                b'{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}',
+                b'{"jsonrpc":"2.0","id":4,"method":"ping","x":1e999}',
+                b'\xff{"jsonrpc":"2.0","id":4,"method":"ping"}',
+            ):
+                with self.subTest(malformed=malformed):
+                    malformed_request = Request(url, data=malformed, headers={"Content-Type": "application/json"})
+                    with urlopen(malformed_request, timeout=1) as response:
+                        self.assertEqual(json.load(response)["error"]["code"], -32700)
             with urlopen(request, timeout=1) as response:
                 self.assertEqual(json.load(response)["result"]["tools"][0]["name"], "audit_path_access")
         finally:

@@ -106,6 +106,15 @@ def run() -> dict:
             status, response = send(port, rpc(6, "tools/list"), token)
             expect("tool discovery", (status, len(response["result"]["tools"])), (200, 4), results)
             expect("malformed JSON", send(port, b"{", token)[1]["error"]["code"], -32700, results)
+            for label, malformed in (
+                ("non-finite JSON", b'{"jsonrpc":"2.0","id":1,"method":"ping","x":NaN}'),
+                ("duplicate JSON key", b'{"jsonrpc":"2.0","id":1,"method":"ping","method":"tools/list"}'),
+                ("nested duplicate JSON key", b'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"dry_run_command","arguments":{"command":"git status","command":"rm -rf /"}}}'),
+                ("overflow JSON number", b'{"jsonrpc":"2.0","id":1,"method":"ping","x":1e999}'),
+                ("invalid UTF-8 JSON", b'\xff{"jsonrpc":"2.0","id":1,"method":"ping"}'),
+            ):
+                expect(label, send(port, malformed, token)[1]["error"]["code"], -32700, results)
+            expect("JSON parser recovery", send(port, rpc(6, "ping"), token)[1]["result"], {}, results)
             expect("invalid ID", send(port, rpc(True, "ping"), token)[1]["error"]["code"], -32600, results)
             expect("invalid argument type", send(port, rpc(7, "tools/call", {"name": "audit_path_access", "arguments": {"path": 7}}), token)[1]["error"]["code"], -32602, results)
             expect("unknown method", send(port, rpc(8, "server/execute"), token)[1]["error"]["code"], -32601, results)
