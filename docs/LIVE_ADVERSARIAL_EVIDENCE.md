@@ -96,3 +96,8 @@ The installed-endpoint Wfuzz review added seven authenticated header cases. For 
 ## Installed audit fail-closed follow-up, 2026-10-19
 
 The installed-endpoint review added a post-scan audit integrity check. It calls `dry_run_command` with `git status` through authenticated HTTP, alters the most recent row in its own temporary SQLite audit database, and repeats the call. The Wfuzz 3.1.0 host run observed `isError: true` with `BLOCKED` / `AUDIT_UNAVAILABLE`, no new decision row, no computed `SAFE` verdict, and a successful subsequent `ping`. This test uses only a disposable audit store. Testing was delayed until host full I/O PSI avg10 fell below 1%. This checks direct row mutation in a disposable store; it does not prove protection against deletion of the final row or an attacker recomputing unkeyed hashes.
+
+
+## Installed secret-stream follow-up, 2026-10-19
+
+The installed-endpoint review sent a synthetic `ghp_`-shaped token one character per authenticated HTTP tool call, then finalized the stream. The collected output contained `[REDACTED_GITHUB_TOKEN_1]` and did not contain the raw token. No complete token appeared in any response body or the temporary SQLite audit database bytes. The host Wfuzz 3.1.0 review and its other installed checks passed after this addition. This tests one supported token shape and one stream; unknown formats, partial-fragment leakage to a caller, and process-memory exposure remain outside the claim.

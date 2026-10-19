@@ -34,6 +34,23 @@ def status(port: int, token: str | None) -> int:
     return request(port, token)[0]
 
 
+def secret_stream_review(port: int, token: str, audit: Path) -> None:
+    synthetic = "ghp_" + "A" * 24
+    emitted: list[str] = []
+    for index, chunk in enumerate([*synthetic, ""]):
+        call = json.dumps({"jsonrpc": "2.0", "id": 100 + index, "method": "tools/call", "params": {"name": "secret_masker", "arguments": {"session_id": "installed-review", "stream_id": "split", "chunk": chunk, "final": index == len(synthetic)}}}).encode()
+        http_status, raw = request(port, token, call)
+        if http_status != 200 or synthetic.encode() in raw:
+            raise AssertionError("secret stream response failed or exposed the synthetic token")
+        result = json.loads(raw)["result"]["structuredContent"]
+        if result["status"] != "SAFE":
+            raise AssertionError("secret stream did not complete safely")
+        emitted.append(result["text"])
+    output = "".join(emitted)
+    if synthetic in output or "[REDACTED_GITHUB_TOKEN_1]" not in output or synthetic.encode() in audit.read_bytes():
+        raise AssertionError("installed masker or audit exposed the synthetic token")
+
+
 def audit_fail_closed(port: int, token: str, audit: Path) -> None:
     call = json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "dry_run_command", "arguments": {"command": "git status"}}}).encode()
     first_status, first_raw = request(port, token, call)
@@ -141,10 +158,11 @@ def run(executable: str, wfuzz: str) -> dict:
                     raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
+            secret_stream_review(port, token, root / "audit.sqlite")
             audit_fail_closed(port, token, root / "audit.sqlite")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after audit tamper")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
