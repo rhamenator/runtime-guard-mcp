@@ -81,6 +81,35 @@ class ProtocolTests(unittest.TestCase):
                 urlopen(bad_host, timeout=1)
             self.assertEqual(error.exception.code, 403)
             error.exception.close()
+            invalid_host = Request(url, data=b'{"jsonrpc":"2.0","id":3,"method":"ping"}', headers={"Host": "localhost:bad"})
+            with self.assertRaises(HTTPError) as error:
+                urlopen(invalid_host, timeout=1)
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+            invalid_origin = Request(url, data=b'{"jsonrpc":"2.0","id":3,"method":"ping"}', headers={"Origin": "ftp://localhost"})
+            with self.assertRaises(HTTPError) as error:
+                urlopen(invalid_origin, timeout=1)
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+            body = b'{"jsonrpc":"2.0","id":4,"method":"ping"}'
+            for headers, expected in (
+                (b"Content-Type: application/json\r\nContent-Length: 42\r\nContent-Length: 42\r\n", 400),
+                (b"Content-Type: application/json\r\nContent-Length: 42\r\nTransfer-Encoding: chunked\r\n", 400),
+                (b"Content-Length: 42\r\n", 415),
+                (b"Host: evil.example\r\nContent-Type: application/json\r\nContent-Length: 42\r\n", 400),
+                (b"Origin: http://localhost\r\nOrigin: http://evil.example\r\nContent-Type: application/json\r\nContent-Length: 42\r\n", 400),
+                (b"Authorization: Bearer one\r\nAuthorization: Bearer two\r\nContent-Type: application/json\r\nContent-Length: 42\r\n", 400),
+                (b"Content-Type: application/json\r\nContent-Type: text/plain\r\nContent-Length: 42\r\n", 415),
+                (b"Content-Type: application/json\r\nContent-Length: " + b"9" * 5000 + b"\r\n", 413),
+            ):
+                with self.subTest(headers=headers[:40]):
+                    with socket.create_connection(("127.0.0.1", port), timeout=2) as connection:
+                        connection.settimeout(2)
+                        connection.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n" + headers + b"Connection: close\r\n\r\n" + body)
+                        status_line = connection.recv(256).split(b"\r\n", 1)[0]
+                    self.assertEqual(int(status_line.split()[1]), expected)
+            with urlopen(request, timeout=1) as response:
+                self.assertEqual(json.load(response)["result"]["tools"][0]["name"], "audit_path_access")
         finally:
             process.terminate()
             process.wait(timeout=5)
