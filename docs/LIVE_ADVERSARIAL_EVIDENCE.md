@@ -101,3 +101,8 @@ The installed-endpoint review added a post-scan audit integrity check. It calls 
 ## Installed secret-stream follow-up, 2026-10-19
 
 The installed-endpoint review sent a synthetic `ghp_`-shaped token one character per authenticated HTTP tool call, then finalized the stream. The collected output contained `[REDACTED_GITHUB_TOKEN_1]` and did not contain the raw token. No complete token appeared in any response body or the temporary SQLite database and WAL/other sidecar bytes. The host Wfuzz 3.1.0 review and its other installed checks passed after this addition. This tests one supported token shape and one stream; unknown formats, partial-fragment leakage to a caller, and process-memory exposure remain outside the claim.
+
+
+## Installed handler saturation follow-up, 2026-10-19
+
+After the Wfuzz sweeps, the fresh-installed server review held exactly 32 loopback connections at partial HTTP headers, matching the configured handler cap. One authenticated `ping` received 503. After closing those sockets, a new authenticated `ping` returned 200. The held connections lasted under five seconds and the review closed them in a `finally` block. This is one bounded saturation/recovery observation, not a sustained flood, CPU/RSS profile, or proof that an upstream proxy cannot exhaust its own resources.
