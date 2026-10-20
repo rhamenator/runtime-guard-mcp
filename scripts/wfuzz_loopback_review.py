@@ -45,6 +45,17 @@ def handler_saturation_review(port: int, token: str) -> None:
         time.sleep(0.2)
         if status(port, token) != 503:
             raise AssertionError("installed server did not reject an excess handler")
+        body = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
+        for connection in held:
+            try:
+                connection.sendall(("Authorization: Bearer " + token + "\r\nContent-Type: application/json\r\nContent-Length: " + str(len(body)) + "\r\n\r\n").encode() + body)
+                response = http.client.HTTPResponse(connection)
+                response.begin()
+                raw = response.read()
+                if response.status != 200 or json.loads(raw).get("result") != {}:
+                    raise AssertionError("a held connection did not acquire a handler slot")
+            except (OSError, http.client.HTTPException) as error:
+                raise AssertionError("a held connection was rejected or closed") from error
     finally:
         for connection in held:
             connection.close()
