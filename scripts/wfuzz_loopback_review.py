@@ -34,6 +34,41 @@ def status(port: int, token: str | None) -> int:
     return request(port, token)[0]
 
 
+def handler_saturation_review(port: int, token: str) -> None:
+    # This is the advertised installed-server handler cap, not an unbounded load test.
+    held: list[socket.socket] = []
+    try:
+        for _ in range(32):
+            connection = socket.create_connection(("127.0.0.1", port), timeout=2)
+            held.append(connection)
+            connection.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n")
+        time.sleep(0.2)
+        if status(port, token) != 503:
+            raise AssertionError("installed server did not reject an excess handler")
+        body = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
+        for connection in held:
+            try:
+                connection.sendall(("Authorization: Bearer " + token + "\r\nContent-Type: application/json\r\nContent-Length: " + str(len(body)) + "\r\n\r\n").encode() + body)
+                response = http.client.HTTPResponse(connection)
+                response.begin()
+                raw = response.read()
+                if response.status != 200 or json.loads(raw).get("result") != {}:
+                    raise AssertionError("a held connection did not acquire a handler slot")
+            except (OSError, http.client.HTTPException) as error:
+                raise AssertionError("a held connection was rejected or closed") from error
+    finally:
+        for connection in held:
+            connection.close()
+    for _ in range(50):
+        try:
+            if status(port, token) == 200:
+                return
+        except OSError:
+            pass
+        time.sleep(0.02)
+    raise AssertionError("installed server did not recover after handler saturation")
+
+
 def secret_stream_review(port: int, token: str, audit: Path) -> None:
     synthetic = "ghp_" + "A" * 24
     emitted: list[str] = []
@@ -160,11 +195,12 @@ def run(executable: str, wfuzz: str) -> dict:
                     raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
+            handler_saturation_review(port, token)
             secret_stream_review(port, token, root / "audit.sqlite")
             audit_fail_closed(port, token, root / "audit.sqlite")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after audit tamper")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
