@@ -32,8 +32,13 @@ jobs:
         run: PYTHONPATH=src python -m unittest discover -s tests -q
       - name: Probe live HTTP security boundary
         run: PYTHONPATH=src python scripts/live_adversarial_test.py
-      - name: Build wheel and source archive
+      - name: Build wheel
         run: python -m pip wheel --no-deps . -w dist
+      - name: Probe freshly installed wheel over stdio
+        run: |
+          python -m venv "$RUNNER_TEMP/runtime-guard-client"
+          "$RUNNER_TEMP/runtime-guard-client/bin/python" -m pip install --no-deps dist/*.whl
+          timeout 20s python scripts/client_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Check repository hygiene
         run: |
           git diff --check
