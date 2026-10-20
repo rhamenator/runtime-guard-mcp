@@ -84,6 +84,14 @@ def run() -> dict:
             else:
                 raise AssertionError("server did not become ready")
             expect("unauthenticated", status, 401, results)
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+            try:
+                connection.request("SYNTHETIC_PRIVATE_MARKER", "/mcp")
+                rejected = connection.getresponse()
+                raw_error = rejected.read()
+                expect("HTTP error excludes request data", (rejected.status, rejected.getheader("Content-Type"), json.loads(raw_error)), (501, "application/json", {"error": "Not Implemented"}), results)
+            finally:
+                connection.close()
             if shutil.which("nmap"):
                 scan = subprocess.run(["nmap", "-sT", "-Pn", "-p", str(port), "127.0.0.1"], capture_output=True, text=True, timeout=15, check=True)
                 expect("loopback nmap port", any(line.startswith(f"{port}/tcp") and " open " in line for line in scan.stdout.splitlines()), True, results)
