@@ -1,4 +1,5 @@
 import json
+import http.client
 import os
 import subprocess
 import sys
@@ -107,6 +108,29 @@ class ProtocolTests(unittest.TestCase):
             else:
                 self.fail("HTTP server did not start")
             self.assertEqual(len(body["result"]["tools"]), 4)
+            marker = b"SYNTHETIC_PRIVATE_MARKER"
+            for wire, expected in (
+                (marker + b" /mcp HTTP/1.1\r\nHost: localhost\r\n\r\n", 501),
+                (b"POST /mcp HTTP/" + marker + b"\r\nHost: localhost\r\n\r\n", 400),
+                (b"POST /mcp HTTP/1.1\r\nHost: localhost\r\nX-Test: " + marker + b"x" * 65536 + b"\r\n\r\n", 431),
+            ):
+                with self.subTest(expected=expected):
+                    with socket.create_connection(("127.0.0.1", port), timeout=2) as connection:
+                        connection.sendall(wire)
+                        reply = http.client.HTTPResponse(connection)
+                        reply.begin()
+                        raw = reply.read()
+                        self.assertEqual(reply.status, expected)
+                        self.assertEqual(reply.getheader("Content-Type"), "application/json")
+                        self.assertNotIn(marker, raw)
+                        self.assertEqual(set(json.loads(raw)), {"error"})
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+            try:
+                connection.request("HEAD", "/mcp")
+                reply = connection.getresponse()
+                self.assertEqual((reply.status, reply.read()), (501, b""))
+            finally:
+                connection.close()
             denied = Request(url, data=b'{"jsonrpc":"2.0","id":2,"method":"ping"}', headers={"Origin": "https://evil.example"})
             with self.assertRaises(HTTPError) as error:
                 urlopen(denied, timeout=1)

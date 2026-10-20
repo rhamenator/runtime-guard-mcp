@@ -106,3 +106,8 @@ The installed-endpoint review sent a synthetic `ghp_`-shaped token one character
 ## Installed handler saturation follow-up, 2026-10-19
 
 After the Wfuzz sweeps, the fresh-installed server review held exactly 32 loopback connections at partial HTTP headers, matching the configured handler cap. One authenticated `ping` received 503. The strengthened probe then completed every held request and required all 32 to return a successful `ping`, proving those connections acquired slots rather than receiving unnoticed 503 responses. After closing those sockets, a new authenticated `ping` returned 200. A regression check confirms the probe rejects a one-slot server and accepts a 32-slot server. The held connections lasted under five seconds and the review closed them in a `finally` block. This is one bounded saturation/recovery observation, not a sustained flood, CPU/RSS profile, or proof that an upstream proxy cannot exhaust its own resources.
+
+
+## HTTP diagnostic reflection follow-up, 2026-10-20
+
+A synthetic private marker used as an unsupported HTTP method returned 501 with generic JSON, without the request marker. Focused process tests also checked malformed HTTP versions and an overlong header (400/431), followed by valid MCP recovery, plus bodyless HEAD errors. The live probe reports 44 checks when Nmap is available. This prevents reflection through the standard handler diagnostic; it does not sanitize content intentionally returned by tools.

@@ -247,6 +247,13 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
         def log_message(self, _format: str, *_args: Any) -> None:
             pass
 
+        def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
+            # BaseHTTPRequestHandler's diagnostic can contain untrusted request data.
+            self.close_connection = True
+            if self.request_version == "HTTP/0.9":
+                self.request_version = "HTTP/1.0"
+            self._json(code, {"error": self.responses.get(code, ("HTTP error",))[0]})
+
         def _json(self, status: int, payload: dict[str, Any] | None) -> None:
             raw = json.dumps(payload, separators=(",", ":")).encode() if payload is not None else b""
             try:
@@ -254,7 +261,7 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(raw)))
                 self.end_headers()
-                if raw:
+                if raw and self.command != "HEAD":
                     self.wfile.write(raw)
             except OSError:
                 # A peer may disconnect, including when the absolute deadline closes it.
