@@ -38,6 +38,8 @@ jobs:
         run: |
           python -m venv "$RUNNER_TEMP/runtime-guard-client"
           "$RUNNER_TEMP/runtime-guard-client/bin/python" -m pip install --no-deps dist/*.whl
+          "$RUNNER_TEMP/runtime-guard-client/bin/python" -I -c 'from importlib.metadata import requires; requirements = requires("runtime-guard-mcp") or []; assert not requirements, f"Runtime dependencies need a documented security justification and CI policy update: {requirements}"'
+          "$RUNNER_TEMP/runtime-guard-client/bin/python" -m pip check
           timeout 20s python scripts/client_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Check repository hygiene
         run: |
