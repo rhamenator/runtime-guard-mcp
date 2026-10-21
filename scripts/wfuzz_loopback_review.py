@@ -16,6 +16,19 @@ import subprocess
 import sys
 import tempfile
 import time
+from typing import Callable
+
+
+def process_resources(pid: int, proc_root: Path = Path("/proc")) -> dict:
+    if not proc_root.is_dir():
+        return {"status": "unavailable", "reason": "procfs is not mounted"}
+    process = proc_root / str(pid)
+    fields = {}
+    for line in (process / "status").read_text().splitlines():
+        key, _, value = line.partition(":")
+        if key in {"VmRSS", "VmHWM", "Threads"}:
+            fields[key] = int(value.split()[0])
+    return {"status": "measured", "rss_kib": fields["VmRSS"], "peak_rss_kib": fields["VmHWM"], "threads": fields["Threads"], "file_descriptors": len(list((process / "fd").iterdir()))}
 
 
 def request(port: int, token: str | None, body: bytes = b'{"jsonrpc":"2.0","id":1,"method":"ping"}') -> tuple[int, bytes]:
@@ -79,7 +92,7 @@ def command_injection_review(port: int, token: str, workspace: Path) -> None:
             raise AssertionError("command review changed a fixture")
 
 
-def handler_saturation_review(port: int, token: str) -> None:
+def handler_saturation_review(port: int, token: str, observe: Callable[[], None] | None = None) -> None:
     # This is the advertised installed-server handler cap, not an unbounded load test.
     held: list[socket.socket] = []
     try:
@@ -97,6 +110,8 @@ def handler_saturation_review(port: int, token: str) -> None:
             response.read()
             if response.status != 503:
                 raise AssertionError("installed server did not reject an excess handler")
+        if observe is not None:
+            observe()
         body = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
         for connection in held:
             try:
@@ -200,6 +215,8 @@ def run(executable: str, wfuzz: str) -> dict:
                     time.sleep(0.02)
             else:
                 raise AssertionError("installed server did not start")
+            time.sleep(0.05)
+            resources = {"baseline": process_resources(process.pid)}
             path_words = root / "paths.txt"
             path_words.write_text("mcp\nadmin\nmetrics\n.env\n")
             paths = {item["payload"]: item["code"] for item in sweep(wfuzz, path_words, f"http://127.0.0.1:{port}/FUZZ", ["Authorization: Bearer " + token])}
@@ -247,14 +264,17 @@ def run(executable: str, wfuzz: str) -> dict:
                     raise AssertionError("valid ping did not return an empty result")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after fuzzing")
-            handler_saturation_review(port, token)
+            handler_saturation_review(port, token, lambda: resources.update({"saturated": process_resources(process.pid)}))
             command_injection_review(port, token, root / "workspace")
             budget_exhaustion_review(port, token)
             secret_stream_review(port, token, root / "audit.sqlite")
             audit_fail_closed(port, token, root / "audit.sqlite")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after audit tamper")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "budget_exhaustion": "10 safe, 2 blocked", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
+            time.sleep(0.05)
+            resources["final"] = process_resources(process.pid)
+            resources["audit_bytes"] = sum(path.stat().st_size for path in root.glob("audit.sqlite*") if path.is_file())
+            return {"resources": resources, "status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "budget_exhaustion": "10 safe, 2 blocked", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
