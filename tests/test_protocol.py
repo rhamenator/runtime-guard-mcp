@@ -36,6 +36,17 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(self.guard.handle(call)["error"]["code"], -32602)
         self.assertEqual(self.guard.handle({"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "missing"}})["error"]["code"], -32602)
 
+    def test_invalid_ids_are_not_reflected_from_malformed_envelopes(self):
+        frames = [{"id": value, "method": 7} for value in (True, [], {"private": "synthetic-marker"})]
+        for frame in frames:
+            with self.subTest(frame=frame):
+                reply = self.guard.handle(frame)
+                self.assertEqual((reply["id"], reply["error"]["code"]), (None, -32600))
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"".join(json.dumps(frame).encode() + b"\n" for frame in frames) + b'{"jsonrpc":"2.0","id":9,"method":"ping"}\n', capture_output=True, env=dict(os.environ, PYTHONPATH="src"), timeout=5, check=True)
+        replies = [json.loads(line) for line in process.stdout.splitlines()]
+        self.assertEqual([(reply["id"], reply["error"]["code"]) for reply in replies[:-1]], [(None, -32600)] * 3)
+        self.assertEqual((replies[-1]["id"], replies[-1]["result"]), (9, {}))
+
     def test_stdio_process(self):
         env = dict(os.environ, PYTHONPATH="src")
         process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--workspace-root", "/tmp/work"], input=b'{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n', stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=5)
@@ -108,6 +119,11 @@ class ProtocolTests(unittest.TestCase):
             else:
                 self.fail("HTTP server did not start")
             self.assertEqual(len(body["result"]["tools"]), 4)
+            for invalid_id in (True, [], {"private": "synthetic-marker"}):
+                malformed = Request(url, data=json.dumps({"id": invalid_id, "method": 7}).encode(), headers={"Content-Type": "application/json"})
+                with urlopen(malformed, timeout=1) as response:
+                    reply = json.load(response)
+                self.assertEqual((reply["id"], reply["error"]["code"]), (None, -32600))
             marker = b"SYNTHETIC_PRIVATE_MARKER"
             for wire, expected in (
                 (marker + b" /mcp HTTP/1.1\r\nHost: localhost\r\n\r\n", 501),
