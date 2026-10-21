@@ -124,7 +124,9 @@ def run(server: str | None = None) -> dict:
             expect("duplicate Authorization rejection", raw_status(port, token, frame, b"Authorization: Bearer wrong\r\nContent-Type: application/json\r\n" + length_header), 400, results)
             expect("duplicate media type rejection", raw_status(port, token, frame, b"Content-Type: application/json\r\nContent-Type: text/plain\r\n" + length_header), 415, results)
             expect("framing recovery", send(port, rpc(4, "ping"), token)[0], 200, results)
-            status, response = send(port, rpc(5, "initialize", {"protocolVersion": "2025-06-18"}), token)
+            for label, params in (("missing", {}), ("capabilities", {"protocolVersion": "2025-06-18", "capabilities": []}), ("clientInfo", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": 7, "version": "1"}})):
+                expect("invalid initialize " + label, send(port, rpc(5, "initialize", params), token)[1]["error"]["code"], -32602, results)
+            status, response = send(port, rpc(5, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "probe", "version": "1"}}), token)
             expect("initialize", (status, response["result"]["protocolVersion"]), (200, "2025-06-18"), results)
             status, response = send(port, rpc(6, "tools/list"), token)
             expect("tool discovery", (status, len(response["result"]["tools"])), (200, 4), results)
