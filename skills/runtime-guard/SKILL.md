@@ -21,3 +21,5 @@ HTTP parser and unsupported-method failures return generic JSON HTTP errors with
 Invalid JSON-RPC ID types produce `-32600` with a null response ID even when the request envelope is malformed. Correct the request before retrying.
 
 Use UTF-8 JSON configuration without duplicate keys or non-finite numbers. Invalid, unreadable, or oversized configuration stops startup; correct the file before reconnecting.
+
+For JSON-RPC calls, omit `params` or send an object or array. Scalar parameters return `-32602`; tool calls require the documented object fields.

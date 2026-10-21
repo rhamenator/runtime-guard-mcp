@@ -130,6 +130,9 @@ def run() -> dict:
             for label, invalid_id in (("boolean", True), ("array", []), ("object", {"private": "synthetic-marker"})):
                 _, reply = send(port, json.dumps({"id": invalid_id, "method": 7}).encode(), token)
                 expect("malformed envelope " + label + " ID", (reply["id"], reply["error"]["code"]), (None, -32600), results)
+            for label, params in (("null", None), ("boolean", True), ("number", 7), ("string", "synthetic-marker")):
+                _, reply = send(port, json.dumps({"jsonrpc": "2.0", "id": 7, "method": "ping", "params": params}).encode(), token)
+                expect("scalar params " + label, (reply["id"], reply["error"]["code"]), (7, -32602), results)
             expect("invalid argument type", send(port, rpc(7, "tools/call", {"name": "audit_path_access", "arguments": {"path": 7}}), token)[1]["error"]["code"], -32602, results)
             expect("unknown method", send(port, rpc(8, "server/execute"), token)[1]["error"]["code"], -32601, results)
             expect("oversized request", send(port, b"x" * (MAX_MESSAGE + 1), token)[0], 413, results)

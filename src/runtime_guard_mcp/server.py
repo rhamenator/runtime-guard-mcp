@@ -184,6 +184,8 @@ class RuntimeGuard:
             return rpc_error(identifier, -32600, "Invalid Request")
         if "id" not in message:
             return None
+        if "params" in message and not isinstance(message["params"], (dict, list)):
+            return rpc_error(identifier, -32602, "Invalid params")
         method = message["method"]
         if method == "initialize":
             result = {"protocolVersion": PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "runtime-guard-mcp", "version": __version__}}

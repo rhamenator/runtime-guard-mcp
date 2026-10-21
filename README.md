@@ -34,7 +34,7 @@ Copy [the config example](runtime-guard.example.json), set `RUNTIME_GUARD_CONFIG
 | `budget_guard` | Caller-wide token, payload, command, and loop budget | Agents must report usage; this does not meter other tools automatically |
 | `secret_masker` | Text with stable `[REDACTED_*]` placeholders | Signature based; unknown formats can remain unmasked |
 
-Blocked tool calls return an MCP tool result with `isError: true`, structured JSON, and a text fallback. Protocol errors use JSON-RPC errors. Invalid ID types return `-32600` with a null response ID, including malformed request envelopes. Both transports require UTF-8 JSON and return `-32700` for duplicate object keys, non-finite numbers, more than 64 levels of nesting, or more than 8192 structural markers outside strings. [Tool declarations](schemas/tools.json) include input and output schemas.
+Blocked tool calls return an MCP tool result with `isError: true`, structured JSON, and a text fallback. Protocol errors use JSON-RPC errors. When `params` is present it must be an object or array; scalar values return `-32602`. Invalid ID types return `-32600` with a null response ID, including malformed request envelopes. Both transports require UTF-8 JSON and return `-32700` for duplicate object keys, non-finite numbers, more than 64 levels of nesting, or more than 8192 structural markers outside strings. [Tool declarations](schemas/tools.json) include input and output schemas.
 
 ## Test
 
