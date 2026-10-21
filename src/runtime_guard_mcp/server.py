@@ -1,4 +1,4 @@
-"""Small MCP server with stdio and local Streamable HTTP transports."""
+"""Advisory MCP server with stdio and legacy JSON-RPC-over-HTTP transports."""
 
 from __future__ import annotations
 
@@ -7,12 +7,13 @@ import hmac
 import json
 import math
 import os
+import queue
 import socket
 import sqlite3
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import BoundedSemaphore, Timer
+from threading import BoundedSemaphore, Event, Lock, Thread, Timer
 from typing import Any
 from urllib.parse import urlparse
 
@@ -21,6 +22,9 @@ from .audit import AuditIntegrityError, AuditLog
 from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
 
 PROTOCOL_VERSION = "2025-06-18"
+MODERN_VERSION = "2026-07-28"
+META_PREFIX = "io.modelcontextprotocol/"
+MAX_STDIO_REQUESTS = 32
 MAX_MESSAGE = 1_048_576
 MAX_JSON_DEPTH = 64
 MAX_JSON_STRUCTURE_TOKENS = 8192
@@ -150,6 +154,20 @@ def parse_json_request(raw: bytes) -> Any:
     return json.loads(source, object_pairs_hook=unique_object, parse_float=finite_float, parse_constant=reject_constant)
 
 
+def valid_meta_key(key: str) -> bool:
+    """Validate metadata names in linear time without backtracking regexes."""
+    if not key.isascii():
+        return False
+    prefix, separator, name = key.rpartition("/")
+    if separator:
+        for label in prefix.split("."):
+            if not label or not label[0].isalpha() or not label[-1].isalnum() or any(not (char.isalnum() or char == "-") for char in label):
+                return False
+    else:
+        name = key
+    return not name or (name[0].isalnum() and name[-1].isalnum() and all(char.isalnum() or char in "-_." for char in name))
+
+
 class RuntimeGuard:
     def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None):
         self.workspace_root = str(Path(workspace_root).expanduser().resolve(strict=False))
@@ -177,7 +195,7 @@ class RuntimeGuard:
                 result = verdict("BLOCKED", "AUDIT_UNAVAILABLE", "Restore audit integrity and storage before using this server.")
         return {"content": [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}], "structuredContent": result, "isError": result["status"] == "BLOCKED"}
 
-    def handle(self, message: Any, caller: str = "local") -> dict[str, Any] | None:
+    def handle(self, message: Any, caller: str = "local", modern_stdio: bool = False) -> dict[str, Any] | None:
         identifier = message.get("id") if isinstance(message, dict) else None
         if type(identifier) not in {str, int, float, type(None)} or (type(identifier) is float and not math.isfinite(identifier)):
             return rpc_error(None, -32600, "Invalid Request")
@@ -191,7 +209,35 @@ class RuntimeGuard:
         if "_meta" in params and not isinstance(params["_meta"], dict):
             return rpc_error(identifier, -32602, "Invalid request metadata")
         method = message["method"]
-        if method == "initialize":
+        meta = params.get("_meta", {})
+        modern = any(key.startswith(META_PREFIX) for key in meta) or method == "server/discover"
+        if modern:
+            if not isinstance(meta.get(META_PREFIX + "protocolVersion"), str) or not isinstance(meta.get(META_PREFIX + "clientCapabilities"), dict):
+                return rpc_error(identifier, -32602, "Missing or invalid per-request protocol metadata")
+            version = meta[META_PREFIX + "protocolVersion"]
+            if version != MODERN_VERSION or not modern_stdio:
+                response = rpc_error(identifier, -32022, "Unsupported protocol version")
+                response["error"]["data"] = {"supported": [MODERN_VERSION, PROTOCOL_VERSION] if modern_stdio else [PROTOCOL_VERSION], "requested": version}
+                return response
+            if type(identifier) not in {str, int}:
+                return rpc_error(None, -32600, "Invalid Request")
+            client = meta.get(META_PREFIX + "clientInfo")
+            if META_PREFIX + "clientInfo" in meta and (not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version"))):
+                return rpc_error(identifier, -32602, "Invalid client implementation")
+            capabilities = meta[META_PREFIX + "clientCapabilities"]
+            if any(not isinstance(value, dict) for value in capabilities.values()):
+                return rpc_error(identifier, -32602, "Invalid client capabilities")
+            if META_PREFIX + "logLevel" in meta and meta[META_PREFIX + "logLevel"] not in ("debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"):
+                return rpc_error(identifier, -32602, "Invalid log level")
+            if "progressToken" in meta and type(meta["progressToken"]) not in {str, int, float}:
+                return rpc_error(identifier, -32602, "Invalid progress token")
+            if any(not valid_meta_key(key) for key in meta):
+                return rpc_error(identifier, -32602, "Invalid metadata key")
+        if method == "server/discover":
+            result = {"supportedVersions": [MODERN_VERSION, PROTOCOL_VERSION], "capabilities": {"tools": {}}, "ttlMs": 0, "cacheScope": "private"}
+        elif method == "initialize":
+            if modern:
+                return rpc_error(identifier, -32601, "Modern requests use server/discover")
             params = message.get("params")
             if not isinstance(params, dict) or not isinstance(params.get("protocolVersion"), str) or not isinstance(params.get("capabilities"), dict):
                 return rpc_error(identifier, -32602, "Invalid initialize parameters")
@@ -203,6 +249,9 @@ class RuntimeGuard:
             result = {}
         elif method == "tools/list":
             result = {"tools": [tool for tool in TOOLS if tool["name"] in self.enabled_tools]}
+            if modern:
+                result["tools"].sort(key=lambda tool: tool["name"])
+                result.update(ttlMs=0, cacheScope="private")
         elif method == "tools/call":
             params = message.get("params")
             if not isinstance(params, dict) or not isinstance(params.get("name"), str) or not isinstance(params.get("arguments", {}), dict):
@@ -226,27 +275,109 @@ class RuntimeGuard:
                 return rpc_error(identifier, -32602, "Invalid tool arguments")
         else:
             return rpc_error(identifier, -32601, "Method not found")
+        if modern:
+            result = {**result, "resultType": "complete", "_meta": {META_PREFIX + "serverInfo": {"name": "runtime-guard-mcp", "version": __version__}}}
         return {"jsonrpc": "2.0", "id": identifier, "result": result}
 
 
-def serve_stdio(guard: RuntimeGuard) -> None:
-    while True:
-        line = sys.stdin.buffer.readline(MAX_MESSAGE + 1)
-        if not line:
-            break
-        if len(line) > MAX_MESSAGE:
-            # Discard the rest of this frame in bounded pieces before parsing the next one.
-            while line and not line.endswith(b"\n"):
-                line = sys.stdin.buffer.readline(65536)
-            response = rpc_error(None, -32600, "Request too large")
-        else:
+class StdioDispatcher:
+    """One policy worker, bounded admission, and cancellation on the reader thread."""
+
+    def __init__(self, guard: RuntimeGuard, emit: Any, capacity: int = MAX_STDIO_REQUESTS):
+        self.guard, self.emit = guard, emit
+        self.pending: dict[Any, Event] = {}
+        self.initializations: set[Any] = set()
+        self.lock = Lock()
+        self.slots = BoundedSemaphore(capacity)
+        self.queue: queue.Queue = queue.Queue(maxsize=capacity)
+        self.closed = Event()
+        self.worker = Thread(target=self._run, daemon=True)
+        self.worker.start()
+
+    def submit(self, message: Any) -> None:
+        if isinstance(message, dict) and "id" not in message and message.get("jsonrpc") == "2.0" and isinstance(message.get("method"), str):
+            params = message.get("params")
+            if message.get("jsonrpc") == "2.0" and message.get("method") == "notifications/cancelled" and isinstance(params, dict) and isinstance(params.get("_meta", {}), dict):
+                identifier = params.get("requestId")
+                if type(identifier) in {str, int} and ("reason" not in params or isinstance(params["reason"], str)):
+                    with self.lock:
+                        event = self.pending.get(identifier)
+                        if event and identifier not in self.initializations:
+                            event.set()
+            return
+        identifier = message.get("id") if isinstance(message, dict) else None
+        tracked = type(identifier) in {str, int}
+        with self.lock:
+            if tracked and identifier in self.pending:
+                self.emit(rpc_error(identifier, -32600, "Request ID already in flight"))
+                return
+            if not self.slots.acquire(blocking=False):
+                self.emit(rpc_error(identifier if tracked else None, 1001, "Request capacity exceeded; retry after pending work completes"))
+                return
+            cancelled = Event()
+            if tracked:
+                self.pending[identifier] = cancelled
+                if message.get("method") == "initialize":
+                    self.initializations.add(identifier)
+            self.queue.put_nowait((message, identifier, tracked, cancelled))
+
+    def _run(self) -> None:
+        while not self.closed.is_set() or not self.queue.empty():
             try:
-                response = guard.handle(parse_json_request(line), "stdio")
-            except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
-                response = rpc_error(None, -32700, "Parse error")
-        if response is not None:
+                message, identifier, tracked, cancelled = self.queue.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            try:
+                if not cancelled.is_set():
+                    try:
+                        response = self.guard.handle(message, "stdio", modern_stdio=True)
+                    except Exception:
+                        response = rpc_error(identifier if tracked else None, -32603, "Internal error")
+                    with self.lock:
+                        if response is not None and not cancelled.is_set():
+                            self.emit(response)
+            finally:
+                with self.lock:
+                    if tracked:
+                        self.pending.pop(identifier, None)
+                        self.initializations.discard(identifier)
+                self.slots.release()
+                self.queue.task_done()
+
+    def close(self) -> None:
+        self.closed.set()
+        self.worker.join(timeout=5)
+        if self.worker.is_alive():
+            with self.lock:
+                for event in self.pending.values():
+                    event.set()
+
+
+def serve_stdio(guard: RuntimeGuard) -> None:
+    output_lock = Lock()
+
+    def emit(response: dict[str, Any]) -> None:
+        with output_lock:
             sys.stdout.write(json.dumps(response, separators=(",", ":")) + "\n")
             sys.stdout.flush()
+
+    dispatcher = StdioDispatcher(guard, emit)
+    try:
+        while True:
+            line = sys.stdin.buffer.readline(MAX_MESSAGE + 1)
+            if not line:
+                break
+            if len(line) > MAX_MESSAGE:
+                while line and not line.endswith(b"\n"):
+                    line = sys.stdin.buffer.readline(65536)
+                emit(rpc_error(None, -32600, "Request too large"))
+            else:
+                try:
+                    dispatcher.submit(parse_json_request(line))
+                except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+                    emit(rpc_error(None, -32700, "Parse error"))
+    finally:
+        dispatcher.close()
 
 
 def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None) -> None:

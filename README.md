@@ -43,3 +43,21 @@ PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
 
 See [release quality gates](docs/QUALITY_BAR.md), [contributing](CONTRIBUTING.md), [security reporting](SECURITY.md), [support](SUPPORT.md), [the changelog](CHANGELOG.md), and [architecture and roadmap](docs/architecture.md), [security model](docs/security.md), and the [draft agent skill](skills/runtime-guard/SKILL.md). The skill is for client integration after the user has configured this server; it does not grant permission for tool execution.
+
+## MCP 2026 stdio and cancellation
+
+Stdio accepts MCP `2026-07-28` requests with per-request metadata, alongside legacy `2025-06-18` initialization. Start the server normally; modern clients do not initialize first. Every modern request needs:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"server/discover","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{}}}}
+```
+
+`server/discover` reports versions and tools capability. Modern successful replies include `resultType: "complete"` and server information; discovery and tool lists have private, immediately stale cache hints. Unknown versions return `-32022` with supported versions; incomplete metadata returns `-32602`. Capabilities and client identity are not inherited or used as authentication. Modern tool lists sort by name. Legacy tools and SDK initialization remain available.
+
+Cancel an outstanding stdio request with `{"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":1}}`. Queued work is skipped; cancelled in-flight replies are suppressed. Running policy work finishes without forced interruption, and completed budget reservations, masker updates or audit writes are not rolled back. Malformed, unknown and late cancellations are ignored. Legacy initialization cannot be cancelled.
+
+Stdio admits at most 32 outstanding requests, including running work, with one policy worker. Overload returns application error `1001`; retry after outstanding work completes. Cancellation processing does not queue behind policy work. On input EOF, admitted work has up to five seconds to drain before remaining replies are suppressed and the process exits. A client that stops reading output can still stall writes: this is not a complete I/O exhaustion guarantee.
+
+The HTTP endpoint remains legacy JSON-RPC over HTTP and rejects modern metadata with `-32022`; modern HTTP, full conformance, broader modern coding-client validation and sustained resource evidence remain release gates. These changes add no permissions or runtime dependencies. Run `python3 scripts/modern_stdio_smoke.py /path/to/runtime-guard-mcp` against a fresh installation.
+
+The optional official Python SDK probe supports both eras: run `python3 scripts/official_sdk_smoke.py /path/to/runtime-guard-mcp --modern` in the separate `mcp==2.3.0` client environment. Omitting the flag runs legacy initialization. CI runs both against the dependency-free installed server.
