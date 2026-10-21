@@ -20,6 +20,11 @@ class AuditLog:
         self._db.execute("PRAGMA journal_mode=WAL")
         self._db.execute("CREATE TABLE IF NOT EXISTS decisions (time_utc INTEGER NOT NULL, caller_hash TEXT NOT NULL, tool TEXT NOT NULL, status TEXT NOT NULL, rule TEXT NOT NULL, prev_hash TEXT, content_hash TEXT)")
         columns = {row[1] for row in self._db.execute("PRAGMA table_info(decisions)")}
+        hash_columns = columns & {"prev_hash", "content_hash"}
+        if len(hash_columns) == 1:
+            self._db.close()
+            raise AuditIntegrityError("Incomplete audit hash schema")
+        legacy = not hash_columns
         for column in ("prev_hash", "content_hash"):
             if column not in columns:
                 self._db.execute(f"ALTER TABLE decisions ADD COLUMN {column} TEXT")
@@ -27,7 +32,7 @@ class AuditLog:
         previous = "0" * 64
         for row in self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, content_hash FROM decisions ORDER BY rowid").fetchall():
             rowid, timestamp, caller, tool, status, rule, current_hash = row
-            if current_hash is None:
+            if legacy:
                 current_hash = self._hash(previous, timestamp, caller, tool, status, rule)
                 self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
             previous = current_hash
