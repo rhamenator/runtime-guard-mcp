@@ -121,3 +121,8 @@ Authenticated HTTP probes sent malformed envelopes with boolean, array, and obje
 ## Installed command-input follow-up, 2026-10-20
 
 The fresh-installed HTTP review submitted three command strings targeting only temporary fixtures. An instruction-like prefix followed by recursive deletion and a `.env` read returned `BLOCKED`; `find -delete` returned the documented `NEEDS_CONFIRMATION`. Structured and text results agreed, fixture contents remained unchanged after each call, and no synthetic private file content appeared in responses. This checks a fixed corpus and observable fixture preservation, not semantic shell safety or containment of other agent tools.
+
+
+## Installed budget exhaustion follow-up, 2026-10-20
+
+The installed review configured a ten-token hourly budget and sent twelve one-token reservations through authenticated HTTP. Exactly ten returned `SAFE` / `WITHIN_BUDGET`, with remaining counts descending to zero. The final two returned `BLOCKED` / `TOKENS_BUDGET` with zero remaining; structured and text results matched. This is a serial single-process budget check, not independent metering of an agent, sustained load, or restart-persistence evidence.
