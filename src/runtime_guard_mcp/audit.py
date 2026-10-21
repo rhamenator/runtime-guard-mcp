@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import closing
 import hashlib
 import json
 import sqlite3
@@ -30,12 +31,12 @@ class AuditLog:
                 self._db.execute(f"ALTER TABLE decisions ADD COLUMN {column} TEXT")
         # Backfill older local audits so subsequent appends have a chain anchor.
         previous = "0" * 64
-        for row in self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, content_hash FROM decisions ORDER BY rowid").fetchall():
-            rowid, timestamp, caller, tool, status, rule, current_hash = row
-            if legacy:
-                current_hash = self._hash(previous, timestamp, caller, tool, status, rule)
-                self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
-            previous = current_hash
+        with closing(self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, content_hash FROM decisions ORDER BY rowid")) as rows:
+            for rowid, timestamp, caller, tool, status, rule, current_hash in rows:
+                if legacy:
+                    current_hash = self._hash(previous, timestamp, caller, tool, status, rule)
+                    self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
+                previous = current_hash
         self._db.commit()
         if not self.verify_integrity()["valid"]:
             self._db.close()
@@ -71,11 +72,15 @@ class AuditLog:
                 raise
 
     def verify_integrity(self) -> dict[str, int | bool | None]:
+        # Keep the scan and hash checks within the writer lock, without retaining
+        # the table in Python memory. Closing the cursor also releases early exits.
         with self._lock:
-            rows = self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, prev_hash, content_hash FROM decisions ORDER BY rowid").fetchall()
-        previous = "0" * 64
-        for index, (rowid, timestamp, caller, tool, status, rule, prev_hash, content_hash) in enumerate(rows):
-            if prev_hash != previous or content_hash != self._hash(previous, timestamp, caller, tool, status, rule):
-                return {"valid": False, "records_checked": index, "failed_rowid": rowid}
-            previous = content_hash
-        return {"valid": True, "records_checked": len(rows), "failed_rowid": None}
+            with closing(self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, prev_hash, content_hash FROM decisions ORDER BY rowid")) as rows:
+                previous = "0" * 64
+                checked = 0
+                for rowid, timestamp, caller, tool, status, rule, prev_hash, content_hash in rows:
+                    if prev_hash != previous or content_hash != self._hash(previous, timestamp, caller, tool, status, rule):
+                        return {"valid": False, "records_checked": checked, "failed_rowid": rowid}
+                    previous = content_hash
+                    checked += 1
+                return {"valid": True, "records_checked": checked, "failed_rowid": None}
