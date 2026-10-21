@@ -17,7 +17,9 @@ async def probe(executable: str) -> None:
     with tempfile.TemporaryDirectory(prefix="runtime-guard-sdk-") as workspace:
         env = {**os.environ, "RUNTIME_GUARD_WORKSPACE_ROOT": workspace}
         env.pop("RUNTIME_GUARD_CONFIG", None)
-        parameters = StdioServerParameters(command=executable, env=env)
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+        parameters = StdioServerParameters(command=executable, env=env, cwd=workspace)
         async with stdio_client(parameters) as (reader, writer):
             async with ClientSession(reader, writer) as session:
                 initialized = await session.initialize()
