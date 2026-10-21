@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-21",
+  "server_revision": "7e2f209",
+  "wheel_sha256": "2ce6b1bdba0d0793a2e01869587d04aef02dcceb9d841c4d235802a8f62a9a55",
+  "client": "Cursor CLI 2026.10.19-6bbf2c4",
+  "transport": "stdio via Cursor ACP",
+  "status": "PASS",
+  "discovered_tools": [
+    "audit_path_access",
+    "dry_run_command",
+    "budget_guard",
+    "secret_masker"
+  ],
+  "audited_decisions": [
+    "SAFE/READ_ONLY_COMMAND",
+    "BLOCKED/RECURSIVE_DELETE"
+  ],
+  "sentinel": "unchanged",
+  "permission_requests": 2,
+  "rejected_other_permissions": 0,
+  "limits": [
+    "terminal UI untested",
+    "cancellation untested",
+    "advisory tools only"
+  ]
+}
