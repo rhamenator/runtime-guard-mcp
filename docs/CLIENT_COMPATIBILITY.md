@@ -1,6 +1,6 @@
 # Client interoperability evidence
 
-This records verified behavior for the installed server at revision `58cc1b7` and the CLI versions noted below. The server is advisory and is not yet a stable release.
+This records versioned observations for installed server revisions and CLI versions noted below. The server is advisory and is not yet a stable release.
 
 ## Reproduce the fresh install
 
@@ -54,6 +54,26 @@ codex exec --ignore-user-config --ephemeral --skip-git-repo-check \
 
 The `mcp_tool_call` event had `status: completed`, `error: null`, and `structured_content` containing `status: SAFE`, `rule: READ_ONLY_COMMAND`, and `remediation: No remediation needed.` The approval option was used only for this bounded smoke test; normal client integrations should use their intended permission review policy. This does not establish that Codex automatically intercepts shell commands or enforces the advisory verdict.
 
+## Cursor CLI 2026.10.19-6bbf2c4
+
+On 2026-10-21, an authenticated Cursor CLI discovered all four tools from a wheel built at server revision `7e2f209`. A temporary ACP session then exposed only `dry_run_command` and completed exactly two inspections. The independent SQLite audit recorded `SAFE` / `READ_ONLY_COMMAND` and `BLOCKED` / `RECURSIVE_DELETE`; a temporary sentinel remained unchanged. Two tool permission requests were approved. The sanitized [evidence record](evidence/cursor-cli-2026-10-21.json) pins the wheel digest.
+
+For a normal installation, create a project-local `.cursor/mcp.json` after installing the server:
+
+```json
+{"mcpServers":{"runtime_guard":{"command":"/path/to/venv/bin/runtime-guard-mcp","env":{"RUNTIME_GUARD_WORKSPACE_ROOT":"/path/to/project"}}}}
+```
+
+From that project directory, run `agent mcp enable runtime_guard` and `agent mcp list-tools runtime_guard`. Use the existing Cursor login, or run `agent login` if needed; never put account credentials into project files. Cursor account/model usage may incur service costs independently of this server. Keep normal tool permission review enabled.
+
+To reproduce the bounded authenticated ACP probe on Linux:
+
+```bash
+python3 scripts/cursor_client_smoke.py --server /path/to/venv/bin/runtime-guard-mcp --client /path/to/agent
+```
+
+The script creates and removes a temporary project and audit store, uses existing account authentication, and requests one agent turn with two synthetic inspections. Its ACP permission handler allows once only for permission titles containing `dry_run_command` and rejects other requests. It does not use a global force-allow option. The ACP phase has a 90-second deadline; discovery/setup have separate short timeouts. It prints only sanitized results and terminates its isolated process group. This is an optional authenticated host probe, not CI. Terminal UI, cancellation propagation, and whole-agent enforcement are not established.
+
 ## Limits
 
-Claude Code and Codex each completed one local stdio call with explicit tool permission. Cursor CLI is unavailable on this host. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
+Claude Code and Codex each completed one local stdio call with explicit tool permission. Cursor CLI completed discovery and two ACP-driven stdio calls as described above; terminal UI and cancellation remain unverified. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
