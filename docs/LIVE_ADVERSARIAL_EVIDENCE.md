@@ -170,3 +170,8 @@ The authenticated HTTP probe rejected a same-length token differing in its final
 ## Installed live-probe CI gate, 2026-10-21
 
 The full live adversarial probe now accepts an installed executable and uses it for every child launch. A host run passed all 55 checks against a fresh wheel, including authenticated HTTP boundaries, secret streaming, handler saturation, stdio oversized-frame recovery, and refusal to restart with a damaged audit. Children ran from a temporary directory with source-path environment overrides cleared. CI runs the same installed mode on Python 3.11 through 3.14 under a 40-second deadline. Nmap remains optional, and this does not replace the separate Wfuzz review or human release gate.
+
+
+## Official SDK adversarial workflow, 2026-10-21
+
+Official Python SDK 2.3.0 drove a fresh installed stdio server through discovery and safe calls, then path escape and instruction-like recursive deletion against temporary fixtures. Both returned error-marked blocked tool results with matching structured/text content. Three one-token reservations with different session IDs exhausted a two-token caller budget: two safe, then `TOKENS_BUDGET`. A synthetic GitHub-shaped token was replaced by its placeholder, absent from returned text and audit database/sidecar bytes. The sentinel remained unchanged. This fixed-corpus SDK check runs in Python 3.12 CI; it does not prove whole-agent interception or complete prompt-injection resistance.
