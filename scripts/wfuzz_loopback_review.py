@@ -35,6 +35,23 @@ def status(port: int, token: str | None) -> int:
     return request(port, token)[0]
 
 
+def budget_exhaustion_review(port: int, token: str) -> None:
+    for index in range(12):
+        call = json.dumps({"jsonrpc": "2.0", "id": 300 + index, "method": "tools/call", "params": {"name": "budget_guard", "arguments": {"session_id": "installed-budget", "tokens": 1, "consume": True}}}).encode()
+        http_status, raw = request(port, token, call)
+        tool = json.loads(raw)["result"]
+        expected = "SAFE" if index < 10 else "BLOCKED"
+        if (http_status, tool["isError"], tool["structuredContent"]["status"]) != (200, expected == "BLOCKED", expected):
+            raise AssertionError("installed budget did not enforce its ten-token limit")
+        if json.loads(tool["content"][0]["text"]) != tool["structuredContent"]:
+            raise AssertionError("installed budget result formats disagree")
+        verdict = tool["structuredContent"]
+        expected_rule = "WITHIN_BUDGET" if index < 10 else "TOKENS_BUDGET"
+        remaining = verdict["remaining"]["tokens"] if index < 10 else verdict["remaining"]
+        if verdict["rule"] != expected_rule or remaining != max(0, 9 - index):
+            raise AssertionError("installed budget returned an incorrect rule or remaining count")
+
+
 def command_injection_review(port: int, token: str, workspace: Path) -> None:
     sentinel = workspace / "sentinel.txt"
     sensitive = workspace / ".env"
@@ -155,7 +172,7 @@ def run(executable: str, wfuzz: str) -> dict:
         root = Path(temporary)
         (root / "workspace").mkdir()
         config = root / "config.json"
-        config.write_text(json.dumps({"workspace_root": str(root / "workspace"), "audit_db": str(root / "audit.sqlite")}))
+        config.write_text(json.dumps({"workspace_root": str(root / "workspace"), "audit_db": str(root / "audit.sqlite"), "token_hour": 10}))
         with socket.socket() as reservation:
             reservation.bind(("127.0.0.1", 0))
             port = reservation.getsockname()[1]
@@ -221,11 +238,12 @@ def run(executable: str, wfuzz: str) -> dict:
                 raise AssertionError("server did not recover after fuzzing")
             handler_saturation_review(port, token)
             command_injection_review(port, token, root / "workspace")
+            budget_exhaustion_review(port, token)
             secret_stream_review(port, token, root / "audit.sqlite")
             audit_fail_closed(port, token, root / "audit.sqlite")
             if status(port, token) != 200:
                 raise AssertionError("server did not recover after audit tamper")
-            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
+            return {"status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "budget_exhaustion": "10 safe, 2 blocked", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
