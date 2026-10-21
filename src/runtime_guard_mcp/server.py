@@ -364,8 +364,14 @@ def main() -> None:
     args = parser.parse_args()
     config = {}
     if args.config:
-        with open(args.config, encoding="utf-8") as source:
-            config = json.load(source)
+        try:
+            with open(args.config, "rb") as source:
+                raw_config = source.read(MAX_MESSAGE + 1)
+            if len(raw_config) > MAX_MESSAGE:
+                raise ValueError("Configuration too large")
+            config = parse_json_request(raw_config)
+        except (OSError, ValueError, UnicodeDecodeError):
+            parser.error("Cannot read config: use valid UTF-8 JSON without duplicate keys or non-finite numbers, within the request size and structure limits")
         if not isinstance(config, dict) or set(config) - {"workspace_root", "allowed_roots", "enabled_tools", "token_hour", "payload_hour", "commands_minute", "audit_db"}:
             parser.error("Invalid config keys")
         for key in ("token_hour", "payload_hour", "commands_minute"):

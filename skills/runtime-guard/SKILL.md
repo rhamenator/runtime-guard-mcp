@@ -19,3 +19,5 @@ Treat `BLOCKED` as a stop for the proposed action and report its rule and remedi
 HTTP parser and unsupported-method failures return generic JSON HTTP errors without reflecting request data. Treat them as transport failures; HEAD error responses omit the body.
 
 Invalid JSON-RPC ID types produce `-32600` with a null response ID even when the request envelope is malformed. Correct the request before retrying.
+
+Use UTF-8 JSON configuration without duplicate keys or non-finite numbers. Invalid, unreadable, or oversized configuration stops startup; correct the file before reconnecting.

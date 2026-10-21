@@ -17,3 +17,5 @@ Both stdio and HTTP decode requests as UTF-8 JSON. Duplicate object keys, non-fi
 Stdio reads at most 1 MiB plus one byte before deciding whether a line is oversized, then drains the rest in 64 KiB pieces and returns one controlled error. It does not parse the remainder as additional requests. The client still controls how fast it writes; host-level process limits remain useful for a compromised local client.
 
 HTTP parser and unsupported-method errors use generic JSON status descriptions rather than the standard handler diagnostics, which can echo request lines or methods. Error responses close the connection, and HEAD responses omit the body. These transport errors are HTTP errors rather than JSON-RPC envelopes.
+
+Configuration files use the strict bounded request JSON parser before validation. Duplicate keys cannot silently replace earlier operator settings. Invalid, unreadable, or oversized files stop startup before serving; the error does not echo file contents.
