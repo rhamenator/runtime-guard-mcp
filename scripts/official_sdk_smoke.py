@@ -16,7 +16,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 
-async def probe(executable: str) -> None:
+async def probe(executable: str, modern: bool = False) -> None:
     with tempfile.TemporaryDirectory(prefix="runtime-guard-sdk-") as workspace:
         root = Path(workspace)
         audit = root / "audit.sqlite"
@@ -31,13 +31,17 @@ async def probe(executable: str) -> None:
         parameters = StdioServerParameters(command=executable, env=env, cwd=workspace)
         async with stdio_client(parameters) as (reader, writer):
             async with ClientSession(reader, writer) as session:
-                initialized = await session.initialize()
-                assert initialized.protocol_version == "2025-06-18"
-                assert initialized.capabilities.tools is not None
+                if modern:
+                    discovered = await session.discover()
+                    assert "2026-07-28" in discovered.supported_versions
+                    assert discovered.capabilities.tools is not None
+                else:
+                    initialized = await session.initialize()
+                    assert initialized.protocol_version == "2025-06-18"
+                    assert initialized.capabilities.tools is not None
                 listed = await session.list_tools()
-                assert [tool.name for tool in listed.tools] == [
-                    "audit_path_access", "dry_run_command", "budget_guard", "secret_masker"
-                ]
+                expected = ["audit_path_access", "dry_run_command", "budget_guard", "secret_masker"]
+                assert [tool.name for tool in listed.tools] == (sorted(expected) if modern else expected)
                 for tool in listed.tools:
                     assert tool.input_schema["type"] == "object"
                     assert tool.output_schema["type"] == "object"
@@ -66,10 +70,10 @@ async def probe(executable: str) -> None:
                 assert synthetic not in masked.content[0].text
                 assert not any(synthetic.encode() in path.read_bytes() for path in root.glob("audit.sqlite*") if path.is_file())
                 assert sentinel.read_text() == "preserve fixture"
-    print("PASS: official SDK initialize, discovery, safe call, path/command rejection, cross-session budget, and secret masking")
+    print("PASS: official SDK " + ("modern" if modern else "legacy") + " discovery, safe call, path/command rejection, cross-session budget, and secret masking")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: official_sdk_smoke.py /path/to/runtime-guard-mcp")
-    anyio.run(probe, sys.argv[1])
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != "--modern"):
+        raise SystemExit("usage: official_sdk_smoke.py /path/to/runtime-guard-mcp [--modern]")
+    anyio.run(probe, sys.argv[1], len(sys.argv) == 3)
