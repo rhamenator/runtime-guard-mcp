@@ -17,8 +17,10 @@ import sys
 import tempfile
 import time
 
+from wfuzz_loopback_review import audit_contains_secret, handler_saturation_review
+
 from runtime_guard_mcp.policy import MAX_MASKER_STREAMS
-from runtime_guard_mcp.server import HTTP_CONNECTION_DEADLINE, MAX_HTTP_HANDLERS, MAX_JSON_DEPTH, MAX_JSON_STRUCTURE_TOKENS, MAX_MESSAGE
+from runtime_guard_mcp.server import HTTP_CONNECTION_DEADLINE, MAX_JSON_DEPTH, MAX_JSON_STRUCTURE_TOKENS, MAX_MESSAGE
 
 
 def rpc(identifier: object, method: str, params: dict | None = None) -> bytes:
@@ -72,7 +74,6 @@ def run() -> dict:
             port = reservation.getsockname()[1]
         environment = dict(os.environ, RUNTIME_GUARD_AUTH_TOKEN=token)
         process = subprocess.Popen([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "http", "--host", "127.0.0.1", "--port", str(port), "--config", str(config)], env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        slow: list[socket.socket] = []
         try:
             for _ in range(100):
                 try:
@@ -148,7 +149,7 @@ def run() -> dict:
             emitted.append(response["result"]["structuredContent"]["text"])
             output = "".join(emitted)
             expect("stream secret redaction", (synthetic in output, "[REDACTED_GITHUB_TOKEN_1]" in output), (False, True), results)
-            expect("audit excludes synthetic secret", synthetic.encode() in audit.read_bytes(), False, results)
+            expect("audit excludes synthetic secret", audit_contains_secret(audit, synthetic.encode()), False, results)
             for index in range(MAX_MASKER_STREAMS):
                 _, response = send(port, rpc(210 + index, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": f"stream-{index}", "chunk": "", "final": False}}), token)
                 if response["result"]["structuredContent"]["status"] != "SAFE":
@@ -158,25 +159,8 @@ def run() -> dict:
             send(port, rpc(401, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": "stream-0", "chunk": "", "final": True}}), token)
             _, response = send(port, rpc(402, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": "overflow", "chunk": "", "final": False}}), token)
             expect("masker stream recovery", response["result"]["structuredContent"]["status"], "SAFE", results)
-            for _ in range(MAX_HTTP_HANDLERS):
-                sock = socket.create_connection(("127.0.0.1", port), timeout=2)
-                sock.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n")
-                slow.append(sock)
-            time.sleep(0.2)
-            expect("handler saturation", send(port, rpc(300, "ping"), token)[0], 503, results)
-            for sock in slow:
-                sock.close()
-            slow.clear()
-            for _ in range(50):
-                try:
-                    if send(port, rpc(301, "ping"), token)[0] == 200:
-                        break
-                except OSError:
-                    pass
-                time.sleep(0.02)
-            else:
-                raise AssertionError("server did not recover after saturation")
-            results.append("recovery after saturation")
+            handler_saturation_review(port, token)
+            results.extend(("handler saturation with 32 accepted requests", "recovery after saturation"))
             with socket.create_connection(("127.0.0.1", port), timeout=2) as drip:
                 drip.settimeout(0.05)
                 drip.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer " + token.encode() + b"\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\nx")
@@ -223,8 +207,6 @@ def run() -> dict:
             expect("cleared audit hash refuses stdio restart", (restarted.returncode != 0, restarted.stdout), (True, b""), results)
             return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "ephemeral child process"}
         finally:
-            for sock in slow:
-                sock.close()
             process.terminate()
             try:
                 process.wait(timeout=5)
