@@ -32,6 +32,15 @@ class PingHandler(BaseHTTPRequestHandler):
 
 
 class InstalledReviewTests(unittest.TestCase):
+    def test_resource_snapshot_reports_kib_threads_and_descriptors(self):
+        with tempfile.TemporaryDirectory() as root:
+            process = Path(root) / "123"
+            (process / "fd").mkdir(parents=True)
+            (process / "status").write_text("Name: fixture\nVmRSS: 1024 kB\nVmHWM: 2048 kB\nThreads: 3\n")
+            (process / "fd" / "0").touch()
+            (process / "fd" / "1").touch()
+            self.assertEqual(review.process_resources(123, Path(root)), {"status": "measured", "rss_kib": 1024, "peak_rss_kib": 2048, "threads": 3, "file_descriptors": 2})
+
     def test_secret_scan_includes_uncheckpointed_sidecar_bytes(self):
         with tempfile.TemporaryDirectory() as root:
             audit = Path(root) / "audit.sqlite"

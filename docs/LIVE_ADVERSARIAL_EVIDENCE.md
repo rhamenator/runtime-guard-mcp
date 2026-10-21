@@ -143,3 +143,15 @@ The audit-tip PR's first push CI exposed an existing saturation-harness race on 
 ## CI probe alignment follow-up, 2026-10-21
 
 The source-tree live probe now shares the installed review's saturation helper and audit-byte scanner. Its 49-check run proves all 32 held requests were accepted, reads overload rejection without a multi-write POST race, and checks audit sidecars as well as the main SQLite file. A focused regression fixture puts the private marker only in a WAL-named sidecar and requires detection. The original simpler source-tree checks did not establish those stronger properties.
+
+## Installed resource snapshots, 2026-10-21
+
+The bounded installed Wfuzz review now records procfs observations for the child server at baseline, while its 32 handlers are held, and after all probes. Against the wheel built from runtime revision `4c3b26f`, the host measured:
+
+| Snapshot | RSS (KiB) | Threads | File descriptors |
+| --- | ---: | ---: | ---: |
+| Baseline | 27744 | 1 | 7 |
+| Saturated | 29508 | 65 | 39 |
+| Final | 28584 | 1 | 7 |
+
+The temporary audit database plus sidecars occupied 255256 bytes after the fixed workload. The report also includes the kernel-reported `VmHWM` at each snapshot. These are sampled observations, not a memory ceiling, a continuous peak profile, or proof of long-term leak freedom; CPU and sustained disk growth remain unmeasured. The 65 threads include the main thread, 32 request handlers, and 32 connection-deadline timers. Procfs absence is explicitly reported as unavailable. Reproduce with the installed-review command in the test plan; output contains no command lines or credentials.
