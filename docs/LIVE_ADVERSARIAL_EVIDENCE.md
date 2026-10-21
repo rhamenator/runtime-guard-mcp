@@ -116,3 +116,8 @@ A synthetic private marker used as an unsupported HTTP method returned 501 with 
 ## Malformed-envelope ID follow-up, 2026-10-20
 
 Authenticated HTTP probes sent malformed envelopes with boolean, array, and object IDs. Each returned `-32600` with a null response ID rather than reflecting the invalid value. Focused stdio and HTTP process tests cover the same cases and subsequent valid traffic. The live probe now reports 47 checks with Nmap available. This closes one envelope-validation gap; it is not full MCP conformance evidence.
+
+
+## Installed command-input follow-up, 2026-10-20
+
+The fresh-installed HTTP review submitted three command strings targeting only temporary fixtures. An instruction-like prefix followed by recursive deletion and a `.env` read returned `BLOCKED`; `find -delete` returned the documented `NEEDS_CONFIRMATION`. Structured and text results agreed, fixture contents remained unchanged after each call, and no synthetic private file content appeared in responses. This checks a fixed corpus and observable fixture preservation, not semantic shell safety or containment of other agent tools.
