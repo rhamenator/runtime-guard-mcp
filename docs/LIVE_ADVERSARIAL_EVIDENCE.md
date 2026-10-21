@@ -165,3 +165,8 @@ Authenticated HTTP calls supplied null, boolean, numeric, and string `params`. E
 ## Bearer comparison hardening, 2026-10-21
 
 The authenticated HTTP probe rejected a same-length token differing in its final character and a non-ASCII incorrect bearer with 401, then continued normal authenticated traffic. Focused process tests also cover first-character mismatch, truncation, scheme case, and missing credentials, requiring generic unauthorized JSON and a successful exact match. The live probe reports 55 checks with Nmap. The server uses constant-time byte comparison; no timing attack or statistical timing guarantee is claimed.
+
+
+## Installed live-probe CI gate, 2026-10-21
+
+The full live adversarial probe now accepts an installed executable and uses it for every child launch. A host run passed all 55 checks against a fresh wheel, including authenticated HTTP boundaries, secret streaming, handler saturation, stdio oversized-frame recovery, and refusal to restart with a damaged audit. Children ran from a temporary directory with source-path environment overrides cleared. CI runs the same installed mode on Python 3.11 through 3.14 under a 40-second deadline. Nmap remains optional, and this does not replace the separate Wfuzz review or human release gate.

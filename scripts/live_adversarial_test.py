@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import http.client
 import json
 import os
@@ -59,7 +60,13 @@ def expect(label: str, actual: object, expected: object, results: list[str]) -> 
     results.append(label)
 
 
-def run() -> dict:
+def run(server: str | None = None) -> dict:
+    launcher = [sys.executable, "-m", "runtime_guard_mcp.server"]
+    if server is not None:
+        executable = Path(server).resolve()
+        if not executable.is_file() or not os.access(executable, os.X_OK):
+            raise ValueError("--server must name an installed executable")
+        launcher = [str(executable)]
     results: list[str] = []
     token = secrets.token_hex(32)
     synthetic = "ghp_" + "A" * 24
@@ -73,7 +80,11 @@ def run() -> dict:
             reservation.bind(("127.0.0.1", 0))
             port = reservation.getsockname()[1]
         environment = dict(os.environ, RUNTIME_GUARD_AUTH_TOKEN=token)
-        process = subprocess.Popen([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "http", "--host", "127.0.0.1", "--port", str(port), "--config", str(config)], env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        child_options = {"cwd": root} if server is not None else {}
+        if server is not None:
+            environment.pop("PYTHONPATH", None)
+            environment.pop("PYTHONHOME", None)
+        process = subprocess.Popen([*launcher, "--transport", "http", "--host", "127.0.0.1", "--port", str(port), "--config", str(config)], env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **child_options)
         try:
             for _ in range(100):
                 try:
@@ -186,7 +197,7 @@ def run() -> dict:
                     time.sleep(0.15)
             expect("byte-drip absolute deadline", closed, True, results)
             expect("byte-drip recovery", send(port, rpc(450, "ping"), token)[0], 200, results)
-            stdio = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "stdio", "--config", str(config)], input=b"x" * (MAX_MESSAGE * 2) + b"\n" + rpc(500, "ping") + b"\n", capture_output=True, env=environment, timeout=5, check=True)
+            stdio = subprocess.run([*launcher, "--transport", "stdio", "--config", str(config)], input=b"x" * (MAX_MESSAGE * 2) + b"\n" + rpc(500, "ping") + b"\n", capture_output=True, env=environment, timeout=5, check=True, **child_options)
             responses = [json.loads(line) for line in stdio.stdout.splitlines()]
             if len(responses) != 2:
                 raise AssertionError("stdio returned an unexpected number of frames")
@@ -209,9 +220,9 @@ def run() -> dict:
             expect("tampered audit blocks tool result", (response["result"]["structuredContent"]["status"], response["result"]["structuredContent"]["rule"], after), ("BLOCKED", "AUDIT_UNAVAILABLE", before), results)
             with sqlite3.connect(audit) as database:
                 database.execute("UPDATE decisions SET content_hash=NULL WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
-            restarted = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--config", str(config)], input=rpc(502, "ping") + b"\n", capture_output=True, env=environment, timeout=5)
+            restarted = subprocess.run([*launcher, "--config", str(config)], input=rpc(502, "ping") + b"\n", capture_output=True, env=environment, timeout=5, **child_options)
             expect("cleared audit hash refuses stdio restart", (restarted.returncode != 0, restarted.stdout), (True, b""), results)
-            return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "ephemeral child process"}
+            return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "installed entry point" if server is not None else "source child process"}
         finally:
             process.terminate()
             try:
@@ -222,8 +233,11 @@ def run() -> dict:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--server", help="installed executable to probe instead of the source module")
+    args = parser.parse_args()
     try:
-        print(json.dumps(run(), indent=2))
+        print(json.dumps(run(args.server), indent=2))
     except (AssertionError, KeyError, OSError, ValueError, subprocess.SubprocessError) as error:
         print(json.dumps({"status": "FAIL", "reason": str(error)}), file=sys.stderr)
         raise SystemExit(1) from error
