@@ -2,6 +2,8 @@
 
 Status: acceptance criteria, not a completion claim. Every stable-release gate needs a passing test, reproducible command, or durable review record linked from a release issue.
 
+See the [prioritized release work queue](RELEASE_GATES.md) for current blockers and closure evidence.
+
 ## Boundary and correctness
 
 - `audit_path_access`, `dry_run_command`, `budget_guard`, and `secret_masker` return deterministic, bounded, schema-valid decisions. Inputs with malformed types, extreme sizes, invalid Unicode, and conflicting fields produce controlled errors rather than crashes.
