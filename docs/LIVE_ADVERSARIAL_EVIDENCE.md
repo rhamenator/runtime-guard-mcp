@@ -155,3 +155,8 @@ The bounded installed Wfuzz review now records procfs observations for the child
 | Final | 28584 | 1 | 7 |
 
 The temporary audit database plus sidecars occupied 255256 bytes after the fixed workload. The report also includes the kernel-reported `VmHWM` at each snapshot. These are sampled observations, not a memory ceiling, a continuous peak profile, or proof of long-term leak freedom; CPU and sustained disk growth remain unmeasured. The 65 threads include the main thread, 32 request handlers, and 32 connection-deadline timers. Procfs absence is explicitly reported as unavailable. Reproduce with the installed-review command in the test plan; output contains no command lines or credentials.
+
+
+## Scalar parameter validation, 2026-10-21
+
+Authenticated HTTP calls supplied null, boolean, numeric, and string `params`. Each returned `-32602` with the request ID preserved. Focused direct and stdio tests cover the same invalid types, subsequent valid requests, accepted structured values, and notification silence. The live probe reports 53 checks with Nmap. This follows the [JSON-RPC parameter structure requirement](https://www.jsonrpc.org/specification#parameter_structures); method-specific validation still applies.
