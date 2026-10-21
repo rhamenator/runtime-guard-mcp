@@ -111,3 +111,8 @@ After the Wfuzz sweeps, the fresh-installed server review held exactly 32 loopba
 ## HTTP diagnostic reflection follow-up, 2026-10-20
 
 A synthetic private marker used as an unsupported HTTP method returned 501 with generic JSON, without the request marker. Focused process tests also checked malformed HTTP versions and an overlong header (400/431), followed by valid MCP recovery, plus bodyless HEAD errors. The live probe reports 44 checks when Nmap is available. This prevents reflection through the standard handler diagnostic; it does not sanitize content intentionally returned by tools.
+
+
+## Malformed-envelope ID follow-up, 2026-10-20
+
+Authenticated HTTP probes sent malformed envelopes with boolean, array, and object IDs. Each returned `-32600` with a null response ID rather than reflecting the invalid value. Focused stdio and HTTP process tests cover the same cases and subsequent valid traffic. The live probe now reports 47 checks with Nmap available. This closes one envelope-validation gap; it is not full MCP conformance evidence.

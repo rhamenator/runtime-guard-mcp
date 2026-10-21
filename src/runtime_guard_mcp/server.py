@@ -177,13 +177,13 @@ class RuntimeGuard:
         return {"content": [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}], "structuredContent": result, "isError": result["status"] == "BLOCKED"}
 
     def handle(self, message: Any, caller: str = "local") -> dict[str, Any] | None:
-        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0" or not isinstance(message.get("method"), str):
-            return rpc_error(message.get("id") if isinstance(message, dict) else None, -32600, "Invalid Request")
-        if "id" not in message:
-            return None
-        identifier = message["id"]
+        identifier = message.get("id") if isinstance(message, dict) else None
         if type(identifier) not in {str, int, float, type(None)} or (type(identifier) is float and not math.isfinite(identifier)):
             return rpc_error(None, -32600, "Invalid Request")
+        if not isinstance(message, dict) or message.get("jsonrpc") != "2.0" or not isinstance(message.get("method"), str):
+            return rpc_error(identifier, -32600, "Invalid Request")
+        if "id" not in message:
+            return None
         method = message["method"]
         if method == "initialize":
             result = {"protocolVersion": PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "runtime-guard-mcp", "version": __version__}}
