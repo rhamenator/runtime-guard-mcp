@@ -126,3 +126,8 @@ The fresh-installed HTTP review submitted three command strings targeting only t
 ## Installed budget exhaustion follow-up, 2026-10-20
 
 The installed review configured a ten-token hourly budget and sent twelve one-token reservations through authenticated HTTP. Exactly ten returned `SAFE` / `WITHIN_BUDGET`, with remaining counts descending to zero. The final two returned `BLOCKED` / `TOKENS_BUDGET` with zero remaining; structured and text results matched. This is a serial single-process budget check, not independent metering of an agent, sustained load, or restart-persistence evidence.
+
+
+## Cleared audit hash restart follow-up, 2026-10-21
+
+After changing the final audit row, the loopback harness cleared its stored hash and attempted a stdio restart with that disposable database. Startup failed before emitting any RPC response. Focused tests also clear either hash column and confirm the altered row remains unmodified; partial hash schemas fail while genuine legacy-table migration still passes. The live probe reports 48 checks with Nmap. Replacing a whole store with a legacy database or recomputing unkeyed hashes remains outside this guarantee.

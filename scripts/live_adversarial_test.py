@@ -208,6 +208,10 @@ def run() -> dict:
             with sqlite3.connect(audit) as database:
                 after = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
             expect("tampered audit blocks tool result", (response["result"]["structuredContent"]["status"], response["result"]["structuredContent"]["rule"], after), ("BLOCKED", "AUDIT_UNAVAILABLE", before), results)
+            with sqlite3.connect(audit) as database:
+                database.execute("UPDATE decisions SET content_hash=NULL WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
+            restarted = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--config", str(config)], input=rpc(502, "ping") + b"\n", capture_output=True, env=environment, timeout=5)
+            expect("cleared audit hash refuses stdio restart", (restarted.returncode != 0, restarted.stdout), (True, b""), results)
             return {"status": "PASS", "checks": results, "count": len(results), "python": platform.python_version(), "platform": platform.system(), "transport": "loopback HTTP JSON-RPC and stdio", "target": "ephemeral child process"}
         finally:
             for sock in slow:

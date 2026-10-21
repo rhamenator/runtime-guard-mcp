@@ -127,6 +127,28 @@ class AuditTests(unittest.TestCase):
             with sqlite3.connect(db) as connection:
                 self.assertEqual(connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], 1)
 
+    def test_cleared_audit_hash_is_not_repaired_at_restart(self):
+        for column in ("content_hash", "prev_hash"):
+            with self.subTest(column=column), tempfile.TemporaryDirectory() as root:
+                db = os.path.join(root, "audit.sqlite3")
+                guard = RuntimeGuard(root, audit_db=db)
+                guard.call("dry_run_command", {"command": "git status"}, "caller")
+                guard.audit._db.close()
+                with sqlite3.connect(db) as connection:
+                    connection.execute(f"UPDATE decisions SET rule='altered', {column}=NULL")
+                with self.assertRaises(AuditIntegrityError):
+                    AuditLog(db)
+                with sqlite3.connect(db) as connection:
+                    self.assertEqual(connection.execute(f"SELECT rule, {column} FROM decisions").fetchone(), ("altered", None))
+
+    def test_partial_audit_hash_schema_is_not_migrated(self):
+        with tempfile.TemporaryDirectory() as root:
+            db = os.path.join(root, "audit.sqlite3")
+            with sqlite3.connect(db) as connection:
+                connection.execute("CREATE TABLE decisions (time_utc INTEGER, caller_hash TEXT, tool TEXT, status TEXT, rule TEXT, content_hash TEXT)")
+            with self.assertRaises(AuditIntegrityError):
+                AuditLog(db)
+
     def test_audit_storage_failure_never_returns_masked_result(self):
         with tempfile.TemporaryDirectory() as root:
             guard = RuntimeGuard(root, audit_db=os.path.join(root, "audit.sqlite3"))

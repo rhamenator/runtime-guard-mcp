@@ -19,3 +19,5 @@ Stdio reads at most 1 MiB plus one byte before deciding whether a line is oversi
 HTTP parser and unsupported-method errors use generic JSON status descriptions rather than the standard handler diagnostics, which can echo request lines or methods. Error responses close the connection, and HEAD responses omit the body. These transport errors are HTTP errors rather than JSON-RPC envelopes.
 
 Configuration files use the strict bounded request JSON parser before validation. Duplicate keys cannot silently replace earlier operator settings. Invalid, unreadable, or oversized files stop startup before serving; the error does not echo file contents.
+
+Audit hash backfilling applies only to legacy tables lacking both hash columns. A partially present hash schema or a cleared hash in an existing chained audit fails startup instead of being repaired. This does not detect an attacker who replaces the entire database with a plausible legacy store; filesystem access controls and an external anchor remain necessary.
