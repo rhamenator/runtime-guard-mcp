@@ -40,6 +40,7 @@ class AuditLog:
         if not self.verify_integrity()["valid"]:
             self._db.close()
             raise AuditIntegrityError("Audit integrity check failed at startup")
+        self._tip = previous
 
     @staticmethod
     def _hash(previous: str, timestamp: int, caller: str, tool: str, status: str, rule: str) -> str:
@@ -50,14 +51,18 @@ class AuditLog:
         digest = hashlib.sha256(caller.encode()).hexdigest()[:16]
         with self._lock:
             try:
+                self._db.execute("BEGIN IMMEDIATE")
                 previous = self._db.execute("SELECT time_utc, caller_hash, tool, status, rule, prev_hash, content_hash FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
                 if previous and previous[6] != self._hash(previous[5], *previous[:5]):
                     raise AuditIntegrityError("Latest audit record failed integrity check")
                 previous_hash = previous[6] if previous else "0" * 64
+                if previous_hash != self._tip:
+                    raise AuditIntegrityError("Audit tip changed outside this process")
                 timestamp = int(time.time())
                 content_hash = self._hash(previous_hash, timestamp, digest, tool, status, rule)
                 self._db.execute("INSERT INTO decisions (time_utc, caller_hash, tool, status, rule, prev_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?)", (timestamp, digest, tool, status, rule, previous_hash, content_hash))
                 self._db.commit()
+                self._tip = content_hash
             except (sqlite3.Error, AuditIntegrityError):
                 try:
                     self._db.rollback()

@@ -149,6 +149,20 @@ class AuditTests(unittest.TestCase):
             with self.assertRaises(AuditIntegrityError):
                 AuditLog(db)
 
+    def test_live_audit_tail_deletion_blocks_new_decisions(self):
+        for delete_all in (False, True):
+            with self.subTest(delete_all=delete_all), tempfile.TemporaryDirectory() as root:
+                db = os.path.join(root, "audit.sqlite3")
+                guard = RuntimeGuard(root, audit_db=db)
+                for _ in range(3):
+                    guard.call("dry_run_command", {"command": "git status"}, "caller")
+                with sqlite3.connect(db) as connection:
+                    connection.execute("DELETE FROM decisions" if delete_all else "DELETE FROM decisions WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
+                result = guard.call("dry_run_command", {"command": "git diff"}, "caller")
+                self.assertEqual((result["isError"], result["structuredContent"]["rule"]), (True, "AUDIT_UNAVAILABLE"))
+                with sqlite3.connect(db) as connection:
+                    self.assertEqual(connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], 0 if delete_all else 2)
+
     def test_audit_storage_failure_never_returns_masked_result(self):
         with tempfile.TemporaryDirectory() as root:
             guard = RuntimeGuard(root, audit_db=os.path.join(root, "audit.sqlite3"))
