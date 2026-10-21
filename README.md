@@ -6,7 +6,7 @@ An MCP server for **advisory** runtime safety checks in coding agents. It inspec
 
 ## Run locally
 
-Python 3.11 or newer; the runtime uses only the standard library. See [dependency decisions](docs/dependencies.md) for the packaging and protocol tradeoffs.
+Python 3.11 or newer; CI exercises Python 3.11 through 3.14. The runtime uses only the standard library. See [dependency decisions](docs/dependencies.md) for the packaging and protocol tradeoffs.
 
 ```bash
 python3 -m pip install --no-build-isolation -e .

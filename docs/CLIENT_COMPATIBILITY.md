@@ -14,7 +14,7 @@ python3 scripts/client_smoke.py /tmp/runtime-guard-smoke/bin/runtime-guard-mcp
 /tmp/runtime-guard-smoke/bin/python scripts/official_sdk_smoke.py /tmp/runtime-guard-smoke/bin/runtime-guard-mcp
 ```
 
-CI builds a wheel on Python 3.11 and 3.13, installs it without dependencies into a fresh virtual environment, and runs the minimal stdio client against that installed executable with a 20-second process limit. This verifies the packaged entry point and tool workflow on each change; it does not replace the application-specific client probes below.
+CI builds a wheel on Python 3.11, 3.12, 3.13, and 3.14, installs it without dependencies into a fresh virtual environment, and runs the minimal stdio client against that installed executable with a 20-second process limit. This verifies the packaged entry point and tool workflow on each change; it does not replace the application-specific client probes below.
 
 The installed distribution has no third-party runtime requirements. The MCP SDK is a test-only dependency. Both probes use a temporary workspace, clear `RUNTIME_GUARD_CONFIG`, and launch the installed stdio entry point. They check `initialize` (negotiated `2025-06-18` and tool capability), `tools/list` (four names and input/output schema objects), and `tools/call` (structured result and text fallback). The local probe also checks the initialized notification and a path check. Expected output is a `PASS` line from each command.
 
