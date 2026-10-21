@@ -35,6 +35,10 @@ def status(port: int, token: str | None) -> int:
     return request(port, token)[0]
 
 
+def audit_contains_secret(audit: Path, secret: bytes) -> bool:
+    return any(secret in path.read_bytes() for path in audit.parent.glob(audit.name + "*") if path.is_file())
+
+
 def budget_exhaustion_review(port: int, token: str) -> None:
     for index in range(12):
         call = json.dumps({"jsonrpc": "2.0", "id": 300 + index, "method": "tools/call", "params": {"name": "budget_guard", "arguments": {"session_id": "installed-budget", "tokens": 1, "consume": True}}}).encode()
@@ -131,7 +135,7 @@ def secret_stream_review(port: int, token: str, audit: Path) -> None:
         emitted.append(result["text"])
     output = "".join(emitted)
     audit_files = list(audit.parent.glob(audit.name + "*"))
-    leaked_to_audit = any(synthetic.encode() in path.read_bytes() for path in audit_files if path.is_file())
+    leaked_to_audit = audit_contains_secret(audit, synthetic.encode())
     if synthetic in output or "[REDACTED_GITHUB_TOKEN_1]" not in output or not audit_files or leaked_to_audit:
         raise AssertionError("installed masker or audit exposed the synthetic token")
 

@@ -4,6 +4,7 @@ import importlib.util
 import json
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+import tempfile
 import threading
 import unittest
 
@@ -31,6 +32,16 @@ class PingHandler(BaseHTTPRequestHandler):
 
 
 class InstalledReviewTests(unittest.TestCase):
+    def test_secret_scan_includes_uncheckpointed_sidecar_bytes(self):
+        with tempfile.TemporaryDirectory() as root:
+            audit = Path(root) / "audit.sqlite"
+            audit.write_bytes(b"clean main file")
+            wal = Path(str(audit) + "-wal")
+            wal.write_bytes(b"synthetic-private-marker")
+            self.assertTrue(review.audit_contains_secret(audit, b"synthetic-private-marker"))
+            wal.write_bytes(b"clean sidecar")
+            self.assertFalse(review.audit_contains_secret(audit, b"synthetic-private-marker"))
+
     def test_saturation_probe_distinguishes_one_and_32_slots(self):
         for capacity in (1, 32):
             with self.subTest(capacity=capacity):
