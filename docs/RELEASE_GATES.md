@@ -4,7 +4,7 @@ Reviewed 2026-10-21, base revision `7068ddb`. This is a work queue, not release 
 
 | Priority | Remaining gate | Evidence required to close |
 | --- | --- | --- |
-| 1 | MCP 2026-07-28 conformance | Implement version-aware per-request metadata/capability negotiation, result envelopes, discovery ordering, and cancellation; test normative requirements through installed stdio and each advertised transport. Preserve verified older-client negotiation. Current server advertises 2025-06-18. |
+| 1 | MCP 2026-07-28 conformance | Implement version-aware per-request metadata/capability negotiation, result envelopes, discovery ordering, and cancellation; test normative requirements through installed stdio and each advertised transport. Preserve verified older-client negotiation. Stdio now implements initial modern per-request metadata, discovery, result envelopes, and bounded cancellation dispatch while preserving 2025-06-18 clients. Complete normative-schema review and modern real-client evidence remain open; HTTP remains legacy. |
 | 2 | Sustained resource bounds and audit retention | Repeatable soak with CPU, RSS, descriptors, threads and disk measurements; explicit storage cap/retention behavior and fail-closed disk failure/recovery. Existing snapshots and handler saturation are bounded evidence only; audit storage currently grows. |
 | 3 | Release-candidate client and adversarial evidence | Fresh artifact probes in versioned Codex, Claude Code and Cursor, including cancellation/recovery; rerun authorized Wfuzz/Nmap and adversarial API corpus against that artifact, review findings and residual risks. Existing probes cover earlier revisions and limited workflows. |
 | 4 | Distribution and human review | Build/inspect wheel, source archive and companion skill ZIP; verify clean installation, checksums/provenance, changelog and claim-to-test mapping. Link evidence in a release issue and obtain human readiness approval before stable tagging. |
@@ -20,3 +20,9 @@ The HTTP endpoint remains legacy JSON-RPC over HTTP. Full Streamable HTTP suppor
 Reject array request parameters and non-object optional `_meta` before dispatch, returning generic `-32602` errors. Regression evidence checks rejected budget requests consume no budget, do not echo the supplied marker, and allow the next valid stdio request. Extension metadata remains accepted; required 2026 metadata semantics and negotiation are still open.
 
 Sources: [2026 specification](https://modelcontextprotocol.io/specification/2026-07-28) and [authoritative schema](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2026-07-28/schema.ts). This change retains the advertised 2025 protocol version.
+
+## Version-aware stdio milestone
+
+The next change adds modern stdio discovery and per-request dispatch, deterministic modern tool ordering, result/cache envelopes, unsupported-version diagnostics, and a bounded single-worker dispatcher. Focused tests exercise malformed metadata, legacy interleaving, saturated queue cancellation, skipped queued work, suppressed active replies, ID reuse and recovery. A subprocess fixture delays an advisory function to make in-flight cancellation reproducible; it is test instrumentation, not a production delay feature or an authenticated coding-client probe. The installed modern smoke probe runs in CI on all supported Python versions. It proves wire behavior, not complete modern conformance.
+
+Cancellation does not forcibly stop Python policy work, undo already consumed budgets, erase masker state or roll back committed audit records. Audit growth, full-table startup/integrity reads, retention semantics and storage-failure evidence remain priority 2.

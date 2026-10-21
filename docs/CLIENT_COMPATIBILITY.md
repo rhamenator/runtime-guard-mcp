@@ -77,3 +77,7 @@ The script creates and removes a temporary project and audit store, uses existin
 ## Limits
 
 Claude Code and Codex each completed one local stdio call with explicit tool permission. Cursor CLI completed discovery and two ACP-driven stdio calls as described above; terminal UI and cancellation remain unverified. The probes do not establish MCP `2026-07-28` or full Streamable HTTP conformance. The current HTTP endpoint is JSON-RPC over HTTP; stdio is the tested buyer path. Do not list a client as fully supported from these probes alone.
+
+## Modern stdio implementation
+
+MCP 2026-07-28 per-request stdio discovery, result envelopes, version errors and cancellation dispatch are implemented. `scripts/modern_stdio_smoke.py` probes a fresh wheel with an independent, dependency-free wire client in CI. Controlled slow-policy tests exercise active and queued cancellation. The official SDK and coding-client evidence above uses legacy initialization; modern authenticated client and UI cancellation probes remain required. The HTTP endpoint does not advertise modern transport support.

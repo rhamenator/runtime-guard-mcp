@@ -29,3 +29,9 @@ Cursor CLI 2026.10.19-6bbf2c4 has bounded ACP/stdio discovery and safe/blocked i
 Custom MCP clients must initialize with `protocolVersion`, an object `capabilities`, and `clientInfo` containing string `name` and `version`. Correct malformed initialization fields after `-32602` before retrying.
 
 Request parameters and optional `_meta` must be objects. Arrays or malformed metadata return `-32602` before tool dispatch; retry with the documented tool arguments. MCP 2026 negotiation remains unfinished.
+
+### Modern stdio requests and cancellation
+
+Modern clients may call `server/discover` without initialization, supplying `_meta.io.modelcontextprotocol/protocolVersion` (`2026-07-28`) and `_meta.io.modelcontextprotocol/clientCapabilities` (an object) on every request. Legacy clients retain the initialization workflow above. Modern results include `resultType: complete`. This modern implementation is still undergoing release conformance and client review; use stdio, as HTTP remains legacy.
+
+Cancel a pending stdio request using `notifications/cancelled` with its string or integer `requestId`. Queued work is discarded and an active reply is suppressed; already applied budget/masker/audit changes are not undone, and running policy functions finish. This grants no execution permission. At most 32 requests may be outstanding; error `1001` asks the client to retry after pending work completes. See the README for EOF and output-backpressure limitations.
