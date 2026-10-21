@@ -202,6 +202,15 @@ def run() -> dict:
                 raise AssertionError("stdio returned an unexpected number of frames")
             expect("stdio oversized frame recovery", (len(responses), responses[0]["error"]["code"], responses[1]["id"], responses[1]["result"]), (2, -32600, 500, {}), results)
             with sqlite3.connect(audit) as database:
+                tail = database.execute("SELECT * FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
+                count = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+                database.execute("DELETE FROM decisions WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
+            _, response = send(port, rpc(503, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+            with sqlite3.connect(audit) as database:
+                remaining = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+                database.execute("INSERT INTO decisions VALUES (?, ?, ?, ?, ?, ?, ?)", tail)
+            expect("deleted audit tail blocks tool result", (response["result"]["structuredContent"]["rule"], remaining), ("AUDIT_UNAVAILABLE", count - 1), results)
+            with sqlite3.connect(audit) as database:
                 before = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
                 database.execute("UPDATE decisions SET rule='synthetic-tamper' WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
             _, response = send(port, rpc(501, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)

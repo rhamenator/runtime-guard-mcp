@@ -131,3 +131,8 @@ The installed review configured a ten-token hourly budget and sent twelve one-to
 ## Cleared audit hash restart follow-up, 2026-10-21
 
 After changing the final audit row, the loopback harness cleared its stored hash and attempted a stdio restart with that disposable database. Startup failed before emitting any RPC response. Focused tests also clear either hash column and confirm the altered row remains unmodified; partial hash schemas fail while genuine legacy-table migration still passes. The live probe reports 48 checks with Nmap. Replacing a whole store with a legacy database or recomputing unkeyed hashes remains outside this guarantee.
+
+
+## Live audit tip follow-up, 2026-10-21
+
+The authenticated HTTP probe deleted the final row of its disposable audit store while the server stayed alive. The next tool call returned `AUDIT_UNAVAILABLE` without appending a replacement decision. Focused tests also delete every row and require the same fail-closed result. The process keeps its last committed tip hash and compares it inside the same immediate transaction as insertion. The live probe reports 49 checks with Nmap. This requires one writer process per store and does not preserve the anchor across restart.
