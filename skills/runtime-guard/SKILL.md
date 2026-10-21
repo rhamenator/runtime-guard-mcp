@@ -27,3 +27,5 @@ For JSON-RPC calls, omit `params` or send an object or array. Scalar parameters 
 Cursor CLI 2026.10.19-6bbf2c4 has bounded ACP/stdio discovery and safe/blocked inspection evidence. Configure the installed server in project-local `.cursor/mcp.json`, run `agent mcp enable runtime_guard` and `agent mcp list-tools runtime_guard` from that project, and retain normal tool permissions. Existing Cursor authentication is required; account/model service costs are separate. Terminal UI and cancellation remain unverified.
 
 Custom MCP clients must initialize with `protocolVersion`, an object `capabilities`, and `clientInfo` containing string `name` and `version`. Correct malformed initialization fields after `-32602` before retrying.
+
+Request parameters and optional `_meta` must be objects. Arrays or malformed metadata return `-32602` before tool dispatch; retry with the documented tool arguments. MCP 2026 negotiation remains unfinished.

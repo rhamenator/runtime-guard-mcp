@@ -67,11 +67,28 @@ class ProtocolTests(unittest.TestCase):
             reply = self.guard.handle(frame)
             self.assertEqual((reply["id"], reply["error"]["code"]), (frame["id"], -32602))
         self.assertIsNone(self.guard.handle({"jsonrpc": "2.0", "method": "notifications/initialized", "params": None}))
-        for params in ({}, []):
+        for params in ({}, {"_meta": {"example/extension": True}}):
             self.assertEqual(self.guard.handle({"jsonrpc": "2.0", "id": 9, "method": "ping", "params": params})["result"], {})
         process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"".join(json.dumps(frame).encode() + b"\n" for frame in frames) + b'{"jsonrpc":"2.0","id":9,"method":"ping"}\n', capture_output=True, env=dict(os.environ, PYTHONPATH="src"), timeout=5, check=True)
         replies = [json.loads(line) for line in process.stdout.splitlines()]
         self.assertEqual([reply["error"]["code"] for reply in replies[:-1]], [-32602] * 4)
+        self.assertEqual(replies[-1]["result"], {})
+
+    def test_object_params_and_metadata_reject_before_tool_side_effects(self):
+        self.guard = RuntimeGuard("/tmp/work", token_hour=1)
+        frames = []
+        for value in ([], None, True, 7, "synthetic-private-marker"):
+            frames.append({"jsonrpc": "2.0", "id": len(frames), "method": "tools/call", "params": {"name": "budget_guard", "arguments": {"session_id": "fixture", "tokens": 1, "consume": True}, "_meta": value}})
+        frames.append({"jsonrpc": "2.0", "id": 99, "method": "ping", "params": []})
+        for frame in frames:
+            self.assertEqual(self.guard.handle(frame)["error"]["code"], -32602)
+        remaining = self.guard.call("budget_guard", {"session_id": "fixture", "tokens": 1, "consume": True}, "local")
+        self.assertEqual(remaining["structuredContent"]["status"], "SAFE")
+        frames.append({"jsonrpc": "2.0", "id": 100, "method": "ping", "params": {"_meta": {"example/extension": {"nested": True}}}})
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"".join(json.dumps(frame).encode() + b"\n" for frame in frames), capture_output=True, env=dict(os.environ, PYTHONPATH="src"), timeout=5, check=True)
+        replies = [json.loads(line) for line in process.stdout.splitlines()]
+        self.assertEqual([reply["error"]["code"] for reply in replies[:-1]], [-32602] * 6)
+        self.assertNotIn("synthetic-private-marker", process.stdout.decode())
         self.assertEqual(replies[-1]["result"], {})
 
     def test_stdio_process(self):

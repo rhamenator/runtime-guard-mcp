@@ -185,8 +185,11 @@ class RuntimeGuard:
             return rpc_error(identifier, -32600, "Invalid Request")
         if "id" not in message:
             return None
-        if "params" in message and not isinstance(message["params"], (dict, list)):
+        if "params" in message and not isinstance(message["params"], dict):
             return rpc_error(identifier, -32602, "Invalid params")
+        params = message.get("params", {})
+        if "_meta" in params and not isinstance(params["_meta"], dict):
+            return rpc_error(identifier, -32602, "Invalid request metadata")
         method = message["method"]
         if method == "initialize":
             params = message.get("params")
