@@ -189,6 +189,12 @@ class RuntimeGuard:
             return rpc_error(identifier, -32602, "Invalid params")
         method = message["method"]
         if method == "initialize":
+            params = message.get("params")
+            if not isinstance(params, dict) or not isinstance(params.get("protocolVersion"), str) or not isinstance(params.get("capabilities"), dict):
+                return rpc_error(identifier, -32602, "Invalid initialize parameters")
+            client = params.get("clientInfo")
+            if not isinstance(client, dict) or not all(isinstance(client.get(field), str) for field in ("name", "version")) or ("title" in client and not isinstance(client["title"], str)):
+                return rpc_error(identifier, -32602, "Invalid client implementation")
             result = {"protocolVersion": PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "runtime-guard-mcp", "version": __version__}}
         elif method == "ping":
             result = {}

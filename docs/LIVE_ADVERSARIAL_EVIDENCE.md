@@ -175,3 +175,8 @@ The full live adversarial probe now accepts an installed executable and uses it 
 ## Official SDK adversarial workflow, 2026-10-21
 
 Official Python SDK 2.3.0 drove a fresh installed stdio server through discovery and safe calls, then path escape and instruction-like recursive deletion against temporary fixtures. Both returned error-marked blocked tool results with matching structured/text content. Three one-token reservations with different session IDs exhausted a two-token caller budget: two safe, then `TOKENS_BUDGET`. A synthetic GitHub-shaped token was replaced by its placeholder, absent from returned text and audit database/sidecar bytes. The sentinel remained unchanged. This fixed-corpus SDK check runs in Python 3.12 CI; it does not prove whole-agent interception or complete prompt-injection resistance.
+
+
+## Initialization required fields, 2026-10-21
+
+HTTP probes rejected missing required initialization fields, a non-object capabilities value, and invalid client implementation fields with `-32602`, followed by successful valid initialization. Focused direct and stdio tests cover additional invalid types, optional title validation, extension fields, and fallback to the supported version. The source and installed live probes now report 58 checks with Nmap. This validates required fields from the [advertised 2025-06-18 schema](https://modelcontextprotocol.io/specification/2025-06-18/schema#initializerequest), not every nested capability or modern lifecycle requirement.

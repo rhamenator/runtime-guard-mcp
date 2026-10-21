@@ -20,12 +20,24 @@ class ProtocolTests(unittest.TestCase):
         self.guard = RuntimeGuard("/tmp/work")
 
     def test_initialize_and_tools(self):
-        init = self.guard.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}})
+        init = self.guard.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "probe", "version": "1"}}})
         self.assertEqual(init["result"]["protocolVersion"], "2025-06-18")
         listed = self.guard.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         self.assertEqual(len(listed["result"]["tools"]), 4)
         schema_file = Path(__file__).resolve().parents[1] / "schemas" / "tools.json"
         self.assertEqual(json.loads(schema_file.read_text()), TOOLS)
+
+    def test_initialize_required_fields_and_recovery(self):
+        valid = {"protocolVersion": "future-version", "capabilities": {"extension": {}}, "clientInfo": {"name": "fixture", "version": "1", "title": "Fixture"}, "extension": {}}
+        invalid = [None, [], {}, {**valid, "protocolVersion": 7}, {**valid, "capabilities": []}, {**valid, "clientInfo": None}, {**valid, "clientInfo": {"name": "fixture"}}, {**valid, "clientInfo": {"name": 7, "version": "1"}}, {**valid, "clientInfo": {"name": "fixture", "version": "1", "title": False}}]
+        frames = [{"jsonrpc": "2.0", "id": index, "method": "initialize", "params": params} for index, params in enumerate(invalid)]
+        for frame in frames:
+            self.assertEqual(self.guard.handle(frame)["error"]["code"], -32602)
+        frames.append({"jsonrpc": "2.0", "id": 99, "method": "initialize", "params": valid})
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=b"".join(json.dumps(frame).encode() + b"\n" for frame in frames), capture_output=True, env=dict(os.environ, PYTHONPATH="src"), timeout=5, check=True)
+        replies = [json.loads(line) for line in process.stdout.splitlines()]
+        self.assertEqual([reply["error"]["code"] for reply in replies[:-1]], [-32602] * len(invalid))
+        self.assertEqual(replies[-1]["result"]["protocolVersion"], "2025-06-18")
 
     def test_call_and_validation(self):
         call = {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "dry_run_command", "arguments": {"command": "rm -rf /"}}}
