@@ -84,8 +84,15 @@ def handler_saturation_review(port: int, token: str) -> None:
             held.append(connection)
             connection.sendall(b"POST /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n")
         time.sleep(0.2)
-        if status(port, token) != 503:
-            raise AssertionError("installed server did not reject an excess handler")
+        # Send once without a body: overload rejection can close before a second
+        # HTTPConnection write, turning the expected 503 into a broken pipe.
+        with socket.create_connection(("127.0.0.1", port), timeout=2) as excess:
+            excess.sendall(b"GET /mcp HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
+            response = http.client.HTTPResponse(excess)
+            response.begin()
+            response.read()
+            if response.status != 503:
+                raise AssertionError("installed server did not reject an excess handler")
         body = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
         for connection in held:
             try:

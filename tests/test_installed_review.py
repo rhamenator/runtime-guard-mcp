@@ -19,7 +19,10 @@ class PingHandler(BaseHTTPRequestHandler):
         pass
 
     def do_POST(self):
-        self.rfile.read(int(self.headers["Content-Length"]))
+        length = self.headers.get("Content-Length")
+        if length is None:
+            return  # Probe cleanup can close a deliberately unfinished request.
+        self.rfile.read(int(length))
         raw = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode()
         self.send_response(200)
         self.send_header("Content-Length", str(len(raw)))
