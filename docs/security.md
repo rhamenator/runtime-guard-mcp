@@ -21,3 +21,5 @@ HTTP parser and unsupported-method errors use generic JSON status descriptions r
 Configuration files use the strict bounded request JSON parser before validation. Duplicate keys cannot silently replace earlier operator settings. Invalid, unreadable, or oversized files stop startup before serving; the error does not echo file contents.
 
 Audit hash backfilling applies only to legacy tables lacking both hash columns. A partially present hash schema or a cleared hash in an existing chained audit fails startup instead of being repaired. This does not detect an attacker who replaces the entire database with a plausible legacy store; filesystem access controls and an external anchor remain necessary.
+
+Bearer-token validation compares UTF-8 encoded values with the standard library constant-time comparison helper. Missing, near-match, wrong-length, wrong-scheme, and non-ASCII incorrect values return generic 401 responses. This reduces content-dependent comparison timing; it is not a network timing-resistance certification and does not hide token length.

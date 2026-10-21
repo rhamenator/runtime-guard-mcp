@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hmac
 import json
 import math
 import os
@@ -316,7 +317,7 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
             if len(auth_headers) > 1:
                 self._json(400, {"error": "Invalid Authorization header"})
                 return
-            if auth_token and (not auth_headers or auth_headers[0] != "Bearer " + auth_token):
+            if auth_token and (not auth_headers or not hmac.compare_digest(auth_headers[0].encode("utf-8"), ("Bearer " + auth_token).encode("utf-8"))):
                 self._json(401, {"error": "Unauthorized"})
                 return
             if self.headers.get_all("Transfer-Encoding"):

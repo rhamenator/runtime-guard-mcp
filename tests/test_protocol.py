@@ -223,6 +223,40 @@ class ProtocolTests(unittest.TestCase):
             process.terminate()
             process.wait(timeout=5)
 
+    def test_http_bearer_auth_near_matches_and_unicode(self):
+        with socket.socket() as reservation:
+            reservation.bind(("127.0.0.1", 0))
+            port = reservation.getsockname()[1]
+        token = "synthetic-token-0123456789"
+        process = subprocess.Popen([sys.executable, "-m", "runtime_guard_mcp.server", "--transport", "http", "--port", str(port)], env=dict(os.environ, PYTHONPATH="src", RUNTIME_GUARD_AUTH_TOKEN=token), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        def send(authorization):
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+            try:
+                headers = {"Content-Type": "application/json"}
+                if authorization is not None:
+                    headers["Authorization"] = authorization
+                connection.request("POST", "/mcp", b'{"jsonrpc":"2.0","id":1,"method":"ping"}', headers)
+                response = connection.getresponse()
+                return response.status, json.loads(response.read())
+            finally:
+                connection.close()
+        try:
+            for _ in range(50):
+                try:
+                    if send(None)[0] == 401:
+                        break
+                except OSError:
+                    time.sleep(0.02)
+            else:
+                self.fail("authenticated HTTP server did not start")
+            for value in (None, "Bearer " + token[:-1], "Bearer " + token[:-1] + "X", "Bearer X" + token[1:], "bearer " + token, "Bearer é"):
+                with self.subTest(value=value):
+                    self.assertEqual(send(value), (401, {"error": "Unauthorized"}))
+            self.assertEqual(send("Bearer " + token), (200, {"jsonrpc": "2.0", "id": 1, "result": {}}))
+        finally:
+            process.terminate()
+            process.wait(timeout=5)
+
     def test_http_handler_cap_and_recovery(self):
         entered = threading.Event()
         release = threading.Event()

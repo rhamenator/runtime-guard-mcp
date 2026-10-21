@@ -160,3 +160,8 @@ The temporary audit database plus sidecars occupied 255256 bytes after the fixed
 ## Scalar parameter validation, 2026-10-21
 
 Authenticated HTTP calls supplied null, boolean, numeric, and string `params`. Each returned `-32602` with the request ID preserved. Focused direct and stdio tests cover the same invalid types, subsequent valid requests, accepted structured values, and notification silence. The live probe reports 53 checks with Nmap. This follows the [JSON-RPC parameter structure requirement](https://www.jsonrpc.org/specification#parameter_structures); method-specific validation still applies.
+
+
+## Bearer comparison hardening, 2026-10-21
+
+The authenticated HTTP probe rejected a same-length token differing in its final character and a non-ASCII incorrect bearer with 401, then continued normal authenticated traffic. Focused process tests also cover first-character mismatch, truncation, scheme case, and missing credentials, requiring generic unauthorized JSON and a successful exact match. The live probe reports 55 checks with Nmap. The server uses constant-time byte comparison; no timing attack or statistical timing guarantee is claimed.
