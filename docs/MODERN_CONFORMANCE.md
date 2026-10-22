@@ -41,3 +41,5 @@ Runtime Guard's current tools complete synchronously; no method issues `input_re
 This follows the [MRTR state/response boundary](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr): state is untrusted and clients only echo state actually issued by the server; unexpected response information can be ignored. This change does not implement a resumable service, cryptographic state validation, exactly-once behavior or deduplication of independent requests. Complete MRTR/schema and message-pattern review remains open.
 
 The installed `request_state_review.py` reuses the bounded frame harness. It rejects 14 frames (seven unsolicited states, four malformed response containers and state on ping/list/discovery), then accepts a full untouched 120-command reservation with unknown input responses and a legacy recovery ping. Errors and results do not echo the supplied marker. CI repeats the 16-frame review on all supported Python versions.
+
+[Installed continuation-boundary evidence](evidence/request-state-2026-10-22.json) records the source revision and wheel/probe checksums.

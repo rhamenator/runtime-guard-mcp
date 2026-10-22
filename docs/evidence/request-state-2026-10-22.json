@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "rejected_frames": 14,
+  "recovery_frames": 2,
+  "budget_preserved": true,
+  "unknown_input_responses_ignored": true,
+  "scope": "server issues no resumable state; not multi-round-trip execution or state replay protection for a resumable service",
+  "date": "2026-10-22",
+  "server_source_revision": "183fb8ed9bda3c1f31ecccb90ac9a469bb971cbc",
+  "wheel_sha256": "bcc3a420c208b8d84b41673b042fcac880d41c4a88cb66587e10c9afc8f03e3f",
+  "probe_sha256": "c2f36e34fbdd5f4383999ad2d31da70d6aec950e20379b2ed2afe32ac72766e0",
+  "command": "python3 scripts/request_state_review.py INSTALLED_SERVER"
+}
