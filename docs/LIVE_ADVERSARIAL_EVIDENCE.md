@@ -200,3 +200,7 @@ PYTHONPATH=src python3 scripts/live_adversarial_test.py --server /path/to/venv/b
 ```
 
 For the source-shadow check, create a temporary `runtime_guard_mcp/__init__.py` that raises `RuntimeError("synthetic-source-shadow")`, put its parent on PYTHONPATH for the Wfuzz command, then remove only that temporary fixture. The fixed target still passes; launching the installed entry point directly with that poisoned path fails. Wfuzz/Nmap are optional developer tools, not runtime dependencies; Wfuzz's local pycurl build did not support OpenSSL, so this HTTP-only review provides no TLS evidence.
+
+## Request-ID corpus accounting follow-up, 2026-10-22
+
+The malformed consuming-ID fixtures extend the Wfuzz sweep from 18 to 21 result entries. The report now derives the total from the five validated sweep groups (paths, authentication, origins, hosts and RPC bodies), rather than retaining a stale literal. A fresh authorized run against the installed request-ID fix passed all 21 scanner entries and functional/recovery checks; updated results and harness identity are in `evidence/request-id-2026-10-22.json`. The total counts scanner entries, not the additional direct assertion/recovery calls. Earlier 18-entry evidence remains historical and is not rewritten.

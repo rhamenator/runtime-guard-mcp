@@ -285,7 +285,7 @@ def run(executable: str, wfuzz: str) -> dict:
             time.sleep(0.05)
             resources["final"] = process_resources(process.pid)
             resources["audit_bytes"] = sum(path.stat().st_size for path in root.glob("audit.sqlite*") if path.is_file())
-            return {"resources": resources, "status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": 18, "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "budget_exhaustion": "10 safe, 2 blocked", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
+            return {"resources": resources, "status": "PASS", "scanner": f"Wfuzz {version}", "target": "installed entry point on ephemeral loopback HTTP", "scanner_requests": sum(len(group) for group in (paths, auth, origins, hosts, body_report)), "path_statuses": paths, "auth_statuses": auth_result, "origin_statuses": origins, "host_statuses": hosts, "rpc_cases": list(rpc_cases), "handler_saturation": "503 then 200", "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged", "budget_exhaustion": "10 safe, 2 blocked", "secret_stream": "redacted", "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE", "recovery": 200}
         finally:
             process.terminate()
             try:
