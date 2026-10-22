@@ -168,3 +168,36 @@ serve_stdio(Fixture('/tmp/work'))
         finally:
             release.set()
             dispatcher.close()
+
+    def test_nested_capabilities_rejected_before_budget_mutation(self):
+        guard = RuntimeGuard("/tmp/work")
+        invalid = [{"experimental": {"probe": True}}, {"extensions": {"probe": {}}},
+                   {"extensions": {"com.example/invalid!": {}}}, {"extensions": {"com.example/probe": []}},
+                   {"sampling": {"tools": False}}, {"sampling": {"context": None}},
+                   {"elicitation": {"form": []}}, {"elicitation": {"url": 1}}]
+        for capabilities in invalid:
+            message = request(method="tools/call", name="budget_guard", arguments={"session_id": "review", "commands": 1, "consume": True})
+            message["params"]["_meta"][META_PREFIX + "clientCapabilities"] = capabilities
+            result = guard.handle(message, modern_stdio=True)
+            self.assertEqual(result["error"]["code"], -32602)
+            self.assertNotIn("probe", json.dumps(result))
+        valid = request(method="tools/call", name="budget_guard", arguments={"session_id": "review", "commands": 120, "consume": True})
+        self.assertEqual(guard.handle(valid, modern_stdio=True)["result"]["structuredContent"]["status"], "SAFE")
+
+    def test_nested_capabilities_and_single_page_cursor(self):
+        guard = RuntimeGuard("/tmp/work")
+        message = request(method="tools/list")
+        message["params"]["_meta"][META_PREFIX + "clientCapabilities"] = {
+            "experimental": {"probe": {}}, "extensions": {"com.example/probe": {"custom": [1, True]}},
+            "sampling": {"context": {}, "tools": {}}, "elicitation": {"form": {}, "url": {}},
+            "com.example/custom": {"future": True}}
+        result = guard.handle(message, modern_stdio=True)["result"]
+        self.assertEqual(len(result["tools"]), 4)
+        self.assertNotIn("nextCursor", result)
+        for cursor in ("", "synthetic-marker", 1, None, [], {}):
+            for modern in (True, False):
+                frame = request(method="tools/list", cursor=cursor) if modern else {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {"cursor": cursor}}
+                error = guard.handle(frame, modern_stdio=True)
+                self.assertEqual(error["error"]["code"], -32602)
+                self.assertNotIn("synthetic-marker", json.dumps(error))
+        self.assertEqual(len(guard.handle(request(method="tools/list"), modern_stdio=True)["result"]["tools"]), 4)

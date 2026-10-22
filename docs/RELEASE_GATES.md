@@ -59,3 +59,8 @@ A subsequent bounded Codex replay passed with process/protocol markers: one proc
 The Codex CLI 0.151.0 app-server path recovers but omits MCP cancellation. The [client-specific recovery procedure](CLIENT_CANCELLATION.md#codex-limitation-and-recovery-procedure) now documents unknown outcomes, unsafe stateful replay and restart semantics. An unrelated client notification must not cancel valid work; a dispatcher regression test protects that boundary. Actual client notification delivery remains an external compatibility limitation, not a configurable server feature.
 
 A fresh installed server now survives 65,536 audit-capacity denials per protocol era with periodic pings, preserved record counts and sampled CPU/RSS/FD/thread/audit-size regression thresholds. See [resource evidence](SUSTAINED_RESOURCE_EVIDENCE.md). CI repeats this finite campaign; it does not close longer mixed/concurrent-load, physical-byte quota, output-backpressure or provenance gates.
+
+
+## Modern capability and pagination review
+
+Known nested client capability shapes and prefixed extension identifiers are validated before dispatch; malformed metadata cannot consume budget. The terminal four-tool list rejects all supplied continuation cursors with non-reflective errors. The installed 24-frame validation campaign checks recovery and legacy interleaving in CI. See [review mapping and remaining scope](MODERN_CONFORMANCE.md); this does not certify all modern normative requirements.

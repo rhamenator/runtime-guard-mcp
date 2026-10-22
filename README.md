@@ -88,3 +88,6 @@ Codex CLI 0.151.0 acknowledged `turn/interrupt` and recovered in the same server
 ### Bounded resource regression review
 
 On Linux, run `python3 scripts/sustained_resource_review.py /path/to/venv/bin/runtime-guard-mcp`. It runs a finite installed-server audit-capacity campaign in both protocol eras, samples RSS/CPU/threads/descriptors/database-plus-WAL sizes and checks fail-closed replies plus recovery pings. It uses only a temporary private audit/config directory, no accounts, VM or external target. CI repeats it on each supported Python version. See [scope and measured evidence](docs/SUSTAINED_RESOURCE_EVIDENCE.md); this is not an indefinite soak or a physical disk quota.
+
+
+Modern stdio validates known nested client capability shapes before tool dispatch. Experimental/extension settings and sampling/elicitation options must have the documented object shapes; extension IDs require a valid prefix. Unknown object-shaped custom capabilities are accepted without enabling them or granting permissions. The four-tool list is one terminal page with no `nextCursor`; supplied cursors return non-reflective `-32602` errors. See the [partial modern conformance review](docs/MODERN_CONFORMANCE.md) and installed `scripts/modern_validation_review.py` probe. Full conformance remains a release gate.

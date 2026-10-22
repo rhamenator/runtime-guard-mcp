@@ -168,6 +168,23 @@ def valid_meta_key(key: str) -> bool:
     return not name or (name[0].isalnum() and name[-1].isalnum() and all(char.isalnum() or char in "-_." for char in name))
 
 
+def valid_client_capabilities(capabilities: dict[str, Any]) -> bool:
+    """Validate known nested capability shapes without interpreting extensions."""
+    if any(not isinstance(value, dict) for value in capabilities.values()):
+        return False
+    for name in ("experimental", "extensions"):
+        entries = capabilities.get(name, {})
+        if any(not isinstance(value, dict) for value in entries.values()):
+            return False
+        if name == "extensions" and any("/" not in key or not valid_meta_key(key) for key in entries):
+            return False
+    for name, fields in (("sampling", ("context", "tools")), ("elicitation", ("form", "url"))):
+        entries = capabilities.get(name, {})
+        if any(field in entries and not isinstance(entries[field], dict) for field in fields):
+            return False
+    return True
+
+
 class RuntimeGuard:
     def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None, audit_max_records: int = DEFAULT_AUDIT_MAX_RECORDS, audit_max_db_bytes: int = DEFAULT_AUDIT_MAX_DB_BYTES, audit_wal_checkpoint_bytes: int = DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES):
         self.workspace_root = str(Path(workspace_root).expanduser().resolve(strict=False))
@@ -229,7 +246,7 @@ class RuntimeGuard:
             if META_PREFIX + "clientInfo" in meta and (not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version")) or ("title" in client and not isinstance(client["title"], str))):
                 return rpc_error(identifier, -32602, "Invalid client implementation")
             capabilities = meta[META_PREFIX + "clientCapabilities"]
-            if any(not isinstance(value, dict) for value in capabilities.values()):
+            if not valid_client_capabilities(capabilities):
                 return rpc_error(identifier, -32602, "Invalid client capabilities")
             if META_PREFIX + "logLevel" in meta and meta[META_PREFIX + "logLevel"] not in ("debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"):
                 return rpc_error(identifier, -32602, "Invalid log level")
@@ -252,6 +269,9 @@ class RuntimeGuard:
         elif method == "ping":
             result = {}
         elif method == "tools/list":
+            # A single terminal page never issues a valid continuation cursor.
+            if "cursor" in params:
+                return rpc_error(identifier, -32602, "Invalid pagination cursor")
             result = {"tools": [tool for tool in TOOLS if tool["name"] in self.enabled_tools]}
             if modern:
                 result["tools"].sort(key=lambda tool: tool["name"])
