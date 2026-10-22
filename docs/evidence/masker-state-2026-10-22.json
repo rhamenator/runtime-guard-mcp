@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "era": "legacy",
+      "tool_calls": 517,
+      "samples": 517,
+      "distinct_secrets": 4096,
+      "secret_capacity_denials": 128,
+      "open_streams": 128,
+      "stream_capacity_denials": 128,
+      "slot_recovery": true,
+      "ping_recovery": true,
+      "baseline": {
+        "rss_bytes": 27287552,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.07
+      },
+      "peak": {
+        "rss_bytes": 32555008,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.53
+      },
+      "final": {
+        "rss_bytes": 30638080,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.53
+      }
+    },
+    {
+      "era": "modern",
+      "tool_calls": 517,
+      "samples": 517,
+      "distinct_secrets": 4096,
+      "secret_capacity_denials": 128,
+      "open_streams": 128,
+      "stream_capacity_denials": 128,
+      "slot_recovery": true,
+      "ping_recovery": true,
+      "baseline": {
+        "rss_bytes": 27217920,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.06
+      },
+      "peak": {
+        "rss_bytes": 32464896,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.54
+      },
+      "final": {
+        "rss_bytes": 30572544,
+        "fds": 3,
+        "threads": 2,
+        "disk_bytes": 0,
+        "cpu_seconds": 0.54
+      }
+    }
+  ],
+  "scope": "finite sequential installed stdio state saturation; no audit, long soak, multi-caller isolation or output backpressure",
+  "server_revision": "12c964d4d56d8479f3e23e4982665295f0ee17bc",
+  "probe_sha256": "931c46e275dc07ead51676810298d8aaa49b6ed1cbaa4e18338ccda8fa2419e8",
+  "wheel_sha256": "79a32c6dde4c959d2c6df00eea1485586ad7098094cc9881f58da171fbcd45cc",
+  "python": "Python 3.14.4"
+}
