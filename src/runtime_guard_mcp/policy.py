@@ -81,6 +81,29 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
     return verdict("NEEDS_CONFIRMATION", "UNRECOGNIZED_COMMAND", "Review effects and target paths before execution.")
 
 
+class InvocationLimiter:
+    """One process-wide fixed minute window; constant memory and atomic admission."""
+
+    def __init__(self, limit: int = 600, clock=time.monotonic):
+        if type(limit) is not int or limit <= 0:
+            raise ValueError("invocations_minute must be a positive integer")
+        self.limit = limit
+        self._clock = clock
+        self._start = clock()
+        self._count = 0
+        self._lock = threading.Lock()
+
+    def admit(self) -> bool:
+        with self._lock:
+            now = self._clock()
+            if now - self._start >= 60:
+                self._start, self._count = now, 0
+            if self._count >= self.limit:
+                return False
+            self._count += 1
+            return True
+
+
 class BudgetState:
     """Per-caller limits; session IDs cannot reset caller-wide windows."""
 

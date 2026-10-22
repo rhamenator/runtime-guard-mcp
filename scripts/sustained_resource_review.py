@@ -29,7 +29,7 @@ def snapshot(pid, root):
 def review(executable, root, era):
     root.mkdir()
     config = root / 'config.json'
-    config.write_text(json.dumps({"workspace_root": str(root), "audit_db": str(root / 'audit.sqlite'), "audit_max_records": CAPACITY}))
+    config.write_text(json.dumps({"workspace_root": str(root), "audit_db": str(root / 'audit.sqlite'), "invocations_minute": 1000000, "audit_max_records": CAPACITY}))
     env = {k: v for k, v in os.environ.items() if k not in ('PYTHONPATH', 'PYTHONHOME') and not k.startswith('RUNTIME_GUARD_')}
     process = subprocess.Popen([executable, '--config', str(config)], cwd=root, env=env,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)

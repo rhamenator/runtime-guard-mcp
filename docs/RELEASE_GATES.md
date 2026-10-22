@@ -122,3 +122,7 @@ The handler now rejects null/float and other invalid explicit request IDs before
 ## Core inventory exposes concrete MUST-level work
 
 See CORE_CONFORMANCE_INVENTORY.md for frozen source hashes, observed/conditional/open obligations and explicit exclusions. Immediate next implementation priority T06 is bounded governance of actual tool invocations over time; optional caller-reported budget checks and concurrency caps do not satisfy it. The queued-output cancellation defect found during review is fixed and tested against installed persistent-audit pipe fixtures. Remaining versioning/caching/full-cancellation clause review and final candidate/human gates stay open.
+
+## Process-wide invocation admission
+
+T06 now has a constant-memory atomic fixed-minute governor before all tool policy dispatch. See README actual invocation limits for defaults, configuration, audit-denial omission and process/burst limitations. Unit races and installed two-era real-minute recovery cover bounded admission and unchanged budget state on denial. Resource saturation probes explicitly raise this allowance to isolate their existing audit/masker capacity targets. Remaining frozen-source clause review (versioning, caching, full cancellation), application-state/trust decisions, broader/native-client and final exact-candidate adversarial/package evidence, and independent human release review remain open.

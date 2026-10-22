@@ -67,3 +67,7 @@ Stdio output is bounded to 32 queued frames and 16 MiB of encoded queued/active 
 Custom clients must use string or integer request IDs. Explicit null, floating-point (including `1.0`), boolean, array and object IDs return `-32600` before policy work in both protocol versions and legacy HTTP. Omit the ID only for a notification, which does not execute tool calls or receive a JSON-RPC reply. This validation is not replay protection or exactly-once execution.
 
 Stdio cancellation also suppresses a completed result still waiting in the output queue. Request IDs and admission slots remain reserved until delivery or cancellation discard. A frame whose pipe write already began cannot be retracted, and cancellation does not undo committed policy/audit effects.
+
+### Invocation throttling
+
+All valid tool calls share a process allowance of 600 calls per fixed minute, independent of tool/session/caller and `budget_guard.consume`. Operators may configure the positive integer `invocations_minute` in server JSON. If `INVOCATION_RATE_LIMIT` blocks a call, wait up to 60 seconds before retrying; ping remains available. Denials do not mutate policy state or write audit rows. Restart resets the allowance, separate processes have separate limits, and HTTP callers share capacity. This is not a distributed or per-user quota.
