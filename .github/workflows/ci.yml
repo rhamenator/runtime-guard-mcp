@@ -54,6 +54,7 @@ jobs:
           timeout 20s python scripts/modern_stdio_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 20s python scripts/client_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 40s env PYTHONPATH=src python scripts/live_adversarial_test.py --server "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+          timeout 40s python scripts/output_backpressure_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Probe isolated filesystem-full recovery
         run: timeout 40s sudo -n "$(command -v python)" scripts/filesystem_full_review.py --mount-only "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Probe paced concurrent mixed-tool resource bounds

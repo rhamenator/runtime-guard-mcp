@@ -106,3 +106,7 @@ A fresh installed artifact now fills the production 4,096-secret map and 128 unf
 ## Extended concurrent replay
 
 A fixed two-minute, 24,576-call installed HTTP profile now repeats the mixed workload and fail-closed audit-capacity path, with sampled resource budgets, post-load ping and restart verification. CI runs both short and extended profiles on Python 3.12. See SUSTAINED_RESOURCE_EVIDENCE.md. This adds duration evidence without closing hours-long soak, output backpressure, exact physical storage or final release review.
+
+## Bounded stdio output backpressure
+
+Queued output has frame/byte limits and delivery/drain deadlines. Real installed pipe tests cover stalled and disconnected readers with stdin held open, plus resumed reading and ping recovery in both eras. See OUTPUT_BACKPRESSURE.md. Native-platform/real-client slow-reader and longer-soak coverage remain open; this does not waive final candidate/human review.

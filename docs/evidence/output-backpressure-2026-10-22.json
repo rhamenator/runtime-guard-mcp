@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "era": "legacy",
+      "scenario": "stalled",
+      "exit_code": 2,
+      "elapsed_seconds": 5.188
+    },
+    {
+      "era": "legacy",
+      "scenario": "disconnected",
+      "exit_code": 2,
+      "elapsed_seconds": 0.172
+    },
+    {
+      "era": "legacy",
+      "scenario": "resumed",
+      "exit_code": 0,
+      "elapsed_seconds": 0.29
+    },
+    {
+      "era": "modern",
+      "scenario": "stalled",
+      "exit_code": 2,
+      "elapsed_seconds": 5.187
+    },
+    {
+      "era": "modern",
+      "scenario": "disconnected",
+      "exit_code": 2,
+      "elapsed_seconds": 0.168
+    },
+    {
+      "era": "modern",
+      "scenario": "resumed",
+      "exit_code": 0,
+      "elapsed_seconds": 0.341
+    }
+  ],
+  "scope": "installed anonymous-pipe backpressure/disconnect/recovery; no whole-agent enforcement or state rollback",
+  "base_revision": "83ffbbae03452703e910ccbeedb176b2f1e2cc74",
+  "probe_sha256": "2fc1a537801db46c8af5c72e5b616bb750cdef64b9facf5bcb5305a5159b735a",
+  "wheel_sha256": "2815c8a40c37223750472ace9777e1f4cb7fe74c092b8038b8c6ecf48af413a5"
+}
