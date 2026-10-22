@@ -12,7 +12,9 @@ PREFIX = 'io.modelcontextprotocol/'
 
 
 def review(executable, root, modern):
-    process = subprocess.Popen([executable], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+    config = root / "invocation-config.json"
+    config.write_text(json.dumps({"invocations_minute": 1000000}))
+    process = subprocess.Popen([executable, "--config", str(config)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.DEVNULL, env=installed_environment(''), cwd=root)
     watchdog = threading.Timer(25, process.kill)
     watchdog.daemon = True

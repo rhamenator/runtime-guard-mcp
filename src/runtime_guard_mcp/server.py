@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 from .stdio import StdioOutput, read_frames
 from . import __version__
 from .audit import AuditCapacityError, AuditIntegrityError, AuditLog, AuditWalCapacityError, DEFAULT_AUDIT_MAX_RECORDS, DEFAULT_AUDIT_MAX_DB_BYTES, DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES
-from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
+from .policy import InvocationLimiter, BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
 
 PROTOCOL_VERSION = "2025-06-18"
 MODERN_VERSION = "2026-07-28"
@@ -216,15 +216,21 @@ def valid_client_capabilities(capabilities: dict[str, Any]) -> bool:
 
 
 class RuntimeGuard:
-    def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None, audit_max_records: int = DEFAULT_AUDIT_MAX_RECORDS, audit_max_db_bytes: int = DEFAULT_AUDIT_MAX_DB_BYTES, audit_wal_checkpoint_bytes: int = DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES):
+    def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None, audit_max_records: int = DEFAULT_AUDIT_MAX_RECORDS, audit_max_db_bytes: int = DEFAULT_AUDIT_MAX_DB_BYTES, audit_wal_checkpoint_bytes: int = DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES, invocations_minute: int = 600):
         self.workspace_root = str(Path(workspace_root).expanduser().resolve(strict=False))
         self.allowed_roots = allowed_roots or []
         self.enabled_tools = set(enabled_tools) if enabled_tools is not None else {tool["name"] for tool in TOOLS}
         self.budgets = BudgetState(token_hour, payload_hour, commands_minute)
+        self.invocations = InvocationLimiter(invocations_minute)
         self.masker = SecretMasker()
         self.audit = AuditLog(audit_db, audit_max_records, audit_max_db_bytes, audit_wal_checkpoint_bytes) if audit_db else None
 
     def call(self, name: str, arguments: dict[str, Any], caller: str) -> dict[str, Any]:
+        if name not in self.enabled_tools:
+            raise KeyError(name)
+        if not self.invocations.admit():
+            result = verdict("BLOCKED", "INVOCATION_RATE_LIMIT", "Wait up to 60 seconds for the shared process invocation window to reset, then retry.")
+            return {"content": [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}], "structuredContent": result, "isError": True}
         if name == "audit_path_access":
             result = audit_path_access(arguments["path"], self.workspace_root, arguments.get("operation", "read"), self.allowed_roots)
         elif name == "dry_run_command":
@@ -615,9 +621,9 @@ def main() -> None:
             config = parse_json_request(raw_config)
         except (OSError, ValueError, UnicodeDecodeError):
             parser.error("Cannot read config: use valid UTF-8 JSON without duplicate keys or non-finite numbers, within the request size and structure limits")
-        if not isinstance(config, dict) or set(config) - {"workspace_root", "allowed_roots", "enabled_tools", "token_hour", "payload_hour", "commands_minute", "audit_db", "audit_max_records", "audit_max_db_bytes", "audit_wal_checkpoint_bytes"}:
+        if not isinstance(config, dict) or set(config) - {"workspace_root", "allowed_roots", "enabled_tools", "token_hour", "payload_hour", "commands_minute", "audit_db", "audit_max_records", "audit_max_db_bytes", "audit_wal_checkpoint_bytes", "invocations_minute"}:
             parser.error("Invalid config keys")
-        for key in ("token_hour", "payload_hour", "commands_minute", "audit_max_records", "audit_max_db_bytes", "audit_wal_checkpoint_bytes"):
+        for key in ("token_hour", "payload_hour", "commands_minute", "audit_max_records", "audit_max_db_bytes", "audit_wal_checkpoint_bytes", "invocations_minute"):
             if key in config and (type(config[key]) is not int or config[key] <= 0):
                 parser.error(f"{key} must be a positive integer")
         for key, minimum in (("audit_max_db_bytes", 8192), ("audit_wal_checkpoint_bytes", 4096)):
@@ -632,7 +638,7 @@ def main() -> None:
         if "enabled_tools" in config and (not isinstance(config["enabled_tools"], list) or not all(isinstance(name, str) for name in config["enabled_tools"]) or not set(config["enabled_tools"]) <= {tool["name"] for tool in TOOLS}):
             parser.error("enabled_tools contains an unknown tool")
     try:
-        guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"), config.get("audit_max_records", DEFAULT_AUDIT_MAX_RECORDS), config.get("audit_max_db_bytes", DEFAULT_AUDIT_MAX_DB_BYTES), config.get("audit_wal_checkpoint_bytes", DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES))
+        guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"), config.get("audit_max_records", DEFAULT_AUDIT_MAX_RECORDS), config.get("audit_max_db_bytes", DEFAULT_AUDIT_MAX_DB_BYTES), config.get("audit_wal_checkpoint_bytes", DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES), config.get("invocations_minute", 600))
     except (OSError, ValueError, sqlite3.Error, AuditIntegrityError, AuditCapacityError):
         parser.error("Cannot initialize Runtime Guard: verify workspace, audit storage access, capacity and integrity")
     if args.transport == "stdio":

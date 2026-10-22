@@ -21,7 +21,7 @@ WORKERS, CYCLES, SECONDS, CAPACITY = 4, 128, 8, 1024
 def review(executable, root, extended=False):
     cycles, seconds, cpu_limit = (2048, 120, 90) if extended else (CYCLES, SECONDS, 20)
     audit, config = root / 'audit.sqlite', root / 'config.json'
-    config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'audit_max_records': CAPACITY,
+    config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'invocations_minute': 1000000, 'audit_max_records': CAPACITY,
                                   'audit_max_db_bytes': 1048576, 'audit_wal_checkpoint_bytes': 65536, 'token_hour': 64}))
     token = secrets.token_hex(32)
     with socket.socket() as reservation:

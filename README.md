@@ -122,3 +122,9 @@ Custom clients must use string or integer request IDs. Explicit null, floating-p
 Stdio cancellation also suppresses a completed result still waiting in the output queue. Request IDs and admission slots remain reserved until delivery or cancellation discard. A frame whose pipe write already began cannot be retracted, and cancellation does not undo committed policy/audit effects.
 
 The [frozen core conformance inventory](docs/CORE_CONFORMANCE_INVENTORY.md) records implemented evidence and concrete open release blockers, including mandatory invocation-rate governance beyond the optional budget tool.
+
+## Actual tool invocation limits
+
+Every valid call to any enabled tool consumes one shared process allowance before policy work, regardless of caller, session, tool name or `consume`. The default is 600 invocations per fixed 60-second window measured with a monotonic clock from server startup. Configure a positive integer `invocations_minute` in the server JSON configuration to tune it; there is no disable value. For example: `{"invocations_minute": 600}`. Both stdio versions and legacy HTTP use this gate. Invalid requests, notifications, discovery and ping do not consume it.
+
+Exhaustion returns `BLOCKED` / `INVOCATION_RATE_LIMIT` with `isError: true` and matching text/structured results. Wait up to 60 seconds before retrying. Rejected invocations do not change policy state or write audit rows, so a rejected flood cannot force SQLite writes; audit history therefore does not count every rate denial. Accepted calls retain normal audit behavior. This constant-memory, lock-protected gate is separate from optional caller-reported `budget_guard` accounting. It is shared across HTTP clients, resets on process restart, and permits a burst on each side of a window boundary. Multiple server processes multiply capacity; it is not distributed or per-user throttling, and protocol parsing/concurrency/output limits still apply.
