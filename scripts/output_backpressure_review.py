@@ -16,7 +16,7 @@ def main():
     results = []
     with tempfile.TemporaryDirectory(prefix='runtime-guard-output-') as root:
         for modern in (False, True):
-            for scenario in ('stalled', 'disconnected', 'resumed'):
+            for scenario in ('stalled', 'stalled-eof', 'disconnected', 'resumed'):
                 process = subprocess.Popen([str(Path(sys.argv[1]).absolute())], cwd=root,
                                            env=installed_environment(''), stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -41,6 +41,8 @@ def main():
                         assert json.loads(result['content'][0]['text']) == result['structuredContent']
                         assert replies[1]['result'] == {}
                     else:
+                        if scenario == 'stalled-eof':
+                            process.stdin.close()
                         if scenario == 'disconnected':
                             process.stdout.close()
                         # Keep stdin open: output failure must end even an idle-input session.

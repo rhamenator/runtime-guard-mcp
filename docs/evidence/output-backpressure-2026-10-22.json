@@ -5,41 +5,201 @@
       "era": "legacy",
       "scenario": "stalled",
       "exit_code": 2,
-      "elapsed_seconds": 5.188
+      "elapsed_seconds": 5.193
+    },
+    {
+      "era": "legacy",
+      "scenario": "stalled-eof",
+      "exit_code": 2,
+      "elapsed_seconds": 5.137
     },
     {
       "era": "legacy",
       "scenario": "disconnected",
       "exit_code": 2,
-      "elapsed_seconds": 0.172
+      "elapsed_seconds": 0.174
     },
     {
       "era": "legacy",
       "scenario": "resumed",
       "exit_code": 0,
-      "elapsed_seconds": 0.29
+      "elapsed_seconds": 0.344
     },
     {
       "era": "modern",
       "scenario": "stalled",
       "exit_code": 2,
-      "elapsed_seconds": 5.187
+      "elapsed_seconds": 5.188
+    },
+    {
+      "era": "modern",
+      "scenario": "stalled-eof",
+      "exit_code": 2,
+      "elapsed_seconds": 5.139
     },
     {
       "era": "modern",
       "scenario": "disconnected",
       "exit_code": 2,
-      "elapsed_seconds": 0.168
+      "elapsed_seconds": 0.173
     },
     {
       "era": "modern",
       "scenario": "resumed",
       "exit_code": 0,
-      "elapsed_seconds": 0.341
+      "elapsed_seconds": 0.338
     }
   ],
   "scope": "installed anonymous-pipe backpressure/disconnect/recovery; no whole-agent enforcement or state rollback",
   "base_revision": "83ffbbae03452703e910ccbeedb176b2f1e2cc74",
-  "probe_sha256": "2fc1a537801db46c8af5c72e5b616bb750cdef64b9facf5bcb5305a5159b735a",
-  "wheel_sha256": "2815c8a40c37223750472ace9777e1f4cb7fe74c092b8038b8c6ecf48af413a5"
+  "probe_sha256": "d4a5463b60d13f474fb1c1dd9be942ec89c4fa50e68968afd23e9d8a39320148",
+  "wheel_sha256": "2815c8a40c37223750472ace9777e1f4cb7fe74c092b8038b8c6ecf48af413a5",
+  "sustained_resource": {
+    "status": "PASS",
+    "limits": {
+      "rss_bytes": 134217728,
+      "rss_growth_bytes": 8388608,
+      "fd_growth": 2,
+      "threads": 4,
+      "disk_growth_bytes": 0,
+      "cpu_seconds": 30
+    },
+    "results": [
+      {
+        "era": "legacy",
+        "blocked_iterations": 65536,
+        "samples": 33,
+        "baseline": {
+          "rss_bytes": 28356608,
+          "fds": 6,
+          "threads": 4,
+          "disk_bytes": 626056,
+          "cpu_seconds": 0.11
+        },
+        "peak": {
+          "rss_bytes": 28618752,
+          "fds": 6,
+          "threads": 4,
+          "disk_bytes": 626056,
+          "cpu_seconds": 11.41
+        },
+        "measured": {
+          "rss_bytes": 28618752,
+          "rss_growth_bytes": 262144,
+          "fd_growth": 0,
+          "threads": 4,
+          "disk_growth_bytes": 0,
+          "cpu_seconds": 11.3
+        },
+        "audit_records": 128,
+        "recovery_ping": true,
+        "elapsed_seconds": 11.8
+      },
+      {
+        "era": "modern",
+        "blocked_iterations": 65536,
+        "samples": 33,
+        "baseline": {
+          "rss_bytes": 28418048,
+          "fds": 6,
+          "threads": 4,
+          "disk_bytes": 626056,
+          "cpu_seconds": 0.12
+        },
+        "peak": {
+          "rss_bytes": 28717056,
+          "fds": 6,
+          "threads": 4,
+          "disk_bytes": 626056,
+          "cpu_seconds": 11.2
+        },
+        "measured": {
+          "rss_bytes": 28717056,
+          "rss_growth_bytes": 299008,
+          "fd_growth": 0,
+          "threads": 4,
+          "disk_growth_bytes": 0,
+          "cpu_seconds": 11.08
+        },
+        "audit_records": 128,
+        "recovery_ping": true,
+        "elapsed_seconds": 11.565
+      }
+    ],
+    "scope": "finite sequential audit-capacity saturation; sampled Linux /proc; not concurrent load, indefinite soak, wall-time CPU guarantee or physical disk quota"
+  },
+  "masker_resource": {
+    "status": "PASS",
+    "results": [
+      {
+        "era": "legacy",
+        "tool_calls": 517,
+        "samples": 517,
+        "distinct_secrets": 4096,
+        "secret_capacity_denials": 128,
+        "open_streams": 128,
+        "stream_capacity_denials": 128,
+        "slot_recovery": true,
+        "ping_recovery": true,
+        "baseline": {
+          "rss_bytes": 27471872,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.07
+        },
+        "peak": {
+          "rss_bytes": 32964608,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.55
+        },
+        "final": {
+          "rss_bytes": 31109120,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.55
+        }
+      },
+      {
+        "era": "modern",
+        "tool_calls": 517,
+        "samples": 517,
+        "distinct_secrets": 4096,
+        "secret_capacity_denials": 128,
+        "open_streams": 128,
+        "stream_capacity_denials": 128,
+        "slot_recovery": true,
+        "ping_recovery": true,
+        "baseline": {
+          "rss_bytes": 27430912,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.07
+        },
+        "peak": {
+          "rss_bytes": 32890880,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.57
+        },
+        "final": {
+          "rss_bytes": 31035392,
+          "fds": 3,
+          "threads": 4,
+          "disk_bytes": 0,
+          "cpu_seconds": 0.57
+        }
+      }
+    ],
+    "scope": "finite sequential installed stdio state saturation; no audit, long soak, multi-caller isolation or output backpressure"
+  },
+  "resource_probe_sha256": {
+    "sustained_resource_review": "faa40397a253289fbe0d12b6ad0f4246054211a3b19b0d0d1ad96605ae060bb4",
+    "masker_state_review": "b5857aef865cfb2df27e448633798090ebcc03705dd3188fa6c620274a25131d"
+  }
 }

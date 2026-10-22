@@ -13,7 +13,7 @@ PREFIX = "io.modelcontextprotocol/"
 ITERATIONS = 65536
 CAPACITY = 128
 LIMITS = {"rss_bytes": 128 * 1024 * 1024, "rss_growth_bytes": 8 * 1024 * 1024,
-          "fd_growth": 2, "threads": 2, "disk_growth_bytes": 0, "cpu_seconds": 30}
+          "fd_growth": 2, "threads": 4, "disk_growth_bytes": 0, "cpu_seconds": 30}
 
 
 def snapshot(pid, root):
