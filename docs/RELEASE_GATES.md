@@ -42,3 +42,7 @@ Audit now defaults to a 100,000-record limit, configurable as positive `audit_ma
 ## Audit startup milestone
 
 Startup migrations now commit atomically after verification, with rollback/connection cleanup on failure and non-reflective CLI diagnostics before transport startup. Real trigger failure and repair/retry are tested on source and installed builds. Power-loss/forced-kill, actual filesystem-full and remaining physical-resource gates stay open.
+
+## Real-client cancellation milestone
+
+Fresh-wheel client-control probes with a test-only policy pause now cover Claude (modern, matching cancellation, suppressed reply, recovery) and Cursor (legacy, no MCP cancellation, recovery), each with one server process. Initial Codex recovery omitted MCP cancellation; its added-marker replay was provider-limited and remains inconclusive. See [scope and evidence](CLIENT_CANCELLATION.md). Do not waive Codex/Cursor cancellation delivery or modern-client replay gates from these observations.

@@ -81,3 +81,7 @@ Claude Code and Codex each completed one local stdio call with explicit tool per
 ## Modern stdio implementation
 
 MCP 2026-07-28 per-request stdio discovery, result envelopes, version errors and cancellation dispatch are implemented. `scripts/modern_stdio_smoke.py` probes a fresh wheel with an independent, dependency-free wire client in CI. Controlled slow-policy tests exercise active and queued cancellation. The official Python SDK 2.3.0 also passed `scripts/official_sdk_smoke.py SERVER --modern`: typed modern discovery/list/tool results, path and command rejection, cross-session budget exhaustion, and secret masking. CI runs both modern and legacy SDK modes. Coding-client evidence above uses legacy initialization; modern authenticated coding-client and UI cancellation probes remain required. The HTTP endpoint does not advertise modern transport support.
+
+## Real-client interrupt/recovery follow-up
+
+The [2026-10-22 cancellation review](CLIENT_CANCELLATION.md) records fresh-wheel control-path observations with a test-only paused first policy call. Claude used modern MCP and sent matching cancellation; Cursor used legacy MCP and omitted it; Codex initially recovered without cancellation, while its marker-enabled replay was provider-rate-limited. These scoped observations supersede earlier claims that all client cancellation was untested, but do not certify desktop/UI controls or waive the remaining gates.
