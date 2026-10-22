@@ -17,22 +17,22 @@
     "resources": {
       "baseline": {
         "status": "measured",
-        "rss_kib": 28032,
-        "peak_rss_kib": 28032,
+        "rss_kib": 27888,
+        "peak_rss_kib": 27888,
         "threads": 1,
         "file_descriptors": 7
       },
       "saturated": {
         "status": "measured",
-        "rss_kib": 29836,
-        "peak_rss_kib": 29836,
+        "rss_kib": 29696,
+        "peak_rss_kib": 29696,
         "threads": 65,
         "file_descriptors": 39
       },
       "final": {
         "status": "measured",
-        "rss_kib": 28912,
-        "peak_rss_kib": 28912,
+        "rss_kib": 28768,
+        "peak_rss_kib": 28768,
         "threads": 1,
         "file_descriptors": 7
       },
@@ -41,7 +41,7 @@
     "status": "PASS",
     "scanner": "Wfuzz 3.1.0",
     "target": "installed entry point on ephemeral loopback HTTP",
-    "scanner_requests": 18,
+    "scanner_requests": 21,
     "path_statuses": {
       "mcp": 200,
       "metrics": 404,
@@ -80,6 +80,7 @@
     "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
     "recovery": 200
   },
-  "wfuzz_probe_sha256": "5f03c35e7f13408f9ccd5407dbc383d6e6954256eeeebdd292df7a64c1747929",
-  "installed_api_checks": 68
+  "wfuzz_probe_sha256": "e525be46bfd01945f20c39a15614498e396a19f1c4823e54cd3a2d7ffe90b77d",
+  "installed_api_checks": 68,
+  "server_source_revision": "3e81f2d5e4633f2974117f412b61ac3055e576be"
 }
