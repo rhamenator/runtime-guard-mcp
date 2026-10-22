@@ -118,3 +118,7 @@ Stdio output is bounded to 32 queued frames and 16 MiB of encoded queued/active 
 Advertised tool schemas and actual structured decisions are checked with a separate Draft 2020-12 validator in the test-client environment; see [conformance evidence](docs/MODERN_CONFORMANCE.md). This does not certify complete MCP conformance.
 
 Custom clients must use string or integer request IDs. Explicit null, floating-point (including `1.0`), boolean, array and object IDs return `-32600` before policy work in both protocol versions and legacy HTTP. Omit the ID only for a notification, which does not execute tool calls or receive a JSON-RPC reply. This validation is not replay protection or exactly-once execution.
+
+Stdio cancellation also suppresses a completed result still waiting in the output queue. Request IDs and admission slots remain reserved until delivery or cancellation discard. A frame whose pipe write already began cannot be retracted, and cancellation does not undo committed policy/audit effects.
+
+The [frozen core conformance inventory](docs/CORE_CONFORMANCE_INVENTORY.md) records implemented evidence and concrete open release blockers, including mandatory invocation-rate governance beyond the optional budget tool.
