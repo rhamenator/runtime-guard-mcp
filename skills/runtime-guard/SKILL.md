@@ -37,3 +37,7 @@ Modern clients may call `server/discover` without initialization, supplying `_me
 Cancel a pending stdio request using `notifications/cancelled` with its string or integer `requestId`. Queued work is discarded and an active reply is suppressed; already applied budget/masker/audit changes are not undone, and running policy functions finish. This grants no execution permission. At most 32 requests may be outstanding; error `1001` asks the client to retry after pending work completes. See the README for EOF and output-backpressure limitations.
 
 Modern request IDs must be strings or integers, including requests with unsupported versions; null/float IDs return `-32600`. Optional modern `clientInfo.title` must be a string or the request returns `-32602`. These checks add no permissions.
+
+### Audit capacity
+
+If the separately configured server enables `audit_db`, `audit_max_records` defaults to 100000 (positive integer). `BLOCKED` / `AUDIT_CAPACITY` means the file has reached its committed-record limit; do not run the proposed action or repeatedly retry budget/masking calls. Ask the operator to stop the server, verify and preserve an SQLite backup, retain the final hash externally, and configure a fresh audit file before restarting. Do not delete rows or disable auditing to bypass the decision. The README describes permissions and the tested backup/restart workflow. This is a record limit, not a byte quota or automatic rotation, and new files do not automatically anchor previous chains. No new execution permission is granted.

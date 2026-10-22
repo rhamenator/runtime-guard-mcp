@@ -11,14 +11,22 @@ import time
 
 
 AUDIT_BUSY_TIMEOUT_SECONDS = 0.25
+DEFAULT_AUDIT_MAX_RECORDS = 100_000
 
 
 class AuditIntegrityError(RuntimeError):
     """A previously recorded audit decision has been changed or removed."""
 
 
+class AuditCapacityError(RuntimeError):
+    """The configured audit record limit has been reached; no rows are removed."""
+
+
 class AuditLog:
-    def __init__(self, path: str):
+    def __init__(self, path: str, max_records: int = DEFAULT_AUDIT_MAX_RECORDS):
+        if type(max_records) is not int or max_records <= 0:
+            raise ValueError("audit_max_records must be a positive integer")
+        self.max_records = max_records
         self._lock = threading.Lock()
         self._db = sqlite3.connect(path, timeout=AUDIT_BUSY_TIMEOUT_SECONDS, check_same_thread=False)
         self._db.execute("PRAGMA journal_mode=WAL")
@@ -41,10 +49,12 @@ class AuditLog:
                     self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
                 previous = current_hash
         self._db.commit()
-        if not self.verify_integrity()["valid"]:
+        integrity = self.verify_integrity()
+        if not integrity["valid"]:
             self._db.close()
             raise AuditIntegrityError("Audit integrity check failed at startup")
         self._tip = previous
+        self._records = integrity["records_checked"]
 
     @staticmethod
     def _hash(previous: str, timestamp: int, caller: str, tool: str, status: str, rule: str) -> str:
@@ -54,6 +64,8 @@ class AuditLog:
     def record(self, caller: str, tool: str, status: str, rule: str) -> None:
         digest = hashlib.sha256(caller.encode()).hexdigest()[:16]
         with self._lock:
+            if self._records >= self.max_records:
+                raise AuditCapacityError("Audit record capacity exhausted")
             try:
                 self._db.execute("BEGIN IMMEDIATE")
                 previous = self._db.execute("SELECT time_utc, caller_hash, tool, status, rule, prev_hash, content_hash FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
@@ -67,6 +79,7 @@ class AuditLog:
                 self._db.execute("INSERT INTO decisions (time_utc, caller_hash, tool, status, rule, prev_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?)", (timestamp, digest, tool, status, rule, previous_hash, content_hash))
                 self._db.commit()
                 self._tip = content_hash
+                self._records += 1
             except (sqlite3.Error, AuditIntegrityError):
                 try:
                     self._db.rollback()
