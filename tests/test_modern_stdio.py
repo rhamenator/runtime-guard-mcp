@@ -137,3 +137,34 @@ serve_stdio(Fixture('/tmp/work'))
         finally:
             release.set()
             dispatcher.close()
+
+    def test_unrelated_client_interrupt_cannot_cancel_advisory_work(self):
+        # Codex/Cursor can interrupt their turn without sending request cancellation.
+        started, release = threading.Event(), threading.Event()
+        effects, replies = [], []
+
+        class Guard:
+            def handle(self, message, caller, modern_stdio=False):
+                if message["id"] == 1:
+                    started.set()
+                    if not release.wait(2):
+                        raise RuntimeError("fixture timeout")
+                effects.append(message["id"])
+                return {"jsonrpc": "2.0", "id": message["id"], "result": {}}
+
+        dispatcher = StdioDispatcher(Guard(), replies.append)
+        try:
+            dispatcher.submit(request(1))
+            self.assertTrue(started.wait(1))
+            dispatcher.submit({"jsonrpc": "2.0", "method": "client/turn-interrupted", "params": {"requestId": 1}})
+            release.set()
+            dispatcher.queue.join()
+            self.assertEqual(effects, [1])
+            self.assertEqual([reply["id"] for reply in replies], [1])
+            dispatcher.submit(request(2))
+            dispatcher.queue.join()
+            self.assertEqual(effects, [1, 2])
+            self.assertEqual([reply["id"] for reply in replies], [1, 2])
+        finally:
+            release.set()
+            dispatcher.close()

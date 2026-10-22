@@ -39,3 +39,19 @@ python3 scripts/client_cancellation_probe.py cursor /path/to/venv/bin/python
 The harness uses an empty owner-only workspace, existing client authentication, one enabled MCP tool, a read-only Codex sandbox, and Cursor permission approval limited to this advisory tool. Claude disables other tools. The agent is instructed not to run commands: `git status` is inspection text for the guard. The Codex temporary home links to existing auth without copying/printing credentials. Private client/wire logs and temporary settings are removed on cleanup; cleanup signals only the probe's process group. Clients may retain their normal account-side history/settings. The helper uses a 150-second watchdog and bounded control waits. A `PASS_OBSERVATION` with `matching_wire_cancellation: false` is a completed negative observation, not a passing prompt-cancellation gate.
 
 A manually authorized bounded Codex retry completed in 11.95 seconds: legacy MCP 2025-06-18, one fixture process, acknowledged interrupt, no MCP cancellation notification, successful second call and two audit records. No current limit was observed; the historical failure cause remains unknown. Future failure hints distinguish explicit account-quota and rate-limit indicators from unknown failures; these hints alone do not establish causality.
+
+
+## Codex limitation and recovery procedure
+
+**Codex CLI 0.151.0 app-server:** advisory calls and same-process recovery are tested; cancellation delivery to Runtime Guard is **unsupported in this tested client path**. `turn/interrupt` acknowledges a client turn interrupt but sent no `notifications/cancelled`. Cursor's tested ACP path has the same limitation. This observation does not establish behavior in other client versions or UIs.
+
+There is no server-side signal that identifies the interrupted request. Runtime Guard must not guess from another request arriving, silence, or an unrelated notification: doing so could cancel valid work. A regression test ensures an unrelated client interrupt notification leaves the active request and subsequent recovery intact. A client fix must forward the matching MCP request ID in `notifications/cancelled`; the existing server cancellation tests then cover skipped queued work and suppressed active replies.
+
+For affected clients:
+
+1. Treat turn interruption as an unknown tool outcome until the actual result is available. The server inspects text; it never executes the proposed command or filesystem action.
+2. Do not automatically replay consuming budget reservations or stateful masking chunks. They may already have changed state, even if the client hid the response. Audit decisions also remain committed. An audit entry records a decision, not the full reservation or masked payload, and cannot reconstruct lost state.
+3. Resume the session and request a fresh read-only advisory check to verify connectivity. A successful recovery check does not prove the earlier call was cancelled. The developer probe performs exactly this check using `dry_run_command`.
+4. If the server is unresponsive, restart it through normal client controls. In-memory budget and masker state reset; persisted audit records remain. Restart is operational recovery, not rollback or safe replay of prior actions.
+
+No Runtime Guard setting can enable a notification the client omits. Keep client cancellation support marked limited until a versioned real-client replay proves delivery; use the documented Claude path or a protocol client that sends matching MCP cancellation when this capability is required.

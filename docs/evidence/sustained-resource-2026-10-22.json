@@ -1,0 +1,80 @@
+{
+  "status": "PASS",
+  "limits": {
+    "rss_bytes": 134217728,
+    "rss_growth_bytes": 8388608,
+    "fd_growth": 2,
+    "threads": 2,
+    "disk_growth_bytes": 0,
+    "cpu_seconds": 30
+  },
+  "results": [
+    {
+      "era": "legacy",
+      "blocked_iterations": 65536,
+      "samples": 33,
+      "baseline": {
+        "rss_bytes": 28106752,
+        "fds": 6,
+        "threads": 2,
+        "disk_bytes": 626056,
+        "cpu_seconds": 0.11
+      },
+      "peak": {
+        "rss_bytes": 28106752,
+        "fds": 6,
+        "threads": 2,
+        "disk_bytes": 626056,
+        "cpu_seconds": 7.04
+      },
+      "measured": {
+        "rss_bytes": 28106752,
+        "rss_growth_bytes": 0,
+        "fd_growth": 0,
+        "threads": 2,
+        "disk_growth_bytes": 0,
+        "cpu_seconds": 6.93
+      },
+      "audit_records": 128,
+      "recovery_ping": true,
+      "elapsed_seconds": 7.796
+    },
+    {
+      "era": "modern",
+      "blocked_iterations": 65536,
+      "samples": 33,
+      "baseline": {
+        "rss_bytes": 28180480,
+        "fds": 6,
+        "threads": 2,
+        "disk_bytes": 626056,
+        "cpu_seconds": 0.11
+      },
+      "peak": {
+        "rss_bytes": 28180480,
+        "fds": 6,
+        "threads": 2,
+        "disk_bytes": 626056,
+        "cpu_seconds": 8.8
+      },
+      "measured": {
+        "rss_bytes": 28180480,
+        "rss_growth_bytes": 0,
+        "fd_growth": 0,
+        "threads": 2,
+        "disk_growth_bytes": 0,
+        "cpu_seconds": 8.690000000000001
+      },
+      "audit_records": 128,
+      "recovery_ping": true,
+      "elapsed_seconds": 9.722
+    }
+  ],
+  "scope": "finite sequential audit-capacity saturation; sampled Linux /proc; not concurrent load, indefinite soak, wall-time CPU guarantee or physical disk quota",
+  "date": "2026-10-22",
+  "server_revision": "6362403e8b2544f540924a18b88ce8f344052c04",
+  "wheel_sha256": "c7536676abe2aada03a2ea0aec369609ad0e56d2df24621d1e491275d9258bbf",
+  "python": "3.14",
+  "platform": "Linux",
+  "command": "python3 scripts/sustained_resource_review.py INSTALLED_SERVER"
+}

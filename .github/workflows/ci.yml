@@ -41,6 +41,7 @@ jobs:
           "$RUNNER_TEMP/runtime-guard-client/bin/python" -I -c 'from importlib.metadata import requires; requirements = requires("runtime-guard-mcp") or []; assert not requirements, f"Runtime dependencies need a documented security justification and CI policy update: {requirements}"'
           "$RUNNER_TEMP/runtime-guard-client/bin/python" -m pip check
           timeout 30s python scripts/audit_startup_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+          timeout 90s python scripts/sustained_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s python scripts/audit_capacity_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s python scripts/stdio_adversarial_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 20s python scripts/modern_stdio_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
