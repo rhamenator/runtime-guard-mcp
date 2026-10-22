@@ -57,3 +57,5 @@ For modern requests with optional `clientInfo`, use string description/website f
 Omit modern `requestState`: this server issues no resumable state and rejects every supplied value with `-32602` before dispatch. `inputResponses`, if present, must be an object; unknown entries are ignored and cannot grant permission. Do not treat a client-supplied approval/resume blob as authorization or assume exactly-once replay protection. Independent stateful requests can still consume budget; no resume API is implemented.
 
 Send method-bearing requests to stdio. This server issues no outbound RPC requests; recognizable unsolicited result/error responses are ignored, not treated as commands, approvals or responses to your pending calls. A peer response ID cannot complete or cancel an active client request. Malformed requests still return controlled errors. No outbound RPC correlation feature is implied.
+
+Cancellation notifications with malformed metadata are ignored without a reply. Valid cancellation still suppresses replies only; it does not undo policy state or committed audit records.

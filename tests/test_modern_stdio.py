@@ -121,7 +121,7 @@ serve_stdio(Fixture('/tmp/work'))
             for identifier in ([], True, "unknown"):
                 dispatcher.submit({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": identifier}})
             for identifier in (1, 2):
-                dispatcher.submit({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": identifier, "reason": "synthetic-marker"}})
+                dispatcher.submit({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": identifier, "reason": "synthetic-marker", "_meta": {"com.example/probe": {}, META_PREFIX + "subscriptionId": "stream"}}})
             release.set()
             dispatcher.queue.join()
             self.assertEqual(calls, [1])
@@ -157,6 +157,11 @@ serve_stdio(Fixture('/tmp/work'))
             dispatcher.submit(request(1))
             self.assertTrue(started.wait(1))
             dispatcher.submit({"jsonrpc": "2.0", "method": "client/turn-interrupted", "params": {"requestId": 1}})
+            for meta in (None, [], {"bad!": {}}, {META_PREFIX + "subscriptionId": True},
+                         {META_PREFIX + "subscriptionId": None}, {META_PREFIX + "subscriptionId": []}):
+                dispatcher.submit({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                                   "params": {"requestId": 1, "_meta": meta}})
+                self.assertFalse(dispatcher.pending[1].is_set())
             release.set()
             dispatcher.queue.join()
             self.assertEqual(effects, [1])

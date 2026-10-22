@@ -94,3 +94,7 @@ Uncorrelated response envelopes no longer become invalid-request replies or coll
 ## Finite concurrent mixed-tool resource evidence
 
 An installed four-worker, eight-second campaign now covers 1,536 budget/masker/command requests, atomic shared-budget enforcement, audit-capacity denials, secret non-exposure, sampled resources and successful post-load/restart-integrity pings. CI runs the extra paced test on Python 3.12. See `SUSTAINED_RESOURCE_EVIDENCE.md`; longer soaks, many callers/secret churn, broader workloads and physical quota guarantees remain open.
+
+## Cancellation metadata validation
+
+Malformed cancellation notification metadata cannot suppress pending replies. Installed reader/worker tests cover rejection, valid extension cancellation and ping recovery; see MODERN_CONFORMANCE.md. Full normative review and the remaining resource, exact-candidate and human-review gates remain open.

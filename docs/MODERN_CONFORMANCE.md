@@ -54,3 +54,11 @@ A paused dispatcher fixture receives response IDs matching an active client call
 This is response-envelope classification, not full validation of result contents or support for server-initiated calls. Any future outbound RPC feature needs explicit correlation rather than reusing client-request IDs. Legacy HTTP remains request-only JSON-RPC; full modern message-pattern/schema/client review stays open.
 
 [Installed peer-response evidence](evidence/peer-response-2026-10-22.json) records the source revision and wheel/probe checksums.
+
+## Cancellation notification metadata boundary
+
+Metadata key grammar and the optional subscription ID type are checked before a cancellation can affect pending work. Invalid notifications receive no reply and cannot suppress a pending reply. Unknown valid extension keys remain accepted; string/integer subscription IDs are shape checks, not authenticated stream identities.
+
+The source-pinned schema remains `271ecc9accafdd9b83a3c869fa67c22953b2af80`, SHA-256 `742750af0bb8c716e7030c4977c992b55d1adc4407e9e66997db5846baedc2cd`, re-fetched 2026-10-22. See [NotificationMetaObject](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/schema/2026-07-28/schema.ts).
+
+`cancellation_metadata_review.py` runs against a fresh installed Python environment with a test-only 300 ms policy pause. Six malformed metadata variants preserve the active reply; a valid extension/subscription notification suppresses it, and both processes recover with ping. Unit tests cover pending-event preservation and valid queued cancellation. CI repeats the installed probe on Python 3.11–3.14. This is not forced preemption, real-client cancellation delivery, or full conformance certification.
