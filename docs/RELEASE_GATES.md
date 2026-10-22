@@ -5,7 +5,7 @@ Reviewed 2026-10-21, base revision `7068ddb`. This is a work queue, not release 
 | Priority | Remaining gate | Evidence required to close |
 | --- | --- | --- |
 | 1 | MCP 2026-07-28 conformance | Implement version-aware per-request metadata/capability negotiation, result envelopes, discovery ordering, and cancellation; test normative requirements through installed stdio and each advertised transport. Preserve verified older-client negotiation. Stdio now implements initial modern per-request metadata, discovery, result envelopes, and bounded cancellation dispatch while preserving 2025-06-18 clients. Complete normative-schema review and modern real-client evidence remain open; HTTP remains legacy. |
-| 2 | Sustained resource bounds and audit retention | Repeatable soak with CPU, RSS, descriptors, threads and disk measurements; explicit storage cap/retention behavior and fail-closed disk failure/recovery. Existing snapshots and handler saturation are bounded evidence only; audit storage currently grows. |
+| 2 | Sustained resource bounds and audit retention | Repeatable soak with CPU, RSS, descriptors, threads and disk measurements; explicit storage cap/retention behavior and fail-closed disk failure/recovery. A default record cap and actual tmpfs ENOSPC recovery are tested; physical byte/WAL quotas and longer mixed/concurrent load remain open. |
 | 3 | Release-candidate client and adversarial evidence | Fresh artifact probes in versioned Codex, Claude Code and Cursor, including cancellation/recovery; rerun authorized Wfuzz/Nmap and adversarial API corpus against that artifact, review findings and residual risks. Existing probes cover earlier revisions and limited workflows. |
 | 4 | Distribution and human review | Build/inspect wheel, source archive and companion skill ZIP; verify clean installation, checksums/provenance, changelog and claim-to-test mapping. Link evidence in a release issue and obtain human readiness approval before stable tagging. |
 
@@ -52,3 +52,10 @@ Fresh-wheel client-control probes with a test-only policy pause now cover Claude
 An installed-server probe now exercises real ENOSPC in a private 2 MiB tmpfs: fail-closed tool response, responsive ping, unchanged prior records and recovery after space restoration, in both protocol eras. CI repeats on every Python matrix version. Physical block-device/inode/power-loss cases and remaining quota/provenance/resource gates stay open.
 
 A subsequent bounded Codex replay passed with process/protocol markers: one process, legacy MCP, interruption acknowledged, recovery successful, no MCP cancellation notification. The earlier inconclusive run remains in evidence with unknown cause.
+
+
+## Cancellation boundary and finite resource regression
+
+The Codex CLI 0.151.0 app-server path recovers but omits MCP cancellation. The [client-specific recovery procedure](CLIENT_CANCELLATION.md#codex-limitation-and-recovery-procedure) now documents unknown outcomes, unsafe stateful replay and restart semantics. An unrelated client notification must not cancel valid work; a dispatcher regression test protects that boundary. Actual client notification delivery remains an external compatibility limitation, not a configurable server feature.
+
+A fresh installed server now survives 65,536 audit-capacity denials per protocol era with periodic pings, preserved record counts and sampled CPU/RSS/FD/thread/audit-size regression thresholds. See [resource evidence](SUSTAINED_RESOURCE_EVIDENCE.md). CI repeats this finite campaign; it does not close longer mixed/concurrent-load, physical-byte quota, output-backpressure or provenance gates.
