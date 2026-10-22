@@ -54,6 +54,9 @@ jobs:
           timeout 40s env PYTHONPATH=src python scripts/live_adversarial_test.py --server "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Probe isolated filesystem-full recovery
         run: timeout 40s sudo -n "$(command -v python)" scripts/filesystem_full_review.py --mount-only "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+      - name: Probe paced concurrent mixed-tool resource bounds
+        if: matrix.python == '3.12'
+        run: timeout 45s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
       - name: Probe installed server with official SDK client
         if: matrix.python == '3.12'
         run: |

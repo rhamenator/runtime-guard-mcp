@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "results": {
+    "workers": 4,
+    "cycles_per_worker": 128,
+    "target_seconds": 8,
+    "elapsed_seconds": 8.025,
+    "requests": 1536,
+    "counts": {
+      "budget_guard/WITHIN_BUDGET": 64,
+      "secret_masker/MASKED": 340,
+      "dry_run_command/READ_ONLY_COMMAND": 340,
+      "budget_guard/TOKENS_BUDGET": 280,
+      "secret_masker/AUDIT_CAPACITY": 172,
+      "dry_run_command/AUDIT_CAPACITY": 172,
+      "budget_guard/AUDIT_CAPACITY": 168
+    },
+    "samples": 159,
+    "baseline": {
+      "rss_bytes": 28823552,
+      "fds": 7,
+      "threads": 1,
+      "disk_bytes": 45136,
+      "cpu_seconds": 0.07
+    },
+    "peak": {
+      "rss_bytes": 29601792,
+      "fds": 11,
+      "threads": 10,
+      "disk_bytes": 287088,
+      "cpu_seconds": 3.59
+    },
+    "final": {
+      "rss_bytes": 29515776,
+      "fds": 7,
+      "threads": 1,
+      "disk_bytes": 266392,
+      "cpu_seconds": 3.59
+    },
+    "audit_records": 1024,
+    "post_load_ping": true,
+    "restart_integrity_ping": true
+  },
+  "scope": "finite paced four-worker loopback HTTP workload; not long-duration soak, latency guarantee, multi-user isolation or exact physical quota",
+  "date": "2026-10-22",
+  "server_source_revision": "afde0ba3e55642563f0c4f2f29625917076d646c",
+  "harness_revision": "4b599739ac43f180f29776609486ec9f070534bc",
+  "wheel_sha256": "bf62556b4a84c634d9ef059dc10ee6526f85400708a2c50426fbc3a90f18e75f",
+  "probe_sha256": "8042ec9e9d77a41ff80b81d88c9b0184d7b83ef71e8629b46b7c0a05282bc084",
+  "command": "python3 scripts/concurrent_resource_review.py INSTALLED_SERVER"
+}

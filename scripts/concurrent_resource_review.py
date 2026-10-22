@@ -1,0 +1,140 @@
+"""Paced, finite authenticated mixed-tool HTTP resource review (Linux)."""
+import concurrent.futures
+from contextlib import closing
+import json
+from pathlib import Path
+import secrets
+import socket
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from sustained_resource_review import snapshot
+from wfuzz_loopback_review import installed_environment, request
+
+WORKERS, CYCLES, SECONDS, CAPACITY = 4, 128, 8, 1024
+
+
+def review(executable, root):
+    audit, config = root / 'audit.sqlite', root / 'config.json'
+    config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'audit_max_records': CAPACITY,
+                                  'audit_max_db_bytes': 1048576, 'audit_wal_checkpoint_bytes': 65536, 'token_hour': 64}))
+    token = secrets.token_hex(32)
+    with socket.socket() as reservation:
+        reservation.bind(('127.0.0.1', 0))
+        port = reservation.getsockname()[1]
+    process = subprocess.Popen([executable, '--transport', 'http', '--port', str(port), '--config', str(config)],
+                               env=installed_environment(token), cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    watchdog = threading.Timer(35, process.kill)
+    watchdog.daemon = True
+    watchdog.start()
+    marker = 'ghp_' + 'A' * 36
+    counts, lock = {}, threading.Lock()
+
+    def call(name, arguments):
+        frame = {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': name, 'arguments': arguments}}
+        status, raw = request(port, token, json.dumps(frame).encode())
+        result = json.loads(raw)['result']
+        value = result['structuredContent']
+        assert status == 200 and json.loads(result['content'][0]['text']) == value
+        assert marker.encode() not in raw
+        expected = {'budget_guard': {'WITHIN_BUDGET', 'TOKENS_BUDGET', 'AUDIT_CAPACITY'},
+                    'secret_masker': {'MASKED', 'AUDIT_CAPACITY'}, 'dry_run_command': {'READ_ONLY_COMMAND', 'AUDIT_CAPACITY'}}
+        assert value['rule'] in expected[name]
+        assert result['isError'] == (value['status'] == 'BLOCKED')
+        if value['rule'] == 'AUDIT_CAPACITY':
+            assert 'text' not in value and 'remaining' not in value
+        with lock:
+            key = name + '/' + value['rule']
+            counts[key] = counts.get(key, 0) + 1
+
+    def ping():
+        status, raw = request(port, token)
+        assert status == 200 and json.loads(raw).get("result") == {}
+
+    try:
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                ping()
+                break
+            except OSError:
+                assert process.poll() is None and time.monotonic() < deadline
+                time.sleep(.03)
+        baseline = snapshot(process.pid, root)
+        samples = [baseline]
+        start = time.monotonic()
+
+        initial_budget_phase = threading.Barrier(WORKERS, timeout=8)
+
+        def worker(index):
+            for cycle in range(CYCLES):
+                call('budget_guard', {'session_id': str(index), 'tokens': 1, 'consume': True})
+                call('secret_masker', {'session_id': str(index), 'stream_id': 'load', 'chunk': marker, 'final': True})
+                call('dry_run_command', {'command': 'git status'})
+                # Finish the first 64 reservations before audit capacity can hide
+                # a completed reservation behind an audit failure.
+                if cycle == 15:
+                    initial_budget_phase.wait()
+                time.sleep(max(0, start + (cycle + 1) * SECONDS / CYCLES - time.monotonic()))
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            futures = [pool.submit(worker, index) for index in range(WORKERS)]
+            while not all(f.done() for f in futures):
+                assert time.monotonic() - start < 30, 'workload exceeded bounded deadline'
+                samples.append(snapshot(process.pid, root))
+                time.sleep(.05)
+            for future in futures:
+                future.result()
+        elapsed = time.monotonic() - start
+        time.sleep(.2)
+        final = snapshot(process.pid, root)
+        samples.append(final)
+        ping()
+        assert sum(counts.values()) == WORKERS * CYCLES * 3
+        assert counts['budget_guard/WITHIN_BUDGET'] == 64
+        assert counts.get('budget_guard/TOKENS_BUDGET', 0) > 0
+        assert sum(n for k, n in counts.items() if k.endswith('/AUDIT_CAPACITY')) == WORKERS * CYCLES * 3 - CAPACITY
+        with closing(sqlite3.connect(audit)) as db:
+            assert db.execute('SELECT count(*) FROM decisions').fetchone()[0] == CAPACITY
+            assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
+        assert all(marker.encode() not in path.read_bytes() for path in root.glob('audit.sqlite*'))
+        peak = {key: max(s[key] for s in samples) for key in baseline}
+        assert peak['rss_bytes'] <= 128 * 1024 * 1024 and final['rss_bytes'] - baseline['rss_bytes'] <= 16 * 1024 * 1024
+        assert peak['threads'] <= 65 and peak['fds'] <= baseline['fds'] + 32
+        assert final['threads'] <= baseline['threads'] + 2 and final['fds'] <= baseline['fds'] + 2
+        assert peak['disk_bytes'] <= 8 * 1024 * 1024 and final['cpu_seconds'] - baseline['cpu_seconds'] <= 20
+        return {'workers': WORKERS, 'cycles_per_worker': CYCLES, 'target_seconds': SECONDS,
+                'elapsed_seconds': round(elapsed, 3), 'requests': sum(counts.values()), 'counts': counts,
+                'samples': len(samples), 'baseline': baseline, 'peak': peak, 'final': final,
+                'audit_records': CAPACITY, 'post_load_ping': True}
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=3)
+        watchdog.cancel()
+
+
+def main():
+    if len(sys.argv) != 2 or not Path('/proc/self/status').exists():
+        raise SystemExit('usage (Linux): concurrent_resource_review.py INSTALLED_SERVER')
+    with tempfile.TemporaryDirectory(prefix='runtime-guard-concurrent-') as directory:
+        executable, root = str(Path(sys.argv[1]).absolute()), Path(directory)
+        results = review(executable, root)
+        restarted = subprocess.run([executable, '--config', str(root / 'config.json')],
+                                   input='{"jsonrpc":"2.0","id":1,"method":"ping"}\n', text=True,
+                                   env=installed_environment(''), cwd=root, capture_output=True, timeout=6, check=True)
+        assert json.loads(restarted.stdout) == {'jsonrpc': '2.0', 'id': 1, 'result': {}}
+        results['restart_integrity_ping'] = True
+    print(json.dumps({'status': 'PASS', 'results': results,
+                      'scope': 'finite paced four-worker loopback HTTP workload; not long-duration soak, latency guarantee, multi-user isolation or exact physical quota'}, indent=2))
+
+
+if __name__ == '__main__':
+    main()
