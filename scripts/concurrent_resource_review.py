@@ -67,11 +67,17 @@ def review(executable, root):
         samples = [baseline]
         start = time.monotonic()
 
+        initial_budget_phase = threading.Barrier(WORKERS, timeout=8)
+
         def worker(index):
             for cycle in range(CYCLES):
                 call('budget_guard', {'session_id': str(index), 'tokens': 1, 'consume': True})
                 call('secret_masker', {'session_id': str(index), 'stream_id': 'load', 'chunk': marker, 'final': True})
                 call('dry_run_command', {'command': 'git status'})
+                # Finish the first 64 reservations before audit capacity can hide
+                # a completed reservation behind an audit failure.
+                if cycle == 15:
+                    initial_budget_phase.wait()
                 time.sleep(max(0, start + (cycle + 1) * SECONDS / CYCLES - time.monotonic()))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as pool:
