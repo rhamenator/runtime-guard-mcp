@@ -64,3 +64,8 @@ A fresh installed server now survives 65,536 audit-capacity denials per protocol
 ## Modern capability and pagination review
 
 Known nested client capability shapes and prefixed extension identifiers are validated before dispatch; malformed metadata cannot consume budget. The terminal four-tool list rejects all supplied continuation cursors with non-reflective errors. The installed 24-frame validation campaign checks recovery and legacy interleaving in CI. See [review mapping and remaining scope](MODERN_CONFORMANCE.md); this does not certify all modern normative requirements.
+
+
+## Database-page ceiling and concurrent WAL-pressure recovery
+
+A default 64 MiB SQLite page ceiling and 4 MiB WAL checkpoint/admission threshold now complement the record cap. Actual page-ceiling exhaustion preserves rows; pinned readers deny new writes until reclamation succeeds. Installed loopback tests cover four concurrent denials, responsive ping, controlled startup refusal, then 128 successful concurrent writes after release. See [storage policy and scope](AUDIT_STORAGE_LIMITS.md). Exact physical WAL/total-disk quotas, longer mixed/concurrent soaks, power-loss and cross-file provenance remain open.

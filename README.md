@@ -91,3 +91,8 @@ On Linux, run `python3 scripts/sustained_resource_review.py /path/to/venv/bin/ru
 
 
 Modern stdio validates known nested client capability shapes before tool dispatch. Experimental/extension settings and sampling/elicitation options must have the documented object shapes; extension IDs require a valid prefix. Unknown object-shaped custom capabilities are accepted without enabling them or granting permissions. The four-tool list is one terminal page with no `nextCursor`; supplied cursors return non-reflective `-32602` errors. See the [partial modern conformance review](docs/MODERN_CONFORMANCE.md) and installed `scripts/modern_validation_review.py` probe. Full conformance remains a release gate.
+
+
+### Audit database pages and WAL pressure
+
+When audit is enabled, `audit_max_db_bytes` defaults to 67108864 (64 MiB, integer >=8192, rounded down to database pages). Existing files above the page ceiling refuse startup; growth failures return `AUDIT_UNAVAILABLE` and preserve prior rows. `audit_wal_checkpoint_bytes` defaults to 4194304 (4 MiB, integer >=4096): at/above that WAL high-water mark, a successful truncating checkpoint is required before another write. Pinned readers cause `AUDIT_WAL_CAPACITY` until released. This is a checkpoint/admission threshold, **not an exact physical WAL quota**; the crossing transaction or migration can overshoot it. Keep an OS quota for total filesystem use. See [configuration, recovery and concurrent installed tests](docs/AUDIT_STORAGE_LIMITS.md). Policy state may already have changed before either audit denial; do not automatically replay stateful calls.

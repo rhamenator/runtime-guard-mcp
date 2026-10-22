@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "results": {
+    "database_ceiling_bytes": 8192,
+    "initial_retained_rows": 20,
+    "concurrent_denials": 4,
+    "startup_refused_while_pinned": true,
+    "wal_unchanged_during_denials": true,
+    "concurrent_recovery_writes": 128,
+    "retained_rows": 149,
+    "ping_healthy": true
+  },
+  "scope": "finite loopback HTTP concurrency and actual SQLite page ceiling; not exact physical WAL quota or long-duration load",
+  "date": "2026-10-22",
+  "wheel_sha256": "537a8454e5431c61d59f07743b3d82ff1e64344fdc077b759e7f14bdda31cfde",
+  "command": "python3 scripts/audit_storage_review.py INSTALLED_SERVER",
+  "server_source_revision": "01e2cafe4915e4c21e5adacfe329c8156341b494",
+  "probe_sha256": "1485d7a76784d15fabdbbca3672d2a6996fa3b91e245c18895893c9527a588f4"
+}

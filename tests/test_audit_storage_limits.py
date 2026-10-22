@@ -3,6 +3,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest import mock
 
 from runtime_guard_mcp.audit import AuditLog, AuditWalCapacityError
 from runtime_guard_mcp.server import RuntimeGuard
@@ -89,3 +90,17 @@ class AuditStorageLimitsTests(unittest.TestCase):
         for values in ({'max_db_bytes': True}, {'max_db_bytes': 8191}, {'wal_checkpoint_bytes': False}, {'wal_checkpoint_bytes': 4095}):
             with self.assertRaises(ValueError):
                 AuditLog(':memory:', **values)
+
+    def test_wal_inspection_failure_is_controlled_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as root:
+            guard = RuntimeGuard(root, audit_db=str(Path(root) / 'audit.sqlite'))
+            try:
+                with mock.patch('runtime_guard_mcp.audit.Path.stat', side_effect=PermissionError('synthetic-private-marker')):
+                    result = guard.call('dry_run_command', {'command': 'git status'}, 'caller')
+                self.assertTrue(result['isError'])
+                self.assertEqual(result['structuredContent']['rule'], 'AUDIT_UNAVAILABLE')
+                self.assertNotIn('synthetic-private-marker', str(result))
+                self.assertEqual(guard.audit.verify_integrity()['records_checked'], 0)
+                self.assertFalse(guard.call('dry_run_command', {'command': 'git status'}, 'caller')['isError'])
+            finally:
+                guard.audit._db.close()
