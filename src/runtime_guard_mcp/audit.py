@@ -29,32 +29,36 @@ class AuditLog:
         self.max_records = max_records
         self._lock = threading.Lock()
         self._db = sqlite3.connect(path, timeout=AUDIT_BUSY_TIMEOUT_SECONDS, check_same_thread=False)
-        self._db.execute("PRAGMA journal_mode=WAL")
-        self._db.execute("CREATE TABLE IF NOT EXISTS decisions (time_utc INTEGER NOT NULL, caller_hash TEXT NOT NULL, tool TEXT NOT NULL, status TEXT NOT NULL, rule TEXT NOT NULL, prev_hash TEXT, content_hash TEXT)")
-        columns = {row[1] for row in self._db.execute("PRAGMA table_info(decisions)")}
-        hash_columns = columns & {"prev_hash", "content_hash"}
-        if len(hash_columns) == 1:
+        try:
+            self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute("BEGIN IMMEDIATE")
+            self._db.execute("CREATE TABLE IF NOT EXISTS decisions (time_utc INTEGER NOT NULL, caller_hash TEXT NOT NULL, tool TEXT NOT NULL, status TEXT NOT NULL, rule TEXT NOT NULL, prev_hash TEXT, content_hash TEXT)")
+            columns = {row[1] for row in self._db.execute("PRAGMA table_info(decisions)")}
+            hash_columns = columns & {"prev_hash", "content_hash"}
+            if len(hash_columns) == 1:
+                raise AuditIntegrityError("Incomplete audit hash schema")
+            legacy = not hash_columns
+            for column in ("prev_hash", "content_hash"):
+                if column not in columns:
+                    self._db.execute(f"ALTER TABLE decisions ADD COLUMN {column} TEXT")
+            # Backfill older local audits so subsequent appends have a chain anchor.
+            previous = "0" * 64
+            with closing(self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, content_hash FROM decisions ORDER BY rowid")) as rows:
+                for rowid, timestamp, caller, tool, status, rule, current_hash in rows:
+                    if legacy:
+                        current_hash = self._hash(previous, timestamp, caller, tool, status, rule)
+                        self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
+                    previous = current_hash
+            integrity = self.verify_integrity()
+            if not integrity["valid"]:
+                raise AuditIntegrityError("Audit integrity check failed at startup")
+            self._db.commit()
+            self._tip = previous
+            self._records = integrity["records_checked"]
+        except BaseException:
+            # Closing rolls back schema/backfill writes, even on interrupted startup.
             self._db.close()
-            raise AuditIntegrityError("Incomplete audit hash schema")
-        legacy = not hash_columns
-        for column in ("prev_hash", "content_hash"):
-            if column not in columns:
-                self._db.execute(f"ALTER TABLE decisions ADD COLUMN {column} TEXT")
-        # Backfill older local audits so subsequent appends have a chain anchor.
-        previous = "0" * 64
-        with closing(self._db.execute("SELECT rowid, time_utc, caller_hash, tool, status, rule, content_hash FROM decisions ORDER BY rowid")) as rows:
-            for rowid, timestamp, caller, tool, status, rule, current_hash in rows:
-                if legacy:
-                    current_hash = self._hash(previous, timestamp, caller, tool, status, rule)
-                    self._db.execute("UPDATE decisions SET prev_hash = ?, content_hash = ? WHERE rowid = ?", (previous, current_hash, rowid))
-                previous = current_hash
-        self._db.commit()
-        integrity = self.verify_integrity()
-        if not integrity["valid"]:
-            self._db.close()
-            raise AuditIntegrityError("Audit integrity check failed at startup")
-        self._tip = previous
-        self._records = integrity["records_checked"]
+            raise
 
     @staticmethod
     def _hash(previous: str, timestamp: int, caller: str, tool: str, status: str, rule: str) -> str:
