@@ -32,3 +32,12 @@ Modern `clientInfo` validates required name/version and optional title, descript
 `implementation_metadata_review.py` reuses the installed-frame harness: ten malformed consuming requests return non-reflective errors, then a complete valid metadata declaration can consume the full untouched budget and a legacy ping succeeds. CI repeats the twelve-frame sequence on Python 3.11–3.14. Source reference remains the pinned `Implementation`, `Icons` and `Icon` definitions above. This closes this shape-validation slice, not the full normative gate.
 
 [Installed probe evidence](evidence/implementation-metadata-2026-10-22.json) records the source revision and wheel/probe checksums.
+
+
+## Unsolicited continuation boundary
+
+Runtime Guard's current tools complete synchronously; no method issues `input_required`, `inputRequests` or `requestState`. Modern requests carrying any `requestState` are rejected with `-32602` before tool dispatch, including empty strings and apparently approved/opaque state. Nothing is decoded as a permission grant or treated as fresh stateful work. A supplied `inputResponses` must be an object; unknown response entries are ignored because this server requested none. No nested response is interpreted or used to authorize an action. Legacy extension handling is unchanged.
+
+This follows the [MRTR state/response boundary](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr): state is untrusted and clients only echo state actually issued by the server; unexpected response information can be ignored. This change does not implement a resumable service, cryptographic state validation, exactly-once behavior or deduplication of independent requests. Complete MRTR/schema and message-pattern review remains open.
+
+The installed `request_state_review.py` reuses the bounded frame harness. It rejects 14 frames (seven unsolicited states, four malformed response containers and state on ping/list/discovery), then accepts a full untouched 120-command reservation with unknown input responses and a legacy recovery ping. Errors and results do not echo the supplied marker. CI repeats the 16-frame review on all supported Python versions.
