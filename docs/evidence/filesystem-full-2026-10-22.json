@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "scope": "private tmpfs ENOSPC, not host disk/power-loss proof",
+  "results": [
+    {
+      "era": "legacy",
+      "status": "PASS",
+      "tmpfs_limit_bytes": 2097152,
+      "filesystem_enospc": true,
+      "filler_bytes": 2043904,
+      "safe_before_full": 1,
+      "records_after_failure": 1,
+      "records_after_recovery": 2,
+      "ping_healthy_while_full": true
+    },
+    {
+      "era": "modern",
+      "status": "PASS",
+      "tmpfs_limit_bytes": 2097152,
+      "filesystem_enospc": true,
+      "filler_bytes": 2043904,
+      "safe_before_full": 1,
+      "records_after_failure": 1,
+      "records_after_recovery": 2,
+      "ping_healthy_while_full": true
+    }
+  ],
+  "server_base_revision": "6f3c67f4d20fdff63cb0b57e522e1f9c06f181c5",
+  "wheel_sha256": "6d145ec581133ff74e5cf2a06f43f69171138a345ee8ecbc9d49c68eeb34df65",
+  "host_mode": "rootless user/mount namespace"
+}
