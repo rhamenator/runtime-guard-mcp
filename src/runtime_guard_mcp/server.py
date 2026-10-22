@@ -168,6 +168,28 @@ def valid_meta_key(key: str) -> bool:
     return not name or (name[0].isalnum() and name[-1].isalnum() and all(char.isalnum() or char in "-_." for char in name))
 
 
+def valid_client_implementation(client: Any) -> bool:
+    """Check modern implementation metadata without fetching or trusting URLs."""
+    if not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version")):
+        return False
+    if any(key in client and not isinstance(client[key], str) for key in ("title", "description", "websiteUrl")):
+        return False
+    if "icons" not in client:
+        return True
+    if not isinstance(client["icons"], list):
+        return False
+    for icon in client["icons"]:
+        if not isinstance(icon, dict) or not isinstance(icon.get("src"), str):
+            return False
+        if "mimeType" in icon and not isinstance(icon["mimeType"], str):
+            return False
+        if "sizes" in icon and (not isinstance(icon["sizes"], list) or not all(isinstance(size, str) for size in icon["sizes"])):
+            return False
+        if "theme" in icon and icon["theme"] not in ("light", "dark"):
+            return False
+    return True
+
+
 def valid_client_capabilities(capabilities: dict[str, Any]) -> bool:
     """Validate known nested capability shapes without interpreting extensions."""
     if any(not isinstance(value, dict) for value in capabilities.values()):
@@ -243,7 +265,7 @@ class RuntimeGuard:
                 response["error"]["data"] = {"supported": [MODERN_VERSION, PROTOCOL_VERSION] if modern_stdio else [PROTOCOL_VERSION], "requested": version}
                 return response
             client = meta.get(META_PREFIX + "clientInfo")
-            if META_PREFIX + "clientInfo" in meta and (not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version")) or ("title" in client and not isinstance(client["title"], str))):
+            if META_PREFIX + "clientInfo" in meta and not valid_client_implementation(client):
                 return rpc_error(identifier, -32602, "Invalid client implementation")
             capabilities = meta[META_PREFIX + "clientCapabilities"]
             if not valid_client_capabilities(capabilities):

@@ -69,3 +69,8 @@ Known nested client capability shapes and prefixed extension identifiers are val
 ## Database-page ceiling and concurrent WAL-pressure recovery
 
 A default 64 MiB SQLite page ceiling and 4 MiB WAL checkpoint/admission threshold now complement the record cap. Actual page-ceiling exhaustion preserves rows; pinned readers deny new writes until reclamation succeeds. Installed loopback tests cover four concurrent denials, responsive ping, controlled startup refusal, then 128 successful concurrent writes after release. See [storage policy and scope](AUDIT_STORAGE_LIMITS.md). Exact physical WAL/total-disk quotas, longer mixed/concurrent soaks, power-loss and cross-file provenance remain open.
+
+
+## Optional modern client metadata validation
+
+Optional client description/website/icon metadata is shape-validated before dispatch. Ten malformed consuming requests, full-budget recovery and legacy interleaving are tested against an installed build, reusing the existing frame harness. Identity/URLs remain untrusted and are neither fetched nor rendered; URI-format/trust and remaining normative/message-pattern review stay open. See `MODERN_CONFORMANCE.md`.
