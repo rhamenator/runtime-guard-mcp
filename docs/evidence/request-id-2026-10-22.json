@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "routes": [
+    "legacy stdio",
+    "modern stdio",
+    "legacy HTTP"
+  ],
+  "invalid_consuming_requests_per_route": 6,
+  "notification_ignored": true,
+  "full_budget_recovery": true,
+  "valid_negative_empty_zero_ids": true,
+  "scope": "request ID shape boundary; no ID replay/deduplication or full conformance claim",
+  "base_revision": "129d0210da21a507c182fbeb467ba0fe1e49cc86",
+  "probe_sha256": "4e812462d8287121b8b0efac7b0ab4519eb9eda9fd315909fdf3c835834e0b94",
+  "wheel_sha256": "7600f0762ee6c688ced8f5d9fc6903265133d6600daee9ea49b7ea5b5534cb70",
+  "wfuzz_review": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 28032,
+        "peak_rss_kib": 28032,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29836,
+        "peak_rss_kib": 29836,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28912,
+        "peak_rss_kib": 28912,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 18,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "localhost:bad": 400,
+      "evil.example": 403
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "wfuzz_probe_sha256": "5f03c35e7f13408f9ccd5407dbc383d6e6954256eeeebdd292df7a64c1747929",
+  "installed_api_checks": 68
+}

@@ -253,6 +253,9 @@ def run(executable: str, wfuzz: str) -> dict:
                 "duplicate method": ('{"jsonrpc":"2.0","id":1,"method":"ping","method":"tools/list"}', -32700),
                 "non-finite number": ('{"jsonrpc":"2.0","id":1,"method":"ping","x":NaN}', -32700),
                 "invalid ID type": ('{"jsonrpc":"2.0","id":true,"method":"ping"}', -32600),
+                'null consuming ID': ('{"jsonrpc":"2.0","id":null,"method":"tools/call","params":{"name":"budget_guard","arguments":{"session_id":"invalid-ids","tokens":1,"consume":true}}}', -32600),
+                'fractional consuming ID': ('{"jsonrpc":"2.0","id":1.5,"method":"tools/call","params":{"name":"budget_guard","arguments":{"session_id":"invalid-ids","tokens":1,"consume":true}}}', -32600),
+                'integral-float consuming ID': ('{"jsonrpc":"2.0","id":1.0,"method":"tools/call","params":{"name":"budget_guard","arguments":{"session_id":"invalid-ids","tokens":1,"consume":true}}}', -32600),
                 "valid ping": ('{"jsonrpc":"2.0","id":1,"method":"ping"}', None),
             }
             body_words = root / "bodies.txt"
