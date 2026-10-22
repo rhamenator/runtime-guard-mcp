@@ -59,6 +59,9 @@ jobs:
       - name: Probe paced concurrent mixed-tool resource bounds
         if: matrix.python == '3.12'
         run: timeout 45s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+      - name: Probe extended concurrent mixed-tool resource bounds
+        if: matrix.python == '3.12'
+        run: timeout 155s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp" --extended
       - name: Probe installed server with official SDK client
         if: matrix.python == '3.12'
         run: |

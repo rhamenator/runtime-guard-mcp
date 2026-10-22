@@ -102,3 +102,7 @@ Malformed cancellation notification metadata cannot suppress pending replies. In
 ## Installed secret-map and unfinished-stream saturation
 
 A fresh installed artifact now fills the production 4,096-secret map and 128 unfinished-stream limits in both stdio eras. Repeated fail-closed denials, stable existing placeholders, released-slot reuse, complete stream flush, resources and ping recovery are checked in CI. See SUSTAINED_RESOURCE_EVIDENCE.md. Longer soak, multiple callers, output backpressure and the remaining release gates remain open.
+
+## Extended concurrent replay
+
+A fixed two-minute, 24,576-call installed HTTP profile now repeats the mixed workload and fail-closed audit-capacity path, with sampled resource budgets, post-load ping and restart verification. CI runs both short and extended profiles on Python 3.12. See SUSTAINED_RESOURCE_EVIDENCE.md. This adds duration evidence without closing hours-long soak, output backpressure, exact physical storage or final release review.
