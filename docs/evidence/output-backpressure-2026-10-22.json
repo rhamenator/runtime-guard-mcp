@@ -4,55 +4,71 @@
     {
       "era": "legacy",
       "scenario": "stalled",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 5.193
+      "elapsed_seconds": 5.385
     },
     {
       "era": "legacy",
       "scenario": "stalled-eof",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 5.137
+      "elapsed_seconds": 5.343
     },
     {
       "era": "legacy",
       "scenario": "disconnected",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 0.174
+      "elapsed_seconds": 0.322
     },
     {
       "era": "legacy",
       "scenario": "resumed",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 0,
-      "elapsed_seconds": 0.344
+      "elapsed_seconds": 0.539
     },
     {
       "era": "modern",
       "scenario": "stalled",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 5.188
+      "elapsed_seconds": 5.389
     },
     {
       "era": "modern",
       "scenario": "stalled-eof",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 5.139
+      "elapsed_seconds": 5.292
     },
     {
       "era": "modern",
       "scenario": "disconnected",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 2,
-      "elapsed_seconds": 0.173
+      "elapsed_seconds": 0.322
     },
     {
       "era": "modern",
       "scenario": "resumed",
+      "audit_records": 1,
+      "restart_integrity_ping": true,
       "exit_code": 0,
-      "elapsed_seconds": 0.338
+      "elapsed_seconds": 0.546
     }
   ],
   "scope": "installed anonymous-pipe backpressure/disconnect/recovery; no whole-agent enforcement or state rollback",
   "base_revision": "83ffbbae03452703e910ccbeedb176b2f1e2cc74",
-  "probe_sha256": "d4a5463b60d13f474fb1c1dd9be942ec89c4fa50e68968afd23e9d8a39320148",
+  "probe_sha256": "23c6afb3010c8857a82063a0eba47cf9dd857e753078787e82965a4a48bd8a06",
   "wheel_sha256": "2815c8a40c37223750472ace9777e1f4cb7fe74c092b8038b8c6ecf48af413a5",
   "sustained_resource": {
     "status": "PASS",

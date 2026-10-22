@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 import subprocess
+import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 import time
@@ -17,7 +19,11 @@ def main():
     with tempfile.TemporaryDirectory(prefix='runtime-guard-output-') as root:
         for modern in (False, True):
             for scenario in ('stalled', 'stalled-eof', 'disconnected', 'resumed'):
-                process = subprocess.Popen([str(Path(sys.argv[1]).absolute())], cwd=root,
+                executable = str(Path(sys.argv[1]).absolute())
+                audit = Path(root) / (str(modern) + '-' + scenario + '.sqlite')
+                config = audit.with_suffix('.json')
+                config.write_text(json.dumps({'workspace_root': root, 'audit_db': str(audit)}))
+                process = subprocess.Popen([executable, '--config', str(config)], cwd=root,
                                            env=installed_environment(''), stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 try:
@@ -49,7 +55,15 @@ def main():
                         process.wait(timeout=8)
                         assert process.returncode == 2, process.returncode
                         assert not process.stderr.read(), 'transport failure leaked a traceback/diagnostic'
+                    with closing(sqlite3.connect(audit)) as db:
+                        assert db.execute('SELECT count(*) FROM decisions').fetchone()[0] == 1
+                        assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
+                    restarted = subprocess.run([executable, '--config', str(config)], cwd=root,
+                                               env=installed_environment(''), capture_output=True, timeout=6,
+                                               input=b'{"jsonrpc":"2.0","id":0,"method":"ping"}\n', check=True)
+                    assert json.loads(restarted.stdout)['result'] == {} and not restarted.stderr
                     results.append({'era': 'modern' if modern else 'legacy', 'scenario': scenario,
+                                    'audit_records': 1, 'restart_integrity_ping': True,
                                     'exit_code': process.returncode, 'elapsed_seconds': round(time.monotonic() - start, 3)})
                 finally:
                     if process.poll() is None:
