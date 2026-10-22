@@ -212,6 +212,8 @@ class RuntimeGuard:
         meta = params.get("_meta", {})
         modern = any(key.startswith(META_PREFIX) for key in meta) or method == "server/discover"
         if modern:
+            if type(identifier) not in {str, int}:
+                return rpc_error(None, -32600, "Invalid Request")
             if not isinstance(meta.get(META_PREFIX + "protocolVersion"), str) or not isinstance(meta.get(META_PREFIX + "clientCapabilities"), dict):
                 return rpc_error(identifier, -32602, "Missing or invalid per-request protocol metadata")
             version = meta[META_PREFIX + "protocolVersion"]
@@ -219,10 +221,8 @@ class RuntimeGuard:
                 response = rpc_error(identifier, -32022, "Unsupported protocol version")
                 response["error"]["data"] = {"supported": [MODERN_VERSION, PROTOCOL_VERSION] if modern_stdio else [PROTOCOL_VERSION], "requested": version}
                 return response
-            if type(identifier) not in {str, int}:
-                return rpc_error(None, -32600, "Invalid Request")
             client = meta.get(META_PREFIX + "clientInfo")
-            if META_PREFIX + "clientInfo" in meta and (not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version"))):
+            if META_PREFIX + "clientInfo" in meta and (not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version")) or ("title" in client and not isinstance(client["title"], str))):
                 return rpc_error(identifier, -32602, "Invalid client implementation")
             capabilities = meta[META_PREFIX + "clientCapabilities"]
             if any(not isinstance(value, dict) for value in capabilities.values()):

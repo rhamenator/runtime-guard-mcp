@@ -30,3 +30,7 @@ Cancellation does not forcibly stop Python policy work, undo already consumed bu
 ## Audit storage milestone
 
 Real SQLite busy/full fixtures now verify controlled tool errors, unchanged audit counts on failed writes, intact hash chains, and recovery after lock/capacity restoration. The exposed HTTP probe covers contention, no append and recovery on source and installed builds. A 250 ms SQLite busy timeout replaces the default five seconds. Actual filesystem-full behavior, retention/storage caps, total latency and sustained resource evidence remain open; see [security model](security.md#audit-storage-failure-and-recovery).
+
+## Finite stdio corpus milestone
+
+A seeded installed-server campaign now rejects 95 legacy and 109 modern hostile frames, checking recovery after each. It identified/fixed modern ID validation order and optional client title validation. See [evidence](STDIO_ADVERSARIAL_EVIDENCE.md); full schema, cancellation/client and sustained resource gates remain open.
