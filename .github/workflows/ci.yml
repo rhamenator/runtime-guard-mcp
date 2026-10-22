@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Compile source
-        run: python -m compileall -q src tests
+        run: python -m compileall -q src tests scripts
       - name: Run tests
         run: PYTHONPATH=src python -m unittest discover -s tests -q
       - name: Probe live HTTP security boundary
