@@ -45,8 +45,10 @@ Startup migrations now commit atomically after verification, with rollback/conne
 
 ## Real-client cancellation milestone
 
-Fresh-wheel client-control probes with a test-only policy pause now cover Claude (modern, matching cancellation, suppressed reply, recovery) and Cursor (legacy, no MCP cancellation, recovery), each with one server process. Initial Codex recovery omitted MCP cancellation; its added-marker replay was provider-limited and remains inconclusive. See [scope and evidence](CLIENT_CANCELLATION.md). Do not waive Codex/Cursor cancellation delivery or modern-client replay gates from these observations.
+Fresh-wheel client-control probes with a test-only policy pause now cover Claude (modern, matching cancellation, suppressed reply, recovery) and Cursor (legacy, no MCP cancellation, recovery), each with one server process. Initial Codex recovery omitted MCP cancellation; its added-marker replay remains inconclusive with an unverified rate-limit indicator. See [scope and evidence](CLIENT_CANCELLATION.md). Do not waive Codex/Cursor cancellation delivery or modern-client replay gates from these observations.
 
 ## Actual filesystem-full milestone
 
 An installed-server probe now exercises real ENOSPC in a private 2 MiB tmpfs: fail-closed tool response, responsive ping, unchanged prior records and recovery after space restoration, in both protocol eras. CI repeats on every Python matrix version. Physical block-device/inode/power-loss cases and remaining quota/provenance/resource gates stay open.
+
+A subsequent bounded Codex replay passed with process/protocol markers: one process, legacy MCP, interruption acknowledged, recovery successful, no MCP cancellation notification. The earlier inconclusive run remains in evidence with unknown cause.

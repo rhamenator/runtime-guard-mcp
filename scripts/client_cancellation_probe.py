@@ -6,6 +6,7 @@ f5aaf302ec756c02bddb8c7246ba3c9aef4eeed5 (GPL-3.0-or-later).
 Run one account-backed probe at a time; existing authentication and model usage
 are required. No VM, namespace, sudo, external target or runtime dependency.
 """
+from client_probe_diagnostics import classify_limit
 import sys,os,json,pathlib,subprocess,tempfile,time,threading,queue,shutil,hashlib,atexit,signal
 assert len(sys.argv)==3 and sys.argv[1] in ('claude','codex','cursor'), 'usage: client_cancellation_probe.py claude|codex|cursor INSTALLED_PYTHON'
 binary=str(pathlib.Path(sys.argv[2]).absolute())
@@ -156,9 +157,9 @@ try:
          'scope':'real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue'}
  print(json.dumps(report),flush=True)
 except (AssertionError, subprocess.TimeoutExpired, queue.Empty):
- text=(root/'client.jsonl').read_text().lower() if (root/'client.jsonl').exists() else ''
- provider_limited=any(marker in text for marker in ('429','rate limit','rate_limit','usage limit'))
- print(json.dumps({'status':'INCONCLUSIVE','client':name,'provider_rate_limit_observed':provider_limited,'reason':'client control/fixture/recovery did not complete; no passing cancellation claim'}),flush=True)
+ text='\n'.join(path.read_text(errors='replace') for path in (root/'client.jsonl', root/'client.stderr') if path.exists())
+ limit_class=classify_limit(text)
+ print(json.dumps({'status':'INCONCLUSIVE','client':name,'limit_indicator':limit_class,'reason':'client control/fixture/recovery did not complete; no passing cancellation claim'}),flush=True)
  raise SystemExit(2)
 finally:
  cleanup()
