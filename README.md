@@ -110,3 +110,5 @@ A [paced concurrent resource review](docs/SUSTAINED_RESOURCE_EVIDENCE.md#paced-c
 Cancellation notifications with malformed metadata are ignored without a reply. Valid cancellation still suppresses replies only; it does not undo policy state or committed audit records.
 
 `secret_masker` keeps at most 128 unfinished streams and 4,096 distinct secret placeholders per caller. On `STREAM_LIMIT`, finish an existing stream with `final=true` before opening another. On `SECRET_STATE_LIMIT`, discard blocked output; existing secrets can still be masked, but more distinct secrets require a fresh server process, which also resets volatile budgets and masker state. Changing session IDs does not bypass the caller-wide secret limit.
+
+Installed resource regression commands and measured limits, including the fixed two-minute mixed HTTP replay, are documented in [resource evidence](docs/SUSTAINED_RESOURCE_EVIDENCE.md). These tests do not establish an indefinite soak or latency guarantee.
