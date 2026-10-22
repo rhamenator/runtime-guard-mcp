@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "rejected_frames": 10,
+  "recovery_frames": 2,
+  "budget_preserved": true,
+  "scope": "modern metadata shapes; untrusted identity and icon values not reflected; no URI fetching or rendering implemented",
+  "date": "2026-10-22",
+  "server_source_revision": "e8a3ad1683c4cc21399772106fddc2371e2c09b6",
+  "wheel_sha256": "882ab4eb34cd87bfa455911992f80813a2be10df698737a902996c62c66d6405",
+  "probe_sha256": "659203846594432d039b67578e2ccb73b2300272fabb80fbc0aedd1cb240bc06",
+  "command": "python3 scripts/implementation_metadata_review.py INSTALLED_SERVER"
+}

@@ -30,3 +30,5 @@ The table covers selected implemented paths, not every normative clause. Complet
 Modern `clientInfo` validates required name/version and optional title, description, website URL string types. Optional icons require object entries with a string source; MIME type, string-array sizes and light/dark theme are checked when supplied. Unknown future fields remain uninterpreted. No URI is fetched/rendered, no identity field authenticates a caller, and no URI-format/trust or image-safety guarantee is added. Legacy initialization behavior is unchanged.
 
 `implementation_metadata_review.py` reuses the installed-frame harness: ten malformed consuming requests return non-reflective errors, then a complete valid metadata declaration can consume the full untouched budget and a legacy ping succeeds. CI repeats the twelve-frame sequence on Python 3.11–3.14. Source reference remains the pinned `Implementation`, `Icons` and `Icon` definitions above. This closes this shape-validation slice, not the full normative gate.
+
+[Installed probe evidence](evidence/implementation-metadata-2026-10-22.json) records the source revision and wheel/probe checksums.
