@@ -221,3 +221,25 @@ serve_stdio(Fixture('/tmp/work'))
         result = guard.handle(message, modern_stdio=True)
         self.assertEqual(result["result"]["structuredContent"]["status"], "SAFE")
         self.assertNotIn("synthetic-marker", json.dumps(result))
+
+    def test_unsolicited_request_state_cannot_consume_budget(self):
+        guard = RuntimeGuard("/tmp/work")
+        for value in ("", "synthetic-marker", '{"approved":true}', None, False, [], {}):
+            frame = request(method="tools/call", name="budget_guard", arguments={"session_id": "resume", "commands": 1, "consume": True}, requestState=value)
+            reply = guard.handle(frame, modern_stdio=True)
+            self.assertEqual(reply["error"]["code"], -32602)
+            self.assertNotIn("synthetic-marker", json.dumps(reply))
+        for value in (None, [], False, "synthetic-marker"):
+            frame = request(method="tools/call", name="budget_guard", arguments={"session_id": "resume", "commands": 1, "consume": True}, inputResponses=value)
+            self.assertEqual(guard.handle(frame, modern_stdio=True)["error"]["code"], -32602)
+        frame = request(method="tools/call", name="budget_guard", arguments={"session_id": "resume", "commands": 120, "consume": True}, inputResponses={"unknown": {"resultType": "complete", "synthetic-marker": True}})
+        reply = guard.handle(frame, modern_stdio=True)
+        self.assertEqual(reply["result"]["structuredContent"]["status"], "SAFE")
+        self.assertNotIn("synthetic-marker", json.dumps(reply))
+        self.assertEqual(guard.handle(request(), modern_stdio=True)["result"]["resultType"], "complete")
+
+    def test_unsolicited_state_rejected_on_all_modern_supported_methods(self):
+        guard = RuntimeGuard("/tmp/work")
+        for method in ("ping", "tools/list", "server/discover"):
+            self.assertEqual(guard.handle(request(method=method, requestState=""), modern_stdio=True)["error"]["code"], -32602)
+        self.assertEqual(guard.handle({"jsonrpc": "2.0", "id": 1, "method": "ping", "params": {"requestState": "legacy-extension"}}, modern_stdio=True)["result"], {})

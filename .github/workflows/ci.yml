@@ -45,6 +45,7 @@ jobs:
           timeout 45s python scripts/audit_storage_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s python scripts/audit_capacity_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s python scripts/stdio_adversarial_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+          timeout 25s python scripts/request_state_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 25s python scripts/implementation_metadata_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 25s python scripts/modern_validation_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 20s python scripts/modern_stdio_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"

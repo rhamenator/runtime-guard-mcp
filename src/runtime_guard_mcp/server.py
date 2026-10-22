@@ -276,6 +276,14 @@ class RuntimeGuard:
                 return rpc_error(identifier, -32602, "Invalid progress token")
             if any(not valid_meta_key(key) for key in meta):
                 return rpc_error(identifier, -32602, "Invalid metadata key")
+        if modern:
+            # This server never issues input_required or resumable request state.
+            # Treat even empty/opaque state as unsolicited, not fresh work.
+            if "requestState" in params:
+                return rpc_error(identifier, -32602, "Unsolicited request state")
+            if "inputResponses" in params and not isinstance(params["inputResponses"], dict):
+                return rpc_error(identifier, -32602, "Invalid input responses")
+            # Unknown input-response entries are ignored; none are requested here.
         if method == "server/discover":
             result = {"supportedVersions": [MODERN_VERSION, PROTOCOL_VERSION], "capabilities": {"tools": {}}, "ttlMs": 0, "cacheScope": "private"}
         elif method == "initialize":

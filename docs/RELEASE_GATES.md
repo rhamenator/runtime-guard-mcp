@@ -74,3 +74,8 @@ A default 64 MiB SQLite page ceiling and 4 MiB WAL checkpoint/admission threshol
 ## Optional modern client metadata validation
 
 Optional client description/website/icon metadata is shape-validated before dispatch. Ten malformed consuming requests, full-budget recovery and legacy interleaving are tested against an installed build, reusing the existing frame harness. Identity/URLs remain untrusted and are neither fetched nor rendered; URI-format/trust and remaining normative/message-pattern review stay open. See `MODERN_CONFORMANCE.md`.
+
+
+## Unsolicited modern continuation state
+
+Modern requests reject all supplied requestState values before dispatch because the server issues none. Malformed inputResponses containers are rejected; unknown response entries are ignored without granting permission. Installed rejection/budget-preservation/recovery tests run in CI. This closes a fail-closed continuation boundary, not full MRTR, idempotency or modern conformance; see `MODERN_CONFORMANCE.md`.
