@@ -98,3 +98,7 @@ An installed four-worker, eight-second campaign now covers 1,536 budget/masker/c
 ## Cancellation metadata validation
 
 Malformed cancellation notification metadata cannot suppress pending replies. Installed reader/worker tests cover rejection, valid extension cancellation and ping recovery; see MODERN_CONFORMANCE.md. Full normative review and the remaining resource, exact-candidate and human-review gates remain open.
+
+## Installed secret-map and unfinished-stream saturation
+
+A fresh installed artifact now fills the production 4,096-secret map and 128 unfinished-stream limits in both stdio eras. Repeated fail-closed denials, stable existing placeholders, released-slot reuse, complete stream flush, resources and ping recovery are checked in CI. See SUSTAINED_RESOURCE_EVIDENCE.md. Longer soak, multiple callers, output backpressure and the remaining release gates remain open.

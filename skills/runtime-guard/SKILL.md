@@ -59,3 +59,5 @@ Omit modern `requestState`: this server issues no resumable state and rejects ev
 Send method-bearing requests to stdio. This server issues no outbound RPC requests; recognizable unsolicited result/error responses are ignored, not treated as commands, approvals or responses to your pending calls. A peer response ID cannot complete or cancel an active client request. Malformed requests still return controlled errors. No outbound RPC correlation feature is implied.
 
 Cancellation notifications with malformed metadata are ignored without a reply. Valid cancellation still suppresses replies only; it does not undo policy state or committed audit records.
+
+`secret_masker` keeps at most 128 unfinished streams and 4,096 distinct secret placeholders per caller. On `STREAM_LIMIT`, finish an existing stream with `final=true` before opening another. On `SECRET_STATE_LIMIT`, discard blocked output; existing secrets can still be masked, but more distinct secrets require a fresh server process, which also resets volatile budgets and masker state. Changing session IDs does not bypass the caller-wide secret limit.
