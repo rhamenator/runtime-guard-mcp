@@ -9,3 +9,5 @@ The deliberate tradeoff is that we maintain a small MCP protocol implementation 
 CI enforces the current zero-runtime-dependency policy against the installed wheel's `Requires-Dist` metadata and runs `pip check` in the fresh client environment. Installing with `--no-deps` alone would hide newly declared requirements when the smoke workflow does not import them. A justified future runtime dependency requires updating this gate together with the documented tradeoff.
 
 The optional Linux filesystem-full development probe uses system `unshare`, `mount` and `umount` with rootless user/mount namespaces, or sudo on disposable CI runners. These are test-environment requirements, not server runtime dependencies or ordinary installation permissions.
+
+`jsonschema==4.26.0` is a test-client-only dependency in the isolated SDK probe environment. Its Draft 2020-12 validator checks advertised tool schemas and actual structured results without adding a schema implementation to the server. It is not listed in project requirements or imported by runtime code; the installed-server zero-dependency gate remains unchanged.
