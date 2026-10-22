@@ -15,6 +15,14 @@ INVALID = [
 ]
 
 
+def run_frames(executable, frames):
+    with tempfile.TemporaryDirectory(prefix='runtime-guard-modern-validation-') as root:
+        env = {key: value for key, value in os.environ.items() if key not in ('PYTHONPATH', 'PYTHONHOME') and not key.startswith('RUNTIME_GUARD_')}
+        env['RUNTIME_GUARD_WORKSPACE_ROOT'] = root
+        result = subprocess.run([str(Path(executable).absolute())], input=''.join(json.dumps(frame) + '\n' for frame in frames), text=True, capture_output=True, cwd=root, env=env, timeout=15, check=True)
+    return [json.loads(line) for line in result.stdout.splitlines()]
+
+
 def main():
     if len(sys.argv) != 2:
         raise SystemExit('usage: modern_validation_review.py INSTALLED_SERVER')
@@ -35,11 +43,7 @@ def main():
     append('tools/list', {'extensions': {'com.example/probe': {'custom': [True]}}, 'sampling': {'tools': {}, 'context': {}}, 'elicitation': {'form': {}, 'url': {}}, 'experimental': {'custom': {}}})
     append('ping')
     append('ping', modern=False)
-    with tempfile.TemporaryDirectory(prefix='runtime-guard-modern-validation-') as root:
-        env = {key: value for key, value in os.environ.items() if key not in ('PYTHONPATH', 'PYTHONHOME') and not key.startswith('RUNTIME_GUARD_')}
-        env['RUNTIME_GUARD_WORKSPACE_ROOT'] = root
-        result = subprocess.run([str(Path(sys.argv[1]).absolute())], input=''.join(json.dumps(frame) + '\n' for frame in frames), text=True, capture_output=True, cwd=root, env=env, timeout=15, check=True)
-    replies = [json.loads(line) for line in result.stdout.splitlines()]
+    replies = run_frames(sys.argv[1], frames)
     assert [reply['id'] for reply in replies] == list(range(1, len(frames) + 1))
     assert all(reply['error']['code'] == -32602 for reply in replies[:rejected])
     assert 'synthetic-marker' not in json.dumps(replies[:rejected])

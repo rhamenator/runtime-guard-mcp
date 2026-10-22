@@ -201,3 +201,23 @@ serve_stdio(Fixture('/tmp/work'))
                 self.assertEqual(error["error"]["code"], -32602)
                 self.assertNotIn("synthetic-marker", json.dumps(error))
         self.assertEqual(len(guard.handle(request(method="tools/list"), modern_stdio=True)["result"]["tools"]), 4)
+
+    def test_optional_client_implementation_metadata(self):
+        guard = RuntimeGuard("/tmp/work")
+        malformed = [{"description": []}, {"websiteUrl": 1}, {"icons": {}}, {"icons": [None]},
+                     {"icons": [{}]}, {"icons": [{"src": False}]}, {"icons": [{"src": "x", "mimeType": []}]},
+                     {"icons": [{"src": "x", "sizes": "any"}]}, {"icons": [{"src": "x", "sizes": [1]}]},
+                     {"icons": [{"src": "x", "theme": "synthetic-marker"}]}]
+        for fields in malformed:
+            message = request(method="tools/call", name="budget_guard", arguments={"session_id": "metadata", "commands": 1, "consume": True})
+            message["params"]["_meta"][META_PREFIX + "clientInfo"] = {"name": "synthetic-marker", "version": "1", **fields}
+            error = guard.handle(message, modern_stdio=True)
+            self.assertEqual(error["error"]["code"], -32602)
+            self.assertNotIn("synthetic-marker", json.dumps(error))
+        message = request(method="tools/call", name="budget_guard", arguments={"session_id": "metadata", "commands": 120, "consume": True})
+        message["params"]["_meta"][META_PREFIX + "clientInfo"] = {
+            "name": "fixture", "version": "1", "title": "Fixture", "description": "Untrusted metadata",
+            "websiteUrl": "https://example.invalid", "icons": [{"src": "data:image/svg+xml,synthetic-marker", "mimeType": "image/svg+xml", "sizes": ["any", "48x48"], "theme": "dark"}], "future": {"custom": True}}
+        result = guard.handle(message, modern_stdio=True)
+        self.assertEqual(result["result"]["structuredContent"]["status"], "SAFE")
+        self.assertNotIn("synthetic-marker", json.dumps(result))
