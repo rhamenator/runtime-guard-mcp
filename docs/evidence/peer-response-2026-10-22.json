@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "ignored_peer_responses": 200,
+  "malformed_request_errors": 1,
+  "recovery_frames": 2,
+  "budget_preserved": true,
+  "scope": "stdio uncorrelated response boundary; not outbound request correlation or full schema certification",
+  "date": "2026-10-22",
+  "server_source_revision": "c3018c063ad8216f7b94fa7e3bdcb2fabf8a4739",
+  "wheel_sha256": "1895bf5671a4a596f69c100a9d19ede1f572c66604474de001c934d51ad2bd37",
+  "probe_sha256": "bdbb74b7427ca34b1f09e78e3f114699b69a9906493e7c0ccffb3f2ac6655dd0",
+  "command": "python3 scripts/peer_response_review.py INSTALLED_SERVER"
+}

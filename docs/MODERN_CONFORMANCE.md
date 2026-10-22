@@ -52,3 +52,5 @@ The installed `request_state_review.py` reuses the bounded frame harness. It rej
 A paused dispatcher fixture receives response IDs matching an active client call, then proves the original call and recovery complete exactly once. The installed `peer_response_review.py` sends 200 uncorrelated result/error frames followed by one malformed request and two recovery calls; it expects exactly one request error and successful full-budget/legacy-ping recovery, without reflecting a synthetic marker. CI repeats against all supported Python versions.
 
 This is response-envelope classification, not full validation of result contents or support for server-initiated calls. Any future outbound RPC feature needs explicit correlation rather than reusing client-request IDs. Legacy HTTP remains request-only JSON-RPC; full modern message-pattern/schema/client review stays open.
+
+[Installed peer-response evidence](evidence/peer-response-2026-10-22.json) records the source revision and wheel/probe checksums.
