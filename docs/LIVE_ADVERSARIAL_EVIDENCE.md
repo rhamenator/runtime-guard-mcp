@@ -180,3 +180,23 @@ Official Python SDK 2.3.0 drove a fresh installed stdio server through discovery
 ## Initialization required fields, 2026-10-21
 
 HTTP probes rejected missing required initialization fields, a non-object capabilities value, and invalid client implementation fields with `-32602`, followed by successful valid initialization. Focused direct and stdio tests cover additional invalid types, optional title validation, extension fields, and fallback to the supported version. The source and installed live probes now report 58 checks with Nmap. This validates required fields from the [advertised 2025-06-18 schema](https://modelcontextprotocol.io/specification/2025-06-18/schema#initializerequest), not every nested capability or modern lifecycle requirement.
+
+
+## Fresh installed toolset review, 2026-10-22
+
+[Machine-readable results](evidence/toolset-review-2026-10-22.json) record source revision `2b8c1bef90f0f2974169d10f3a8cd4ef1514a6fc`, fresh wheel SHA-256, harness revision, scanner versions and all finite results. Wfuzz 3.1.0 sent 18 scanner requests at concurrency one to the generated loopback target. Paths, bearer authorization, Origin/Host boundaries and five malformed/valid RPC cases passed. Supplemental checks preserved command fixtures, enforced a ten-token budget, masked a synthetic streamed secret, denied tampered audit writes and recovered after 32-handler saturation. Final handlers/descriptors returned to baseline (one thread/seven descriptors); sampled RSS was 28,032 KiB before, 29,852 KiB saturated and 28,928 KiB final. These snapshots are not sustained-load bounds.
+
+The separate installed API campaign passed 68 checks, including Nmap 7.98's one-port TCP-connect check. No external server, real secret, model account or VM was used. The server remains advisory: no proposed command was executed. This refresh does not close full modern MCP/client, TLS, long-duration load, candidate packaging/provenance or human release review.
+
+### Installed-target isolation finding and fix
+
+The Wfuzz harness previously inherited Python/source configuration and repository working directory. That could make an alleged installed-package review import a source override. It now removes PYTHONPATH, PYTHONHOME and inherited RUNTIME_GUARD_* variables, sets only its generated bearer token, and launches in the private temporary directory. A regression subprocess boots/imports JSON despite a poisoned Python home and shadow module. The actual Wfuzz run also passed with a synthetic runtime_guard_mcp source-shadow package on the inherited Python path; an unisolated installed --help control failed on that same shadow as expected. This is a test-harness evidence defect, not an observed server authentication bypass.
+
+Repeat after building/installing a fresh wheel:
+
+```bash
+python3 scripts/wfuzz_loopback_review.py --server /path/to/venv/bin/runtime-guard-mcp
+PYTHONPATH=src python3 scripts/live_adversarial_test.py --server /path/to/venv/bin/runtime-guard-mcp
+```
+
+For the source-shadow check, create a temporary `runtime_guard_mcp/__init__.py` that raises `RuntimeError("synthetic-source-shadow")`, put its parent on PYTHONPATH for the Wfuzz command, then remove only that temporary fixture. The fixed target still passes; launching the installed entry point directly with that poisoned path fails. Wfuzz/Nmap are optional developer tools, not runtime dependencies; Wfuzz's local pycurl build did not support OpenSSL, so this HTTP-only review provides no TLS evidence.
