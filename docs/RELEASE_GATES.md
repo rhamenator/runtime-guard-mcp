@@ -89,3 +89,8 @@ Wfuzz 3.1.0 and Nmap 7.98 were rerun against a fresh installed artifact of `2b8c
 ## Stdio peer response classification
 
 Uncorrelated response envelopes no longer become invalid-request replies or collide with pending client-request IDs. They are ignored before admission because this server issues no outbound RPCs. Active-ID collision and a 200-response installed campaign verify no policy work, no feedback replies and successful recovery. This is a bounded message-pattern fix, not full result-schema validation, outbound RPC support or conformance certification.
+
+
+## Finite concurrent mixed-tool resource evidence
+
+An installed four-worker, eight-second campaign now covers 1,536 budget/masker/command requests, atomic shared-budget enforcement, audit-capacity denials, secret non-exposure, sampled resources and successful post-load/restart-integrity pings. CI runs the extra paced test on Python 3.12. See `SUSTAINED_RESOURCE_EVIDENCE.md`; longer soaks, many callers/secret churn, broader workloads and physical quota guarantees remain open.
