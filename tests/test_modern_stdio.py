@@ -243,3 +243,47 @@ serve_stdio(Fixture('/tmp/work'))
         for method in ("ping", "tools/list", "server/discover"):
             self.assertEqual(guard.handle(request(method=method, requestState=""), modern_stdio=True)["error"]["code"], -32602)
         self.assertEqual(guard.handle({"jsonrpc": "2.0", "id": 1, "method": "ping", "params": {"requestState": "legacy-extension"}}, modern_stdio=True)["result"], {})
+
+    def test_peer_responses_do_not_collide_with_active_request_ids(self):
+        started, release = threading.Event(), threading.Event()
+        replies, calls = [], []
+
+        class Guard:
+            def handle(self, message, caller, modern_stdio=False):
+                calls.append(message["id"])
+                started.set()
+                if not release.wait(2):
+                    raise RuntimeError("fixture timeout")
+                return {"jsonrpc": "2.0", "id": message["id"], "result": {}}
+
+        dispatcher = StdioDispatcher(Guard(), replies.append, capacity=1)
+        try:
+            dispatcher.submit(request(1))
+            self.assertTrue(started.wait(1))
+            for _ in range(20):
+                dispatcher.submit({"jsonrpc": "2.0", "id": 1, "result": {"resultType": "complete"}})
+                dispatcher.submit({"jsonrpc": "2.0", "id": 1, "error": {"code": -32600, "message": "synthetic-marker"}})
+            self.assertEqual(replies, [])
+            self.assertEqual(list(dispatcher.pending), [1])
+            release.set()
+            dispatcher.queue.join()
+            self.assertEqual(calls, [1])
+            self.assertEqual(replies, [{"jsonrpc": "2.0", "id": 1, "result": {}}])
+            dispatcher.submit(request(2))
+            dispatcher.queue.join()
+            self.assertEqual(calls, [1, 2])
+        finally:
+            release.set()
+            dispatcher.close()
+
+    def test_stdio_ignores_uncorrelated_responses_but_rejects_bad_requests(self):
+        frames = [{"jsonrpc": "2.0", "id": "peer", "result": {"resultType": "complete", "marker": "synthetic-marker"}},
+                  {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "synthetic-marker"}},
+                  {"jsonrpc": "2.0", "error": {"code": -32600, "message": "synthetic-marker"}},
+                  {"jsonrpc": "2.0", "id": 3}, request(4)]
+        result = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server"], input=''.join(json.dumps(f) + '\n' for f in frames), text=True, capture_output=True, env=dict(os.environ, PYTHONPATH="src"), timeout=6, check=True)
+        replies = [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual([r["id"] for r in replies], [3, 4])
+        self.assertEqual(replies[0]["error"]["code"], -32600)
+        self.assertEqual(replies[1]["result"]["resultType"], "complete")
+        self.assertNotIn("synthetic-marker", result.stdout)
