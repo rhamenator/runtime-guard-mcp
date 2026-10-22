@@ -2,6 +2,10 @@
 
 import importlib.util
 import json
+import os
+import subprocess
+import sys
+from unittest import mock
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 import tempfile
@@ -67,3 +71,21 @@ class InstalledReviewTests(unittest.TestCase):
                     server.shutdown()
                     server.server_close()
                     thread.join(timeout=2)
+
+    def test_installed_environment_rejects_inherited_python_and_guard_overrides(self):
+        with tempfile.TemporaryDirectory() as root:
+            shadow = Path(root) / "shadow"
+            shadow.mkdir()
+            (shadow / "json.py").write_text("raise RuntimeError('synthetic-source-shadow')\n")
+            overrides = {"PYTHONPATH": str(shadow), "PYTHONHOME": str(Path(root) / "missing-home"),
+                         "RUNTIME_GUARD_CONFIG": "synthetic-config", "RUNTIME_GUARD_WORKSPACE_ROOT": "synthetic-root",
+                         "RUNTIME_GUARD_AUTH_TOKEN": "synthetic-inherited-token"}
+            with mock.patch.dict(os.environ, overrides):
+                environment = review.installed_environment("synthetic-generated-token")
+            result = subprocess.run([sys.executable, "-c", "import json; print(json.dumps({'installed': True}))"],
+                                    cwd=root, env=environment, capture_output=True, text=True, timeout=5, check=True)
+            self.assertEqual(json.loads(result.stdout), {"installed": True})
+            self.assertEqual({key: value for key, value in environment.items() if key.startswith("RUNTIME_GUARD_")},
+                             {"RUNTIME_GUARD_AUTH_TOKEN": "synthetic-generated-token"})
+            self.assertNotIn("PYTHONPATH", environment)
+            self.assertNotIn("PYTHONHOME", environment)
