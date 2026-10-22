@@ -19,6 +19,14 @@ import time
 from typing import Callable
 
 
+def installed_environment(token: str) -> dict[str, str]:
+    """Keep installed evidence independent of source/config overrides."""
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in {"PYTHONPATH", "PYTHONHOME"} and not key.startswith("RUNTIME_GUARD_")}
+    environment["RUNTIME_GUARD_AUTH_TOKEN"] = token
+    return environment
+
+
 def process_resources(pid: int, proc_root: Path = Path("/proc")) -> dict:
     if not proc_root.is_dir():
         return {"status": "unavailable", "reason": "procfs is not mounted"}
@@ -202,8 +210,8 @@ def run(executable: str, wfuzz: str) -> dict:
         with socket.socket() as reservation:
             reservation.bind(("127.0.0.1", 0))
             port = reservation.getsockname()[1]
-        environment = dict(os.environ, RUNTIME_GUARD_AUTH_TOKEN=token)
-        process = subprocess.Popen([executable, "--transport", "http", "--host", "127.0.0.1", "--port", str(port), "--config", str(config)], env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        environment = installed_environment(token)
+        process = subprocess.Popen([executable, "--transport", "http", "--host", "127.0.0.1", "--port", str(port), "--config", str(config)], env=environment, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
             for _ in range(100):
                 if process.poll() is not None:

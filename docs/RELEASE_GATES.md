@@ -79,3 +79,8 @@ Optional client description/website/icon metadata is shape-validated before disp
 ## Unsolicited modern continuation state
 
 Modern requests reject all supplied requestState values before dispatch because the server issues none. Malformed inputResponses containers are rejected; unknown response entries are ignored without granting permission. Installed rejection/budget-preservation/recovery tests run in CI. This closes a fail-closed continuation boundary, not full MRTR, idempotency or modern conformance; see `MODERN_CONFORMANCE.md`.
+
+
+## Refreshed installed adversarial toolset evidence
+
+Wfuzz 3.1.0 and Nmap 7.98 were rerun against a fresh installed artifact of `2b8c1be`, with 18 scanner requests and 68 API checks. A harness source-shadow isolation defect was fixed and regression-tested. Scope, measured snapshots and limitations are recorded in `LIVE_ADVERSARIAL_EVIDENCE.md`; final exact-candidate/client/TLS/long-load/package and human-review gates remain open.
