@@ -10,6 +10,9 @@ import threading
 import time
 
 
+AUDIT_BUSY_TIMEOUT_SECONDS = 0.25
+
+
 class AuditIntegrityError(RuntimeError):
     """A previously recorded audit decision has been changed or removed."""
 
@@ -17,7 +20,7 @@ class AuditIntegrityError(RuntimeError):
 class AuditLog:
     def __init__(self, path: str):
         self._lock = threading.Lock()
-        self._db = sqlite3.connect(path, check_same_thread=False)
+        self._db = sqlite3.connect(path, timeout=AUDIT_BUSY_TIMEOUT_SECONDS, check_same_thread=False)
         self._db.execute("PRAGMA journal_mode=WAL")
         self._db.execute("CREATE TABLE IF NOT EXISTS decisions (time_utc INTEGER NOT NULL, caller_hash TEXT NOT NULL, tool TEXT NOT NULL, status TEXT NOT NULL, rule TEXT NOT NULL, prev_hash TEXT, content_hash TEXT)")
         columns = {row[1] for row in self._db.execute("PRAGMA table_info(decisions)")}

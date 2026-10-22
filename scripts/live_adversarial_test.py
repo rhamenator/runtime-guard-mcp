@@ -209,6 +209,15 @@ def run(server: str | None = None) -> dict:
             if len(responses) != 2:
                 raise AssertionError("stdio returned an unexpected number of frames")
             expect("stdio oversized frame recovery", (len(responses), responses[0]["error"]["code"], responses[1]["id"], responses[1]["result"]), (2, -32600, 500, {}), results)
+            with sqlite3.connect(audit) as holder:
+                holder.execute("BEGIN IMMEDIATE")
+                count = holder.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+                _, blocked = send(port, rpc(510, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+                expect("busy audit fails closed", (blocked["result"]["isError"], blocked["result"]["structuredContent"]["rule"]), (True, "AUDIT_UNAVAILABLE"), results)
+                expect("busy audit adds no record", holder.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], count, results)
+                expect("ping survives audit contention", send(port, rpc(511, "ping"), token)[1]["result"], {}, results)
+            _, recovered = send(port, rpc(512, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+            expect("audit lock release recovers", recovered["result"]["structuredContent"]["rule"], "READ_ONLY_COMMAND", results)
             with sqlite3.connect(audit) as database:
                 tail = database.execute("SELECT * FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
                 count = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
