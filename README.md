@@ -114,3 +114,5 @@ Cancellation notifications with malformed metadata are ignored without a reply. 
 Installed resource regression commands and measured limits, including the fixed two-minute mixed HTTP replay, are documented in [resource evidence](docs/SUSTAINED_RESOURCE_EVIDENCE.md). These tests do not establish an indefinite soak or latency guarantee.
 
 Stdio output is bounded to 32 queued frames and 16 MiB of encoded queued/active data. A frame has five seconds to reach the client; EOF also has a five-second output-drain budget after the existing policy drain. Stalled/disconnected output or exceeded buffering ends the CLI session with exit code 2. Discard a partial response and reconnect; an interrupted decision may already have changed budgets, masker state or audit records. Do not automatically replay stateful calls. No rollback or whole-agent enforcement is provided.
+
+Advertised tool schemas and actual structured decisions are checked with a separate Draft 2020-12 validator in the test-client environment; see [conformance evidence](docs/MODERN_CONFORMANCE.md). This does not certify complete MCP conformance.

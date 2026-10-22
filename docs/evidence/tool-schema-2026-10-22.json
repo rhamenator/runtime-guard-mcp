@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "validator": "jsonschema Draft202012Validator",
+  "results": [
+    {
+      "era": "legacy",
+      "schemas_checked": 8,
+      "tool_results_validated": 16,
+      "invalid_input_errors": 4,
+      "unknown_method_tool_errors": 2,
+      "statuses": [
+        "BLOCKED",
+        "NEEDS_CONFIRMATION",
+        "SAFE"
+      ],
+      "rules": [
+        "AUDIT_CAPACITY",
+        "DESTRUCTIVE_FILE_OPERATION",
+        "INVALID_BUDGET_INPUT",
+        "MASKED",
+        "READ_ONLY_COMMAND",
+        "RECURSIVE_DELETE",
+        "SENSITIVE_PATH",
+        "TOKENS_BUDGET",
+        "UNRECOGNIZED_COMMAND",
+        "WITHIN_BUDGET",
+        "WORKSPACE_PATH"
+      ],
+      "audit_records": 12,
+      "recovery_ping": true
+    },
+    {
+      "era": "modern",
+      "schemas_checked": 8,
+      "tool_results_validated": 16,
+      "invalid_input_errors": 4,
+      "unknown_method_tool_errors": 2,
+      "statuses": [
+        "BLOCKED",
+        "NEEDS_CONFIRMATION",
+        "SAFE"
+      ],
+      "rules": [
+        "AUDIT_CAPACITY",
+        "DESTRUCTIVE_FILE_OPERATION",
+        "INVALID_BUDGET_INPUT",
+        "MASKED",
+        "READ_ONLY_COMMAND",
+        "RECURSIVE_DELETE",
+        "SENSITIVE_PATH",
+        "TOKENS_BUDGET",
+        "UNRECOGNIZED_COMMAND",
+        "WITHIN_BUDGET",
+        "WORKSPACE_PATH"
+      ],
+      "audit_records": 12,
+      "recovery_ping": true
+    }
+  ],
+  "scope": "finite installed tool schema/result fixtures; not full MCP normative certification or exhaustive policy coverage",
+  "server_revision": "f12e34f4497fb1f10d5e3edf161aed2233464baf",
+  "probe_sha256": "1d53e352076e630259213ade31e0a480736e48709b37d5c8fda942d7643808ed",
+  "wheel_sha256": "b993e646fc12d16bb536a6eab7ed2e4657a8bb86367fb6a6629f02fb370670d9",
+  "jsonschema_version": "4.26.0"
+}

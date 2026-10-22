@@ -110,3 +110,7 @@ A fixed two-minute, 24,576-call installed HTTP profile now repeats the mixed wor
 ## Bounded stdio output backpressure
 
 Queued output has frame/byte limits and delivery/drain deadlines. Real installed pipe tests cover stalled and disconnected readers with stdin held open, plus resumed reading and ping recovery in both eras. See OUTPUT_BACKPRESSURE.md. Native-platform/real-client slow-reader and longer-soak coverage remain open; this does not waive final candidate/human review.
+
+## Installed tool schema/result validation
+
+An isolated Draft 2020-12 validator now checks the installed tool schema pairs and sixteen real structured decisions per protocol era, including all four audit-capacity error results and all three advisory statuses. CI runs this alongside the official SDK probes without adding server dependencies. See MODERN_CONFORMANCE.md; remaining normative and exact-candidate/human-review gates stay open.
