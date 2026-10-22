@@ -84,4 +84,6 @@ MCP 2026-07-28 per-request stdio discovery, result envelopes, version errors and
 
 ## Real-client interrupt/recovery follow-up
 
-The [2026-10-22 cancellation review](CLIENT_CANCELLATION.md) records fresh-wheel control-path observations with a test-only paused first policy call. Claude used modern MCP and sent matching cancellation; Cursor used legacy MCP and omitted it; Codex initially recovered without cancellation, while its marker-enabled replay was provider-rate-limited. These scoped observations supersede earlier claims that all client cancellation was untested, but do not certify desktop/UI controls or waive the remaining gates.
+The [2026-10-22 cancellation review](CLIENT_CANCELLATION.md) records fresh-wheel control-path observations with a test-only paused first policy call. Claude used modern MCP and sent matching cancellation; Cursor used legacy MCP and omitted it; Codex initially recovered without cancellation, while its marker-enabled replay was inconclusive (the original rate-limit indicator was not reliable). These scoped observations supersede earlier claims that all client cancellation was untested, but do not certify desktop/UI controls or waive the remaining gates.
+
+A subsequent bounded Codex replay passed with process/protocol markers: one process, legacy MCP, interruption acknowledged, recovery successful, no MCP cancellation notification. The earlier inconclusive run remains in evidence with unknown cause.

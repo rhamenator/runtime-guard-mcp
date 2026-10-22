@@ -42,7 +42,7 @@
       "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue",
       "fixture_processes": null,
       "protocol_versions": null,
-      "instrumentation_note": "Completed initial run before process/protocol markers were added; the marker-enabled replay was rate-limited."
+      "instrumentation_note": "Completed initial run before process/protocol markers were added; the first marker-enabled replay was inconclusive."
     },
     {
       "status": "PASS_OBSERVATION",
@@ -63,14 +63,36 @@
       "recovery_safe": true,
       "audit_decisions": 2,
       "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    {
+      "status": "PASS_OBSERVATION",
+      "client": "codex",
+      "client_version": "codex-cli 0.151.0",
+      "control_path": "app-server turn/interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.313,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
     }
   ],
   "inconclusive_replays": [
     {
       "status": "INCONCLUSIVE",
       "client": "codex",
-      "provider_rate_limit_observed": true,
-      "reason": "client control/fixture/recovery did not complete; no passing cancellation claim"
+      "reason": "client control/fixture/recovery did not complete; no passing cancellation claim",
+      "limit_indicator": "unverified",
+      "diagnostic_note": "Historical broad substring classifier matched a possible rate limit, but could also match arbitrary IDs containing 429; cause is not confirmed."
     }
-  ]
+  ],
+  "retry_note": "One manually authorized bounded retry passed in 11.95 seconds. No current limit observed; historical failure cause remains unknown."
 }
