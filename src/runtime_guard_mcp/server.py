@@ -18,7 +18,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from . import __version__
-from .audit import AuditIntegrityError, AuditLog
+from .audit import AuditCapacityError, AuditIntegrityError, AuditLog, DEFAULT_AUDIT_MAX_RECORDS
 from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
 
 PROTOCOL_VERSION = "2025-06-18"
@@ -169,13 +169,13 @@ def valid_meta_key(key: str) -> bool:
 
 
 class RuntimeGuard:
-    def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None):
+    def __init__(self, workspace_root: str, token_hour: int = 100_000, payload_hour: int = 50_000_000, commands_minute: int = 120, audit_db: str | None = None, allowed_roots: list[str] | None = None, enabled_tools: list[str] | None = None, audit_max_records: int = DEFAULT_AUDIT_MAX_RECORDS):
         self.workspace_root = str(Path(workspace_root).expanduser().resolve(strict=False))
         self.allowed_roots = allowed_roots or []
         self.enabled_tools = set(enabled_tools) if enabled_tools is not None else {tool["name"] for tool in TOOLS}
         self.budgets = BudgetState(token_hour, payload_hour, commands_minute)
         self.masker = SecretMasker()
-        self.audit = AuditLog(audit_db) if audit_db else None
+        self.audit = AuditLog(audit_db, audit_max_records) if audit_db else None
 
     def call(self, name: str, arguments: dict[str, Any], caller: str) -> dict[str, Any]:
         if name == "audit_path_access":
@@ -191,6 +191,8 @@ class RuntimeGuard:
         if self.audit:
             try:
                 self.audit.record(caller, name, result["status"], result["rule"])
+            except AuditCapacityError:
+                result = verdict("BLOCKED", "AUDIT_CAPACITY", "Archive the verified audit database and configure a fresh audit_db before retrying; do not delete active audit rows.")
             except (sqlite3.Error, AuditIntegrityError):
                 result = verdict("BLOCKED", "AUDIT_UNAVAILABLE", "Restore audit integrity and storage before using this server.")
         return {"content": [{"type": "text", "text": json.dumps(result, separators=(",", ":"))}], "structuredContent": result, "isError": result["status"] == "BLOCKED"}
@@ -515,9 +517,9 @@ def main() -> None:
             config = parse_json_request(raw_config)
         except (OSError, ValueError, UnicodeDecodeError):
             parser.error("Cannot read config: use valid UTF-8 JSON without duplicate keys or non-finite numbers, within the request size and structure limits")
-        if not isinstance(config, dict) or set(config) - {"workspace_root", "allowed_roots", "enabled_tools", "token_hour", "payload_hour", "commands_minute", "audit_db"}:
+        if not isinstance(config, dict) or set(config) - {"workspace_root", "allowed_roots", "enabled_tools", "token_hour", "payload_hour", "commands_minute", "audit_db", "audit_max_records"}:
             parser.error("Invalid config keys")
-        for key in ("token_hour", "payload_hour", "commands_minute"):
+        for key in ("token_hour", "payload_hour", "commands_minute", "audit_max_records"):
             if key in config and (type(config[key]) is not int or config[key] <= 0):
                 parser.error(f"{key} must be a positive integer")
         if "workspace_root" in config and (not isinstance(config["workspace_root"], str) or not config["workspace_root"]):
@@ -528,7 +530,7 @@ def main() -> None:
             parser.error("allowed_roots must be a list of paths")
         if "enabled_tools" in config and (not isinstance(config["enabled_tools"], list) or not all(isinstance(name, str) for name in config["enabled_tools"]) or not set(config["enabled_tools"]) <= {tool["name"] for tool in TOOLS}):
             parser.error("enabled_tools contains an unknown tool")
-    guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"))
+    guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"), config.get("audit_max_records", DEFAULT_AUDIT_MAX_RECORDS))
     if args.transport == "stdio":
         serve_stdio(guard)
     else:

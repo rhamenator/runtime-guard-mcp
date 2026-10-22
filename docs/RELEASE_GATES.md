@@ -34,3 +34,7 @@ Real SQLite busy/full fixtures now verify controlled tool errors, unchanged audi
 ## Finite stdio corpus milestone
 
 A seeded installed-server campaign now rejects 95 legacy and 109 modern hostile frames, checking recovery after each. It identified/fixed modern ID validation order and optional client title validation. See [evidence](STDIO_ADVERSARIAL_EVIDENCE.md); full schema, cancellation/client and sustained resource gates remain open.
+
+## Audit capacity milestone
+
+Audit now defaults to a 100,000-record limit, configurable as positive `audit_max_records`. At capacity, tools fail closed with `AUDIT_CAPACITY`; records are preserved and the count survives restart. Concurrency, above-cap startup, backup preservation and fresh-file recovery are tested. CI runs the installed workflow in both protocol eras. This is deliberate stop-and-archive retention: byte quotas, automatic rotation, cross-file anchors/signatures, sustained resources and real filesystem-full evidence remain open.
