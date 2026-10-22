@@ -530,7 +530,10 @@ def main() -> None:
             parser.error("allowed_roots must be a list of paths")
         if "enabled_tools" in config and (not isinstance(config["enabled_tools"], list) or not all(isinstance(name, str) for name in config["enabled_tools"]) or not set(config["enabled_tools"]) <= {tool["name"] for tool in TOOLS}):
             parser.error("enabled_tools contains an unknown tool")
-    guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"), config.get("audit_max_records", DEFAULT_AUDIT_MAX_RECORDS))
+    try:
+        guard = RuntimeGuard(config.get("workspace_root", args.workspace_root), config.get("token_hour", 100_000), config.get("payload_hour", 50_000_000), config.get("commands_minute", 120), config.get("audit_db"), config.get("allowed_roots"), config.get("enabled_tools"), config.get("audit_max_records", DEFAULT_AUDIT_MAX_RECORDS))
+    except (OSError, ValueError, sqlite3.Error, AuditIntegrityError):
+        parser.error("Cannot initialize Runtime Guard: verify workspace, audit storage access, capacity and integrity")
     if args.transport == "stdio":
         serve_stdio(guard)
     else:
