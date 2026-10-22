@@ -248,7 +248,7 @@ class RuntimeGuard:
 
     def handle(self, message: Any, caller: str = "local", modern_stdio: bool = False) -> dict[str, Any] | None:
         identifier = message.get("id") if isinstance(message, dict) else None
-        if type(identifier) not in {str, int, float, type(None)} or (type(identifier) is float and not math.isfinite(identifier)):
+        if isinstance(message, dict) and "id" in message and type(identifier) not in {str, int}:
             return rpc_error(None, -32600, "Invalid Request")
         if not isinstance(message, dict) or message.get("jsonrpc") != "2.0" or not isinstance(message.get("method"), str):
             return rpc_error(identifier, -32600, "Invalid Request")

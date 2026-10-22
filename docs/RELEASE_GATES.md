@@ -114,3 +114,7 @@ Queued output has frame/byte limits and delivery/drain deadlines. Real installed
 ## Installed tool schema/result validation
 
 An isolated Draft 2020-12 validator now checks the installed tool schema pairs and sixteen real structured decisions per protocol era, including all four audit-capacity error results and all three advisory statuses. CI runs this alongside the official SDK probes without adding server dependencies. See MODERN_CONFORMANCE.md; remaining normative and exact-candidate/human-review gates stay open.
+
+## Common request-ID validation
+
+The handler now rejects null/float and other invalid explicit request IDs before policy work across both stdio eras and legacy HTTP. Installed tests prove budget preservation, notification silence and valid-ID recovery on all three routes. See MODERN_CONFORMANCE.md. Full normative review, final candidate evidence and human release approval remain open.

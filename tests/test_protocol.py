@@ -59,6 +59,21 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual([(reply["id"], reply["error"]["code"]) for reply in replies[:-1]], [(None, -32600)] * 3)
         self.assertEqual((replies[-1]["id"], replies[-1]["result"]), (9, {}))
 
+    def test_invalid_request_ids_cannot_consume_budget_in_either_era(self):
+        for modern in (False, True):
+            guard = RuntimeGuard("/tmp/work")
+            params = {"name": "budget_guard", "arguments": {"session_id": "ids", "commands": 1, "consume": True}}
+            if modern:
+                params["_meta"] = {"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                                   "io.modelcontextprotocol/clientCapabilities": {}}
+            for identifier in (None, 1.0, 1.5, True, [], {"synthetic-marker": "private"}):
+                reply = guard.handle({"jsonrpc": "2.0", "id": identifier, "method": "tools/call", "params": params}, modern_stdio=True)
+                self.assertEqual((reply["id"], reply["error"]["code"]), (None, -32600))
+                self.assertNotIn("synthetic-marker", json.dumps(reply))
+            params["arguments"]["commands"] = 120
+            result = guard.handle({"jsonrpc": "2.0", "id": "recovery", "method": "tools/call", "params": params}, modern_stdio=True)
+            self.assertEqual(result["result"]["structuredContent"]["status"], "SAFE")
+
     def test_scalar_params_are_rejected_and_stdio_recovers(self):
         frames = [{"jsonrpc": "2.0", "id": index, "method": method, "params": value}
                   for index, (method, value) in enumerate((
