@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "seed": 20261021,
+  "results": [
+    {
+      "era": "legacy",
+      "hostile_frames": 95,
+      "recovery_checks": 95,
+      "corpus_sha256": "3624b3c7b43504800246c3b9b785e958193b43a7222029334f1031f81c439fa4"
+    },
+    {
+      "era": "modern",
+      "hostile_frames": 109,
+      "recovery_checks": 109,
+      "corpus_sha256": "79bad3a0e9809bff9bb60ace3f19788bb09840516fb6b910419334d33630fd4d"
+    }
+  ]
+}

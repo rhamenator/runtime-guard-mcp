@@ -52,7 +52,13 @@ class ModernTests(unittest.TestCase):
         self.assertEqual(error["code"], -32022)
         self.assertEqual(error["data"], {"supported": [MODERN_VERSION, "2025-06-18"], "requested": "2099-01-01"})
         for identifier in (None, 1.5, True):
-            self.assertEqual(guard.handle(request(identifier), modern_stdio=True)["error"]["code"], -32600)
+            for version in (MODERN_VERSION, "2099-01-01"):
+                message = request(identifier)
+                message["params"]["_meta"][META_PREFIX + "protocolVersion"] = version
+                self.assertEqual(guard.handle(message, modern_stdio=True)["error"]["code"], -32600)
+        message = request()
+        message["params"]["_meta"][META_PREFIX + "clientInfo"] = {"name": "fixture", "version": "1", "title": False}
+        self.assertEqual(guard.handle(message, modern_stdio=True)["error"]["code"], -32602)
 
     def test_wire_cancellation_suppresses_inflight_reply(self):
         # A controlled slow policy fixture tests the real reader/worker/output path.
