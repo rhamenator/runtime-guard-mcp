@@ -84,3 +84,8 @@ Modern requests reject all supplied requestState values before dispatch because 
 ## Refreshed installed adversarial toolset evidence
 
 Wfuzz 3.1.0 and Nmap 7.98 were rerun against a fresh installed artifact of `2b8c1be`, with 18 scanner requests and 68 API checks. A harness source-shadow isolation defect was fixed and regression-tested. Scope, measured snapshots and limitations are recorded in `LIVE_ADVERSARIAL_EVIDENCE.md`; final exact-candidate/client/TLS/long-load/package and human-review gates remain open.
+
+
+## Stdio peer response classification
+
+Uncorrelated response envelopes no longer become invalid-request replies or collide with pending client-request IDs. They are ignored before admission because this server issues no outbound RPCs. Active-ID collision and a 200-response installed campaign verify no policy work, no feedback replies and successful recovery. This is a bounded message-pattern fix, not full result-schema validation, outbound RPC support or conformance certification.

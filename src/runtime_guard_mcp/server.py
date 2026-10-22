@@ -334,6 +334,19 @@ class RuntimeGuard:
         return {"jsonrpc": "2.0", "id": identifier, "result": result}
 
 
+def is_peer_response(message: Any) -> bool:
+    """Recognize response envelopes, not requests or notifications."""
+    if not isinstance(message, dict) or message.get("jsonrpc") != "2.0" or "method" in message:
+        return False
+    if ("result" in message) == ("error" in message):
+        return False
+    if "result" in message:
+        return type(message.get("id")) in {str, int}
+    error = message["error"]
+    return (type(message.get("id")) in {str, int, type(None)} and isinstance(error, dict)
+            and type(error.get("code")) is int and isinstance(error.get("message"), str))
+
+
 class StdioDispatcher:
     """One policy worker, bounded admission, and cancellation on the reader thread."""
 
@@ -349,6 +362,10 @@ class StdioDispatcher:
         self.worker.start()
 
     def submit(self, message: Any) -> None:
+        # No server-initiated requests exist, so peer responses are uncorrelated.
+        # Never reply to a reply, route it by a client-request ID, or admit work.
+        if is_peer_response(message):
+            return
         if isinstance(message, dict) and "id" not in message and message.get("jsonrpc") == "2.0" and isinstance(message.get("method"), str):
             params = message.get("params")
             if message.get("jsonrpc") == "2.0" and message.get("method") == "notifications/cancelled" and isinstance(params, dict) and isinstance(params.get("_meta", {}), dict):
