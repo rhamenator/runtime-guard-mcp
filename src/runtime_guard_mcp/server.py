@@ -168,6 +168,13 @@ def valid_meta_key(key: str) -> bool:
     return not name or (name[0].isalnum() and name[-1].isalnum() and all(char.isalnum() or char in "-_." for char in name))
 
 
+def valid_notification_meta(meta: Any) -> bool:
+    """Check notification metadata before it can affect pending requests."""
+    return (isinstance(meta, dict) and all(valid_meta_key(key) for key in meta)
+            and (META_PREFIX + "subscriptionId" not in meta
+                 or type(meta[META_PREFIX + "subscriptionId"]) in {str, int}))
+
+
 def valid_client_implementation(client: Any) -> bool:
     """Check modern implementation metadata without fetching or trusting URLs."""
     if not isinstance(client, dict) or not all(isinstance(client.get(key), str) for key in ("name", "version")):
@@ -368,7 +375,7 @@ class StdioDispatcher:
             return
         if isinstance(message, dict) and "id" not in message and message.get("jsonrpc") == "2.0" and isinstance(message.get("method"), str):
             params = message.get("params")
-            if message.get("jsonrpc") == "2.0" and message.get("method") == "notifications/cancelled" and isinstance(params, dict) and isinstance(params.get("_meta", {}), dict):
+            if message.get("jsonrpc") == "2.0" and message.get("method") == "notifications/cancelled" and isinstance(params, dict) and valid_notification_meta(params.get("_meta", {})):
                 identifier = params.get("requestId")
                 if type(identifier) in {str, int} and ("reason" not in params or isinstance(params["reason"], str)):
                     with self.lock:
