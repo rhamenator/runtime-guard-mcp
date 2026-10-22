@@ -358,8 +358,9 @@ def is_peer_response(message: Any) -> bool:
 class StdioDispatcher:
     """One policy worker, bounded admission, and cancellation on the reader thread."""
 
-    def __init__(self, guard: RuntimeGuard, emit: Any, capacity: int = MAX_STDIO_REQUESTS):
+    def __init__(self, guard: RuntimeGuard, emit: Any, capacity: int = MAX_STDIO_REQUESTS, emit_deferred: Any = None):
         self.guard, self.emit = guard, emit
+        self.emit_deferred = emit_deferred
         self.pending: dict[Any, Event] = {}
         self.initializations: set[Any] = set()
         self.lock = Lock()
@@ -406,6 +407,7 @@ class StdioDispatcher:
                 message, identifier, tracked, cancelled = self.queue.get(timeout=0.05)
             except queue.Empty:
                 continue
+            deferred = False
             try:
                 if not cancelled.is_set():
                     try:
@@ -414,14 +416,22 @@ class StdioDispatcher:
                         response = rpc_error(identifier if tracked else None, -32603, "Internal error")
                     with self.lock:
                         if response is not None and not cancelled.is_set():
-                            self.emit(response)
+                            if self.emit_deferred is None:
+                                self.emit(response)
+                            else:
+                                complete = lambda identifier=identifier, tracked=tracked, cancelled=cancelled: self._finish(identifier, tracked, cancelled)
+                                deferred = self.emit_deferred(response, cancelled, complete)
             finally:
-                with self.lock:
-                    if tracked:
-                        self.pending.pop(identifier, None)
-                        self.initializations.discard(identifier)
-                self.slots.release()
+                if not deferred:
+                    self._finish(identifier, tracked, cancelled)
                 self.queue.task_done()
+
+    def _finish(self, identifier: Any, tracked: bool, cancelled: Event) -> None:
+        with self.lock:
+            if tracked and self.pending.get(identifier) is cancelled:
+                self.pending.pop(identifier)
+                self.initializations.discard(identifier)
+        self.slots.release()
 
     def close(self) -> None:
         self.closed.set()
@@ -441,7 +451,10 @@ def serve_stdio(guard: RuntimeGuard) -> bool:
     def emit(response: dict[str, Any]) -> None:
         output.emit((json.dumps(response, separators=(",", ":")) + "\n").encode("utf-8"))
 
-    dispatcher = StdioDispatcher(guard, emit)
+    def emit_deferred(response: dict[str, Any], cancelled: Event, complete: Any) -> bool:
+        return output.emit((json.dumps(response, separators=(",", ":")) + "\n").encode("utf-8"), cancelled, complete)
+
+    dispatcher = StdioDispatcher(guard, emit, emit_deferred=emit_deferred)
     try:
         while output.healthy():
             try:

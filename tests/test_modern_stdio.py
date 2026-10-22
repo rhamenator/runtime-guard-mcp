@@ -138,6 +138,42 @@ serve_stdio(Fixture('/tmp/work'))
             release.set()
             dispatcher.close()
 
+    def test_queued_responses_retain_cancellation_ids_and_admission_slots(self):
+        replies, buffered, calls = [], [], []
+
+        class Guard:
+            def handle(self, message, caller, modern_stdio=False):
+                calls.append(message["id"])
+                return {"jsonrpc": "2.0", "id": message["id"], "result": {}}
+
+        def enqueue(reply, cancelled, complete):
+            buffered.append((reply, cancelled, complete))
+            return True
+
+        dispatcher = StdioDispatcher(Guard(), replies.append, capacity=2, emit_deferred=enqueue)
+        try:
+            for identifier in (2, 3):
+                dispatcher.submit(request(identifier))
+            dispatcher.queue.join()
+            self.assertEqual(set(dispatcher.pending), {2, 3})
+            dispatcher.submit(request(2))
+            self.assertEqual(replies[-1]["error"]["code"], -32600)
+            dispatcher.submit(request(4))
+            self.assertEqual(replies[-1]["error"]["code"], 1001)
+            dispatcher.submit({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": 2}})
+            self.assertTrue(buffered[0][1].is_set())
+            buffered[0][2]()
+            self.assertEqual(set(dispatcher.pending), {3})
+            buffered[1][2]()
+            self.assertFalse(dispatcher.pending)
+            dispatcher.submit(request(4))
+            dispatcher.queue.join()
+            buffered[2][2]()
+            self.assertFalse(dispatcher.pending)
+            self.assertEqual(calls, [2, 3, 4])
+        finally:
+            dispatcher.close()
+
     def test_unrelated_client_interrupt_cannot_cancel_advisory_work(self):
         # Codex/Cursor can interrupt their turn without sending request cancellation.
         started, release = threading.Event(), threading.Event()

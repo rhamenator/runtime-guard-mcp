@@ -19,19 +19,21 @@ class StdioOutput:
         self.worker = Thread(target=self._run, daemon=True)
         self.worker.start()
 
-    def emit(self, raw):
+    def emit(self, raw, cancelled=None, complete=None):
         with self.lock:
             if self.failed.is_set() or self.closed.is_set():
-                return
+                return False
             if self.bytes + len(raw) > self.max_bytes:
                 self.failed.set()
-                return
+                return False
             self.bytes += len(raw)
             try:
-                self.queue.put_nowait(raw)
+                self.queue.put_nowait((raw, cancelled, complete))
             except queue.Full:
                 self.bytes -= len(raw)
                 self.failed.set()
+                return False
+            return True
 
     def healthy(self):
         with self.lock:
@@ -42,12 +44,14 @@ class StdioOutput:
     def _run(self):
         while not self.failed.is_set() and (not self.closed.is_set() or not self.queue.empty()):
             try:
-                raw = self.queue.get(timeout=.05)
+                raw, cancelled, complete = self.queue.get(timeout=.05)
             except queue.Empty:
                 continue
             with self.lock:
                 self.started = time.monotonic()
             try:
+                if cancelled is not None and cancelled.is_set():
+                    continue
                 remaining = memoryview(raw)
                 while remaining:
                     size = os.write(self.fd, remaining)
@@ -62,6 +66,9 @@ class StdioOutput:
                     self.bytes -= len(raw)
                     self.started = None
                 self.queue.task_done()
+                if complete is not None:
+                    complete()
+                raw = remaining = cancelled = complete = None
 
     def close(self):
         self.closed.set()
