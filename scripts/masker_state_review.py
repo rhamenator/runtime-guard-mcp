@@ -68,7 +68,7 @@ def review(executable, root, modern):
         peak = {key: max(s[key] for s in samples) for key in baseline}
         assert peak['rss_bytes'] <= 128 * 1024 * 1024
         assert final['rss_bytes'] - baseline['rss_bytes'] <= 32 * 1024 * 1024
-        assert peak['fds'] <= baseline['fds'] + 2 and peak['threads'] <= 2
+        assert peak['fds'] <= baseline['fds'] + 2 and peak['threads'] <= 4
         assert peak['disk_bytes'] == 0
         assert final['cpu_seconds'] - baseline['cpu_seconds'] <= 15
         process.stdin.write(b'{"jsonrpc":"2.0","id":"recovery","method":"ping"}\n'); process.stdin.flush()

@@ -17,6 +17,7 @@ from threading import BoundedSemaphore, Event, Lock, Thread, Timer
 from typing import Any
 from urllib.parse import urlparse
 
+from .stdio import StdioOutput, read_frames
 from . import __version__
 from .audit import AuditCapacityError, AuditIntegrityError, AuditLog, AuditWalCapacityError, DEFAULT_AUDIT_MAX_RECORDS, DEFAULT_AUDIT_MAX_DB_BYTES, DEFAULT_AUDIT_WAL_CHECKPOINT_BYTES
 from .policy import BudgetState, SecretMasker, audit_path_access, dry_run_command, verdict
@@ -431,23 +432,25 @@ class StdioDispatcher:
                     event.set()
 
 
-def serve_stdio(guard: RuntimeGuard) -> None:
-    output_lock = Lock()
+def serve_stdio(guard: RuntimeGuard) -> bool:
+    output = StdioOutput(sys.stdout.fileno())
+    frames, stopped = queue.Queue(maxsize=1), Event()
+    reader = Thread(target=read_frames, args=(sys.stdin.fileno(), frames, stopped, MAX_MESSAGE), daemon=True)
+    reader.start()
 
     def emit(response: dict[str, Any]) -> None:
-        with output_lock:
-            sys.stdout.write(json.dumps(response, separators=(",", ":")) + "\n")
-            sys.stdout.flush()
+        output.emit((json.dumps(response, separators=(",", ":")) + "\n").encode("utf-8"))
 
     dispatcher = StdioDispatcher(guard, emit)
     try:
-        while True:
-            line = sys.stdin.buffer.readline(MAX_MESSAGE + 1)
-            if not line:
+        while output.healthy():
+            try:
+                line = frames.get(timeout=.05)
+            except queue.Empty:
+                continue
+            if line is None:
                 break
-            if len(line) > MAX_MESSAGE:
-                while line and not line.endswith(b"\n"):
-                    line = sys.stdin.buffer.readline(65536)
+            if line is False:
                 emit(rpc_error(None, -32600, "Request too large"))
             else:
                 try:
@@ -455,7 +458,13 @@ def serve_stdio(guard: RuntimeGuard) -> None:
                 except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
                     emit(rpc_error(None, -32700, "Parse error"))
     finally:
+        stopped.set()
+        if not output.healthy():
+            with dispatcher.lock:
+                for event in dispatcher.pending.values():
+                    event.set()
         dispatcher.close()
+    return output.close()
 
 
 def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None) -> None:
@@ -614,7 +623,8 @@ def main() -> None:
     except (OSError, ValueError, sqlite3.Error, AuditIntegrityError, AuditCapacityError):
         parser.error("Cannot initialize Runtime Guard: verify workspace, audit storage access, capacity and integrity")
     if args.transport == "stdio":
-        serve_stdio(guard)
+        if not serve_stdio(guard):
+            raise SystemExit(2)
     else:
         serve_http(guard, args.host, args.port, os.environ.get("RUNTIME_GUARD_AUTH_TOKEN"))
 
