@@ -8,9 +8,23 @@ import sys
 import tempfile
 import threading
 from jsonschema import Draft202012Validator
+from referencing import Registry
+from referencing.exceptions import NoSuchResource
+from schema_policy import check_offline_schema
 from wfuzz_loopback_review import installed_environment
 
 PREFIX = 'io.modelcontextprotocol/'
+
+
+def refuse_retrieval(uri):
+    # Never include an untrusted URI in a diagnostic or attempt I/O.
+    raise NoSuchResource(ref='offline-schema-retrieval-disabled')
+
+
+def offline_validator(schema):
+    check_offline_schema(schema)
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema, registry=Registry(retrieve=refuse_retrieval))
 
 
 def review(executable, root, modern):
@@ -41,9 +55,7 @@ def review(executable, root, modern):
         assert {t['name'] for t in tools} == {'audit_path_access', 'dry_run_command', 'budget_guard', 'secret_masker'}
         validators = {}
         for tool in tools:
-            for key in ('inputSchema', 'outputSchema'):
-                Draft202012Validator.check_schema(tool[key])
-            validators[tool['name']] = (Draft202012Validator(tool['inputSchema']), Draft202012Validator(tool['outputSchema']))
+            validators[tool['name']] = (offline_validator(tool['inputSchema']), offline_validator(tool['outputSchema']))
         invalid = [('audit_path_access', {'path': 7}), ('dry_run_command', {'command': []}),
                    ('budget_guard', {'session_id': 's', 'tokens': True}),
                    ('secret_masker', {'session_id': 's', 'stream_id': 's', 'chunk': '', 'final': 'yes'})]

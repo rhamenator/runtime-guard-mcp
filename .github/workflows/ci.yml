@@ -73,6 +73,7 @@ jobs:
           "$RUNNER_TEMP/runtime-guard-sdk-client/bin/python" -m pip install 'mcp==2.3.0' 'jsonschema==4.26.0'
           timeout 30s "$RUNNER_TEMP/runtime-guard-sdk-client/bin/python" scripts/official_sdk_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s "$RUNNER_TEMP/runtime-guard-sdk-client/bin/python" scripts/official_sdk_smoke.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp" --modern
+          timeout 15s "$RUNNER_TEMP/runtime-guard-sdk-client/bin/python" scripts/offline_schema_review.py
           timeout 40s "$RUNNER_TEMP/runtime-guard-sdk-client/bin/python" scripts/tool_schema_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           "$RUNNER_TEMP/runtime-guard-client/bin/python" -m pip check
       - name: Check repository hygiene
