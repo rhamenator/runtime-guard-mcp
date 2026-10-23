@@ -27,3 +27,11 @@ The regression was also run against the baseline audit module and failed specifi
 ## Limits
 
 This measures traced Python allocations only. It does not establish bounded SQLite native memory/cache, process RSS, CPU time, disk/WAL growth, sustained traffic behavior or adversarially rewritten oversized database rows. Disk-full and storage-lock recovery, tamper-evident retention semantics, and sustained resource profiling remain required. No external target, real secret, VM or authenticated model invocation was used.
+
+## Forced process termination during write traffic
+
+The development-only `audit_kill_review.py` starts an installed HTTP server with a temporary audit file, records at least eight acknowledged read-only advisory decisions, then sends SIGKILL while a bounded sequential request producer continues. Eight independent iterations vary the delay before killing. Partial HTTP responses/disconnections after the planned kill are expected transport outcomes, not successful acknowledgements. Unexpected policy/parser failures always fail the probe.
+
+After each kill it requires SQLite integrity and a record count between acknowledged calls and acknowledged calls plus one (at most one request was outstanding). Restarting the actual installed stdio server must verify the persisted audit chain and successfully append another SAFE decision; its row count must increase by exactly one. Restart diagnostics or hash/integrity failures fail the run. CI runs this installed campaign on Python 3.11–3.14.
+
+This establishes bounded same-host process-crash recovery under real traffic, without a test-only runtime patch. It does not guarantee the kill lands inside SQLite commit, simulate host power loss/storage-controller failure, establish physical durability on other filesystems, or recover volatile budgets/masking handles. Those limitations and independent human release disposition remain open. [Machine-readable evidence](evidence/audit-kill-recovery-2026-10-23.json) records actual acknowledgements, surviving row counts, artifact/probe hashes and elapsed time. All eight cycles passed locally in 1.92 seconds, with no unhandled worker exceptions.
