@@ -154,3 +154,7 @@ VERSION_CACHE_CANCELLATION_REVIEW.md maps the four newly frozen sources to curre
 ## Deterministic draft companion package
 
 DRAFT_SKILL_PACKAGE.md documents an allowlisted immutable-Git-source ZIP builder, injected draft warning, content inspection, external checksums/provenance and reproducibility comparisons. Dirty/untracked source contamination and overwrite regressions are tested. CI pairs draft inspection with fresh installed-server client/API probes. This is not marketplace submission or stable readiness: final source-archive/wheel, native-client/adversarial/package claims and human release approval remain required.
+
+## Wheel inspection (2026-10-23)
+
+The CI-built wheel now has a bounded, non-extracting standard-library inspector (`scripts/inspect_wheel.py`). It rejects unexpected/missing/duplicate members, nonregular/encrypted/oversized entries, runtime dependencies, incorrect license/entry-point metadata and RECORD integrity failures. Regression fixtures include traversal-style extra files, omitted notice, injected dependency and modified source bytes. Inspection precedes the existing installed-client/API tests on Python 3.11–3.14. This is consistency evidence, not authenticated provenance. Clean source-archive reconstruction, exact-candidate native-client/adversarial evidence and independent human review remain open; no stable release or submission is authorized by this check.
