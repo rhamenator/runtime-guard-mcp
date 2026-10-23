@@ -5,6 +5,7 @@ import csv
 import hashlib
 import io
 import json
+import re
 from email.parser import BytesParser
 from pathlib import Path
 import zipfile
@@ -24,7 +25,7 @@ def inspect(path):
         expected |= {prefix + n for n in ('METADATA', 'WHEEL', 'entry_points.txt',
                                           'top_level.txt', 'RECORD',
                                           'licenses/LICENSE', 'licenses/NOTICE')}
-        if set(names) != expected or not prefix.startswith('runtime_guard_mcp-'):
+        if set(names) != expected or not re.fullmatch(r'runtime_guard_mcp-[A-Za-z0-9_.+]+\.dist-info/', prefix):
             raise ValueError('unexpected or missing wheel members')
         for info in archive.infolist():
             if info.file_size > 1024 * 1024 or info.flag_bits & 1:
