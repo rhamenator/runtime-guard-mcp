@@ -87,6 +87,9 @@ jobs:
       - name: Probe paced concurrent mixed-tool resource bounds
         if: matrix.python == '3.12'
         run: timeout 45s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+      - name: Probe successful audited writes over three minutes
+        if: matrix.python == '3.12'
+        run: timeout 215s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp" --successful-writes
       - name: Probe extended concurrent mixed-tool resource bounds
         if: matrix.python == '3.12'
         run: timeout 155s python scripts/concurrent_resource_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp" --extended

@@ -18,11 +18,15 @@ from wfuzz_loopback_review import installed_environment, request
 WORKERS, CYCLES, SECONDS, CAPACITY = 4, 128, 8, 1024
 
 
-def review(executable, root, extended=False):
+def review(executable, root, extended=False, successful_writes=False):
     cycles, seconds, cpu_limit = (2048, 120, 90) if extended else (CYCLES, SECONDS, 20)
+    if successful_writes:
+        cycles, seconds, cpu_limit = 256, 180, 60
+    capacity = WORKERS * cycles * 3 + 1 if successful_writes else CAPACITY
+    token_budget = WORKERS * cycles if successful_writes else 64
     audit, config = root / 'audit.sqlite', root / 'config.json'
-    config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'invocations_minute': 1000000, 'audit_max_records': CAPACITY,
-                                  'audit_max_db_bytes': 1048576, 'audit_wal_checkpoint_bytes': 65536, 'token_hour': 64}))
+    config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'invocations_minute': 1000000, 'audit_max_records': capacity,
+                                  'audit_max_db_bytes': 8388608 if successful_writes else 1048576, 'audit_wal_checkpoint_bytes': 65536, 'token_hour': token_budget}))
     token = secrets.token_hex(32)
     with socket.socket() as reservation:
         reservation.bind(('127.0.0.1', 0))
@@ -44,6 +48,9 @@ def review(executable, root, extended=False):
         assert marker.encode() not in raw
         expected = {'budget_guard': {'WITHIN_BUDGET', 'TOKENS_BUDGET', 'AUDIT_CAPACITY'},
                     'secret_masker': {'MASKED', 'AUDIT_CAPACITY'}, 'dry_run_command': {'READ_ONLY_COMMAND', 'AUDIT_CAPACITY'}}
+        if successful_writes:
+            expected = {'budget_guard': {'WITHIN_BUDGET'}, 'secret_masker': {'MASKED'},
+                        'dry_run_command': {'READ_ONLY_COMMAND'}}
         assert value['rule'] in expected[name]
         assert result['isError'] == (value['status'] == 'BLOCKED')
         if value['rule'] == 'AUDIT_CAPACITY':
@@ -96,11 +103,17 @@ def review(executable, root, extended=False):
         samples.append(final)
         ping()
         assert sum(counts.values()) == WORKERS * cycles * 3
-        assert counts['budget_guard/WITHIN_BUDGET'] == 64
-        assert counts.get('budget_guard/TOKENS_BUDGET', 0) > 0
-        assert sum(n for k, n in counts.items() if k.endswith('/AUDIT_CAPACITY')) == WORKERS * cycles * 3 - CAPACITY
+        assert counts['budget_guard/WITHIN_BUDGET'] == token_budget
+        if successful_writes:
+            assert counts == {'budget_guard/WITHIN_BUDGET': WORKERS * cycles,
+                              'secret_masker/MASKED': WORKERS * cycles,
+                              'dry_run_command/READ_ONLY_COMMAND': WORKERS * cycles}
+        else:
+            assert counts.get('budget_guard/TOKENS_BUDGET', 0) > 0
+            assert sum(n for k, n in counts.items() if k.endswith('/AUDIT_CAPACITY')) == WORKERS * cycles * 3 - CAPACITY
+        expected_rows = WORKERS * cycles * 3 if successful_writes else CAPACITY
         with closing(sqlite3.connect(audit)) as db:
-            assert db.execute('SELECT count(*) FROM decisions').fetchone()[0] == CAPACITY
+            assert db.execute('SELECT count(*) FROM decisions').fetchone()[0] == expected_rows
             assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
         assert all(marker.encode() not in path.read_bytes() for path in root.glob('audit.sqlite*'))
         peak = {key: max(s[key] for s in samples) for key in baseline}
@@ -111,7 +124,7 @@ def review(executable, root, extended=False):
         return {'workers': WORKERS, 'cycles_per_worker': cycles, 'target_seconds': seconds, 'cpu_limit_seconds': cpu_limit,
                 'elapsed_seconds': round(elapsed, 3), 'requests': sum(counts.values()), 'counts': counts,
                 'samples': len(samples), 'baseline': baseline, 'peak': peak, 'final': final,
-                'audit_records': CAPACITY, 'post_load_ping': True}
+                'audit_records': expected_rows, 'successful_write_profile': successful_writes, 'post_load_ping': True}
     finally:
         if process.poll() is None:
             process.terminate()
@@ -126,13 +139,15 @@ def review(executable, root, extended=False):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('installed_server')
-    parser.add_argument('--extended', action='store_true', help='bounded 120-second / 24,576-call profile')
+    profiles = parser.add_mutually_exclusive_group()
+    profiles.add_argument('--successful-writes', action='store_true', help='180-second / 3,072-call all-successful audited-write profile')
+    profiles.add_argument('--extended', action='store_true', help='bounded 120-second / 24,576-call profile')
     args = parser.parse_args()
     if not Path('/proc/self/status').exists():
         parser.error('Linux procfs is required')
     with tempfile.TemporaryDirectory(prefix='runtime-guard-concurrent-') as directory:
         executable, root = str(Path(args.installed_server).absolute()), Path(directory)
-        results = review(executable, root, args.extended)
+        results = review(executable, root, args.extended, args.successful_writes)
         restarted = subprocess.run([executable, '--config', str(root / 'config.json')],
                                    input='{"jsonrpc":"2.0","id":1,"method":"ping"}\n', text=True,
                                    env=installed_environment(''), cwd=root, capture_output=True, timeout=6, check=True)

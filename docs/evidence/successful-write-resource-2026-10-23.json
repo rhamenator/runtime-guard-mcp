@@ -1,0 +1,84 @@
+{
+  "status": "PASS_BOUNDED_PROFILE",
+  "run_started_utc": "2026-10-23T16:50:00Z",
+  "local_completed_utc": "2026-10-23T16:54:52.045847+00:00",
+  "profile": {
+    "status": "PASS",
+    "results": {
+      "workers": 4,
+      "cycles_per_worker": 256,
+      "target_seconds": 180,
+      "cpu_limit_seconds": 60,
+      "elapsed_seconds": 180.025,
+      "requests": 3072,
+      "counts": {
+        "budget_guard/WITHIN_BUDGET": 1024,
+        "secret_masker/MASKED": 1024,
+        "dry_run_command/READ_ONLY_COMMAND": 1024
+      },
+      "samples": 3534,
+      "baseline": {
+        "rss_bytes": 28844032,
+        "fds": 7,
+        "threads": 1,
+        "disk_bytes": 45136,
+        "cpu_seconds": 0.07
+      },
+      "peak": {
+        "rss_bytes": 30167040,
+        "fds": 12,
+        "threads": 10,
+        "disk_bytes": 688520,
+        "cpu_seconds": 8.29
+      },
+      "final": {
+        "rss_bytes": 30105600,
+        "fds": 7,
+        "threads": 1,
+        "disk_bytes": 647224,
+        "cpu_seconds": 8.29
+      },
+      "audit_records": 3072,
+      "successful_write_profile": true,
+      "post_load_ping": true,
+      "restart_integrity_ping": true
+    },
+    "scope": "finite paced four-worker loopback HTTP workload; not long-duration soak, latency guarantee, multi-user isolation or exact physical quota"
+  },
+  "capacity_denial_regression": "PASS",
+  "installed_server_source_commit": "bd56ecae8f26f6b9b4cc9ef32db11d1fbaf6681f",
+  "installed_wheel": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "c90aa21e829c29735dbc0f6fb18607d19ac6a8c68b5278c872b8a29d228a6701",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "local_build_check": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "e9f77cbc051a73e2ff57f402bc586d63afd6b959da40076a4c97b626516b5607",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "probe_sha256": "58d00f881952beae0e34783cf82591006013353ed6363c8a9ca310132bce369f",
+  "runtime_source_sha256": {
+    "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+    "src/runtime_guard_mcp/audit.py": "5b9d62f4e6ae36e633c893ae762437b64f462586d5995cbdd0368504d0cd91c1",
+    "src/runtime_guard_mcp/policy.py": "b473a10804f6b1730b01c31cd1f2fcb5626f980b59719e6b1827c1fbe9c49899",
+    "src/runtime_guard_mcp/server.py": "18439782d6aa0f1bab91d75af5c63fd116a8e25eb0554ce562993a698c3f7239",
+    "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+  },
+  "tests": {
+    "count": 107,
+    "status": "PASS",
+    "elapsed_seconds": 11.7
+  },
+  "wheel_build_seconds": 2.06,
+  "limitations": [
+    "Reuses the prior clean installed wheel; runtime source unchanged. CI builds this revision and repeats the full profile.",
+    "Three-minute same-host Linux loopback run, not hours-long soak or throughput guarantee.",
+    "Resource sampling can miss transient peaks; no VM operations or production traffic.",
+    "Independent human and exact final-candidate client review remain open."
+  ]
+}
