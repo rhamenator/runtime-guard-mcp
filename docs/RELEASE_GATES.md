@@ -142,3 +142,7 @@ Bounded tracestate grammar now rejects before policy/cancellation effects, with 
 ## Baggage wire admission
 
 Bounded baggage wire grammar now rejects malformed input before policy/cancellation effects, with installed three-route preservation/recovery and combined-context cancellation fixtures. Metadata stays encoded/opaque, with no decoding, identity authority or forwarding. B10 still needs context association/propagation disposition; broader versioning/caching/full-cancellation review, application-state decisions and exact candidate/client/adversarial/package/human-review gates remain open. See MODERN_CONFORMANCE.md.
+
+## Explicit request-context disposition
+
+REQUEST_CONTEXT_REVIEW.md now maps protocol context, masking handles, caller-wide resource admission and persistent operator state to their actual scopes. Installed three-route metadata-spoofing/interleaving fixtures verify the boundary; no runtime behavior changes. Process-local portability remains a documented recommendation departure for human release disposition. Trace association grants no identity and downstream propagation is conditional on future forwarding. Next technical priority is the frozen versioning/caching/full-cancellation clause review, followed by exact candidate/client/adversarial/resource/package evidence and human review.
