@@ -1,0 +1,22 @@
+{
+  "status": "PASS_MINIMUM_BACKEND_COMPATIBILITY",
+  "run_started_utc": "2026-10-23T19:46:00Z",
+  "local_completed_utc": "2026-10-23T19:47:55.418155+00:00",
+  "base_commit": "aae5824435027d30e10ea8bd48f5644264697a31",
+  "negative_control": {
+    "setuptools": "68.0.0",
+    "status": "FAIL_EXPECTED",
+    "reason": "project.license SPDX string rejected by legacy schema"
+  },
+  "minimum_backend": {
+    "setuptools": "77.0.3",
+    "wheel_build_seconds": 0.21,
+    "installed_stdio_smoke": "PASS"
+  },
+  "runtime_dependencies": [],
+  "limits": [
+    "Build metadata compatibility test, not publisher authenticity or stable release approval.",
+    "The local wheel was built from the clean base commit, whose license metadata/runtime code is unchanged; CI repeats from this PR with corrected backend floor.",
+    "Python 3.11 CI tests exact minimum; other versions test currently resolved compatible backends."
+  ]
+}

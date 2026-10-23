@@ -178,3 +178,7 @@ A paced 180-second four-worker profile requires all 3,072 tool decisions to succ
 ## Refreshed native-client cancellation/recovery evidence
 
 All three authenticated CLI/control probes completed against a fresh inspected source-to-wheel installation at `cd2dd7d`, without retry. Claude delivered matching modern cancellation and suppressed the interrupted response; Codex and Cursor recovered but again omitted legacy MCP cancellation. The [artifact-bound observations](CLIENT_CANCELLATION.md#fresh-source-to-wheel-replay-2026-10-23) preserve that distinction. This reduces stale-client-evidence risk but does not waive those compatibility limitations, native UI/all-tool coverage, final candidate designation or independent human approval.
+
+## Minimum build-backend compatibility
+
+A negative control with the formerly declared setuptools 68.0.0 floor fails to parse the project's SPDX string `project.license`; the tested 77.0.3 backend builds a wheel that passes license/notice/RECORD inspection and fresh installed stdio smoke. The declared build floor is now 77.0.3. Python 3.11 CI pins that exact backend and source-to-wheel building disables a second implicit build environment so the minimum is actually exercised; other Python versions use a current compatible backend. This fixes build metadata compatibility without adding runtime dependencies. Final provenance, native/platform scope and independent human review remain open.
