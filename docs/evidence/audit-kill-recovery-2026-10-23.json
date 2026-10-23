@@ -1,0 +1,98 @@
+{
+  "status": "PASS_BOUNDED_SIGKILL_RECOVERY",
+  "run_started_utc": "2026-10-23T21:12:30Z",
+  "local_completed_utc": "2026-10-23T21:15:18.285588+00:00",
+  "base_commit": "40c32fa44076ebae3dd17a524105c6de3b3e5868",
+  "installed_source_commit": "cd2dd7d5f257e08f974a88ba7b8656c700f57949",
+  "installed_wheel": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "5734a566703a7d44a6f19beca5844d493ab502889bc5dba7a57f217e3ec242d3",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "local_build_check": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "f04b1410d729835f3a243375fa0ae2872d53748a1252779d8a8de537c3b0beb4",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "probe_sha256": "9c85cea3d77ec7fa71a8d869ae63457ffb2a76f7ab7cf8bc07f87fd6afc38688",
+  "runtime_source_sha256": {
+    "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+    "src/runtime_guard_mcp/audit.py": "5b9d62f4e6ae36e633c893ae762437b64f462586d5995cbdd0368504d0cd91c1",
+    "src/runtime_guard_mcp/policy.py": "b473a10804f6b1730b01c31cd1f2fcb5626f980b59719e6b1827c1fbe9c49899",
+    "src/runtime_guard_mcp/server.py": "18439782d6aa0f1bab91d75af5c63fd116a8e25eb0554ce562993a698c3f7239",
+    "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+  },
+  "campaign": {
+    "status": "PASS",
+    "iterations": [
+      {
+        "iteration": 0,
+        "acknowledged": 8,
+        "recovered_rows": 8,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 1,
+        "acknowledged": 8,
+        "recovered_rows": 8,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 2,
+        "acknowledged": 9,
+        "recovered_rows": 9,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 3,
+        "acknowledged": 10,
+        "recovered_rows": 10,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 4,
+        "acknowledged": 10,
+        "recovered_rows": 10,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 5,
+        "acknowledged": 12,
+        "recovered_rows": 12,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 6,
+        "acknowledged": 12,
+        "recovered_rows": 12,
+        "restart_verified_and_writable": true
+      },
+      {
+        "iteration": 7,
+        "acknowledged": 11,
+        "recovered_rows": 11,
+        "restart_verified_and_writable": true
+      }
+    ],
+    "scope": "owned server SIGKILL under sequential audit traffic; not power loss, exact commit interruption or portable state recovery"
+  },
+  "elapsed_seconds": {
+    "campaign": 1.92,
+    "build": 2.13,
+    "tests": 10.86
+  },
+  "tests": {
+    "count": 107,
+    "status": "PASS"
+  },
+  "limits": [
+    "Reused prior clean installed artifact; runtime sources unchanged. CI rebuilds this revision.",
+    "SIGKILL under active sequential HTTP write traffic, not guaranteed exact commit interruption or physical power loss.",
+    "Volatile budgets/masking state are not recovered; final candidate and independent human review remain open.",
+    "No VM, external target or new runtime dependency."
+  ]
+}

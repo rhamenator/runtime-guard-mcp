@@ -182,3 +182,7 @@ All three authenticated CLI/control probes completed against a fresh inspected s
 ## Minimum build-backend compatibility
 
 A negative control with the formerly declared setuptools 68.0.0 floor fails to parse the project's SPDX string `project.license`; the tested 77.0.3 backend builds a wheel that passes license/notice/RECORD inspection and fresh installed stdio smoke. The declared build floor is now 77.0.3. Python 3.11 CI pins that exact backend and source-to-wheel building disables a second implicit build environment so the minimum is actually exercised; other Python versions use a current compatible backend. This fixes build metadata compatibility without adding runtime dependencies. Final provenance, native/platform scope and independent human review remain open.
+
+## Forced-process audit recovery
+
+Eight installed-server SIGKILL cycles under audited request traffic now check acknowledged-write retention, SQLite integrity, startup hash verification and successful subsequent audit append. The campaign runs in all supported Python CI jobs. See [scope and limits](AUDIT_RESOURCE_EVIDENCE.md#forced-process-termination-during-write-traffic). This addresses the prior missing forced-kill evidence; exact commit interruption, physical power-loss/inode/storage failure and volatile application-state recovery remain explicitly unproven.
