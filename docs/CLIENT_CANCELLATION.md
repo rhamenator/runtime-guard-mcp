@@ -55,3 +55,15 @@ For affected clients:
 4. If the server is unresponsive, restart it through normal client controls. In-memory budget and masker state reset; persisted audit records remain. Restart is operational recovery, not rollback or safe replay of prior actions.
 
 No Runtime Guard setting can enable a notification the client omits. Keep client cancellation support marked limited until a versioned real-client replay proves delivery; use the documented Claude path or a protocol client that sends matching MCP cancellation when this capability is required.
+
+## Fresh source-to-wheel replay, 2026-10-23
+
+[Recorded observations](evidence/native-client-replay-2026-10-23.json) pin commit `cd2dd7d`, inspected clean source archive/rebuilt wheel and harness digests. All three authenticated control probes ran sequentially against the fresh installation, completed without retry, acknowledged interruption and recovered in one live server process with two intact audit rows. Versions are unchanged from the earlier review:
+
+| Client | Protocol | Matching cancellation | Interrupted call replied | Wall time |
+| --- | --- | --- | --- | --- |
+| Claude Code 2.1.301 | 2026-07-28 | Yes | No | 5.51 s |
+| Codex CLI 0.151.0 | 2025-06-18 | No | Yes | 12.06 s |
+| Cursor CLI 2026.10.19-6bbf2c4 | 2025-06-18 | No | Yes | 18.57 s |
+
+The completed negative Codex/Cursor observations reconfirm the documented limitation; they do not pass a cancellation-delivery gate. Claude's matching notification suppressed its reply while the paused policy work still completed and audited. No new account-limit failure was observed. The 107-test suite also passed. This refreshes artifact-bound native CLI/control evidence after protocol and packaging work; it does not cover desktop controls, all tools, saturated queues, Codex/Cursor modern protocol or independent human acceptance. The existing recovery procedure still applies.

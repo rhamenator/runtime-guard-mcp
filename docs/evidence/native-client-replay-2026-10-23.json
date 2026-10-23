@@ -1,0 +1,104 @@
+{
+  "status": "COMPLETED_QUALIFIED_OBSERVATIONS",
+  "run_started_utc": "2026-10-23T18:20:00Z",
+  "local_completed_utc": "2026-10-23T18:24:44.908000+00:00",
+  "source_commit": "cd2dd7d5f257e08f974a88ba7b8656c700f57949",
+  "source_archive": {
+    "members": 148,
+    "sha256": "fc9203c93cfd23b44573dfd43e4007c701379449e2474afab00f33c6962fc030",
+    "source_commit": "cd2dd7d5f257e08f974a88ba7b8656c700f57949",
+    "status": "PASS"
+  },
+  "wheel": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "5734a566703a7d44a6f19beca5844d493ab502889bc5dba7a57f217e3ec242d3",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "clients": {
+    "claude": {
+      "status": "PASS_OBSERVATION",
+      "client": "claude",
+      "client_version": "2.1.301 (Claude Code)",
+      "control_path": "stream-json interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": true,
+      "cancelled_call_replied": false,
+      "cancel_notifications": 1,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2026-07-28"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue",
+      "elapsed_wall_seconds": 5.51
+    },
+    "codex": {
+      "status": "PASS_OBSERVATION",
+      "client": "codex",
+      "client_version": "codex-cli 0.151.0",
+      "control_path": "app-server turn/interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.314,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue",
+      "elapsed_wall_seconds": 12.06
+    },
+    "cursor": {
+      "status": "PASS_OBSERVATION",
+      "client": "cursor",
+      "client_version": "2026.10.19-6bbf2c4",
+      "control_path": "ACP session/cancel",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue",
+      "elapsed_wall_seconds": 18.57
+    }
+  },
+  "harness_sha256": {
+    "client_cancellation_probe.py": "84d397317e71495f84d8916fa5526d579b2285ca6bda67e61371a125b2919765",
+    "client_cancellation_bridge.py": "169472f65fec1ca056130ec9b9a8666a7ea371b16b24f0612bfb93ef78369137",
+    "client_cancellation_fixture.py": "e4fdca43ebb88e17d86a25ffc3c4404013db8ee62133078271b5956c8b5d1a2f",
+    "client_probe_diagnostics.py": "1d42da32098e3ca822791d7e01357371215f3f5a66b76ab3395ae041c02b3de7"
+  },
+  "tests": {
+    "count": 107,
+    "status": "PASS",
+    "elapsed_wall_seconds": 11.4
+  },
+  "release_gate_closed": false,
+  "build_timing": "Build/install included in local preparation interval; no separate per-build duration recorded.",
+  "limits": [
+    "Fresh clean source-to-wheel artifact, existing authenticated accounts, sequential bounded probes; no retries required.",
+    "Claude modern cancellation delivered; Codex/Cursor legacy paths recovered but omitted matching MCP cancellation.",
+    "Only dry_run_command exposed through a test-only delayed fixture, not all tools or native desktop/terminal UI.",
+    "No preemption/rollback claim, full protocol certification, stable candidate designation or independent human approval.",
+    "No VM operations or new runtime dependencies; normal client model-account usage may incur cost."
+  ]
+}
