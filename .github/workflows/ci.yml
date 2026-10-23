@@ -42,7 +42,11 @@ jobs:
         run: |
           git clone --quiet --no-local . "$RUNNER_TEMP/source-checkout"
           git -C "$RUNNER_TEMP/source-checkout" checkout --quiet --detach "$GITHUB_SHA"
-          python -m pip install 'setuptools>=77' wheel
+          if [ "${{ matrix.python }}" = "3.11" ]; then
+            python -m pip install 'setuptools==77.0.3' wheel
+          else
+            python -m pip install 'setuptools>=77.0.3' wheel
+          fi
           (cd "$RUNNER_TEMP/source-checkout" && python -c 'from setuptools.build_meta import build_sdist; build_sdist("dist")')
           python scripts/inspect_sdist.py "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz --ref "$GITHUB_SHA"
       - name: Run tests from inspected source archive
@@ -50,7 +54,7 @@ jobs:
           python -c 'import glob, os, tarfile; archive = tarfile.open(glob.glob(os.environ["RUNNER_TEMP"] + "/source-checkout/dist/*.tar.gz")[0]); archive.extractall(os.environ["RUNNER_TEMP"] + "/source-unpacked", filter="data"); archive.close()'
           (cd "$RUNNER_TEMP"/source-unpacked/runtime_guard_mcp-* && PYTHONPATH=src python -m unittest discover -s tests -q)
       - name: Build wheel from inspected source archive
-        run: python -m pip wheel --no-deps "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz -w dist
+        run: python -m pip wheel --no-deps --no-build-isolation "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz -w dist
       - name: Inspect wheel contents and integrity
         run: python scripts/inspect_wheel.py dist/*.whl
       - name: Probe freshly installed wheel
