@@ -1,6 +1,6 @@
 # Frozen modern core conformance inventory
 
-Source commit: `271ecc9accafdd9b83a3c869fa67c22953b2af80`, retrieved 2026-10-22. This is a self-review inventory of the current advisory server surface, not independent review or release approval. `OBSERVED` links bounded code/test evidence; `OPEN` is unresolved implementation/review work; `CONDITIONAL` identifies obligations for features not implemented or advertised. Client obligations are separated from server obligations. This inventory does not claim every normative statement in the full specification has been reviewed.
+Source commit: `271ecc9accafdd9b83a3c869fa67c22953b2af80`, initial five sources retrieved 2026-10-22; versioning/discovery/caching/cancellation retrieved 2026-10-23. This is a self-review inventory of the current advisory server surface, not independent review or release approval. `OBSERVED` links bounded code/test evidence; `OPEN` is unresolved implementation/review work; `CONDITIONAL` identifies obligations for features not implemented or advertised. Client obligations are separated from server obligations. This inventory does not claim every normative statement in the full specification has been reviewed.
 
 ## Frozen sources
 
@@ -11,6 +11,10 @@ Source commit: `271ecc9accafdd9b83a3c869fa67c22953b2af80`, retrieved 2026-10-22.
 | [tools](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/server/tools.mdx) | `ed550806a58eb7744b858fb9f26001aa5e55dac9e2babe88317cc81d9d4c490d` |
 | [mrtr](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/basic/patterns/mrtr.mdx) | `a8671eb2a0d292c0dcbae19666ff4fc3d97f294ce8107e9f38259cc5a02a066b` |
 | [pagination](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/server/utilities/pagination.mdx) | `c4c7b674ae9ce16c012b5da35559d35768f6b7a508ceb5d2d71393a9f46afd2b` |
+| [basic/versioning.mdx](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/basic/versioning.mdx) | `bc02f271700bdecd88034f2d7801eb09110a71d65876487378d94e48dfeb90dc` |
+| [server/discover.mdx](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/server/discover.mdx) | `3fe1f5b5f1528014216b1e49cc3363b3c689c36bcb80a6957ddca6a04cea409c` |
+| [server/utilities/caching.mdx](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/server/utilities/caching.mdx) | `ca416e94b40c067de638bb101541969f2b956b33e9695761032ddc06245d514d` |
+| [basic/patterns/cancellation.mdx](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/271ecc9accafdd9b83a3c869fa67c22953b2af80/docs/specification/2026-07-28/basic/patterns/cancellation.mdx) | `396030784a4af9b734a1c8d4faed13b31077e4a3a1f03c9c1f2048ec52794ba4` |
 
 ## Applicable surface and open decisions
 
@@ -46,4 +50,4 @@ Source commit: `271ecc9accafdd9b83a3c869fa67c22953b2af80`, retrieved 2026-10-22.
 
 Modern Streamable HTTP, subscriptions, roots/sampling/elicitation execution, prompts/resources, embedded resources, icons rendering/fetching and header-mapped tool parameters are not advertised server features. Their conditional requirements are not waived if those features are added. The server accepts self-reported implementation metadata as data, not authenticated identity.
 
-This frozen five-source inventory is not the complete protocol universe. Versioning/compatibility, caching and the full cancellation-pattern page still require a dedicated clause review against this same source revision. Native-client/platform probes, exact-candidate adversarial/build/package evidence, documented application-state/portability risk acceptance and independent human review remain open. T06 now has bounded implementation evidence; remaining clause review and final acceptance still apply.
+This frozen nine-source inventory is not the complete protocol universe. Versioning/compatibility, discovery, caching and cancellation now have a scoped clause review in VERSION_CACHE_CANCELLATION_REVIEW.md; conditional/client-only obligations and cancellation limitations remain explicit. Native-client/platform probes, exact-candidate adversarial/build/package evidence, documented application-state/portability risk acceptance and independent human review remain open. T06 now has bounded implementation evidence; remaining clause review and final acceptance still apply.

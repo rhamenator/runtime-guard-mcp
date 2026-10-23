@@ -15,11 +15,16 @@ INVALID = [
 ]
 
 
-def run_frames(executable, frames):
+def run_frames(executable, frames, config=None):
     with tempfile.TemporaryDirectory(prefix='runtime-guard-modern-validation-') as root:
         env = {key: value for key, value in os.environ.items() if key not in ('PYTHONPATH', 'PYTHONHOME') and not key.startswith('RUNTIME_GUARD_')}
         env['RUNTIME_GUARD_WORKSPACE_ROOT'] = root
-        result = subprocess.run([str(Path(executable).absolute())], input=''.join(json.dumps(frame) + '\n' for frame in frames), text=True, capture_output=True, cwd=root, env=env, timeout=15, check=True)
+        command = [str(Path(executable).absolute())]
+        if config is not None:
+            config_path = Path(root) / "config.json"
+            config_path.write_text(json.dumps(config))
+            command.extend(["--config", str(config_path)])
+        result = subprocess.run(command, input=''.join(json.dumps(frame) + '\n' for frame in frames), text=True, capture_output=True, cwd=root, env=env, timeout=15, check=True)
     return [json.loads(line) for line in result.stdout.splitlines()]
 
 
