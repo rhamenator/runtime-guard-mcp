@@ -17,12 +17,14 @@ REQUIRED = {'LICENSE', 'NOTICE', 'README.md', 'pyproject.toml', 'MANIFEST.in',
 
 def inspect(path, source):
     seen = set()
+    files = set()
     root = None
     with tarfile.open(path, 'r:gz') as archive:
         for index, member in enumerate(archive):
             parts = PurePosixPath(member.name).parts
             if (index >= 2048 or not parts or member.name.startswith('/')
-                    or '..' in parts or '\\' in member.name):
+                    or '..' in parts or '\\' in member.name
+                    or PurePosixPath(member.name).as_posix() != member.name):
                 raise ValueError('unsafe or excessive archive members')
             if root is None:
                 root = parts[0]
@@ -34,12 +36,14 @@ def inspect(path, source):
                 continue
             if not member.isfile() or member.size > 1024 * 1024:
                 raise ValueError('nonregular or oversized source member')
+            files.add(relative)
             data = archive.extractfile(member).read()
             if relative not in GENERATED and source.get(relative) != data:
                 raise ValueError('uncommitted or modified source: ' + relative)
-    included = {name.removeprefix(root + '/') for name in seen}
-    required = REQUIRED | {n for n in source if n.startswith('src/runtime_guard_mcp/') and n.endswith('.py')}
-    if not required <= included:
+    required = REQUIRED | {n for n in source if (
+        n.startswith(('src/runtime_guard_mcp/', 'scripts/', 'tests/')) and n.endswith('.py')
+        or n.startswith(('docs/', 'schemas/', 'skills/')) and n.endswith(('.md', '.json')))}
+    if not required <= files:
         raise ValueError('missing required source files')
     return {'status': 'PASS', 'members': len(seen),
             'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest()}
