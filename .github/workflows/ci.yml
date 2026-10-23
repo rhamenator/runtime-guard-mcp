@@ -40,6 +40,8 @@ jobs:
           cmp "$RUNNER_TEMP/skill-a/runtime-guard-draft.manifest.json" "$RUNNER_TEMP/skill-b/runtime-guard-draft.manifest.json"
       - name: Build wheel
         run: python -m pip wheel --no-deps . -w dist
+      - name: Inspect wheel contents and integrity
+        run: python scripts/inspect_wheel.py dist/*.whl
       - name: Probe freshly installed wheel
         run: |
           python -m venv "$RUNNER_TEMP/runtime-guard-client"
