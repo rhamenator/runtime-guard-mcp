@@ -134,3 +134,7 @@ B09 now has explicit no-retrieval client-harness evidence: bounded inline-only s
 ## Traceparent admission
 
 Malformed traceparent values now reject before policy/admission on all request routes and cannot cancel active stdio replies. Installed three-route budget preservation/recovery and reader/worker cancellation fixtures cover this bounded milestone. B10 remains partial: finish tracestate/baggage grammar and propagation review; no tracing or authentication claim is added. See MODERN_CONFORMANCE.md. Remaining versioning/caching/full-cancellation review, application-state decisions and exact candidate/client/adversarial/package/human-review gates stay open.
+
+## Tracestate admission
+
+Bounded tracestate grammar now rejects before policy/cancellation effects, with installed three-route rejection, budget preservation/recovery, boundary and cancellation fixtures. B10 remains partial: baggage grammar and context association/propagation disposition stay open. See MODERN_CONFORMANCE.md. Versioning/caching/full-cancellation clause review, application-state decisions, final candidate/client/adversarial/package evidence and independent human review remain required.

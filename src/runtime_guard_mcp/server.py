@@ -185,10 +185,46 @@ def valid_traceparent(value: Any) -> bool:
     return len(value) == 55 or value[55] == '-'
 
 
+def valid_tracestate(value: Any) -> bool:
+    """Bounded W3C list grammar; opaque entries never become caller identity."""
+    if not isinstance(value, str) or len(value) > 32768 or not value.isascii():
+        return False
+    if value.count(',') >= 32:
+        return False
+    seen = set()
+    letters = 'abcdefghijklmnopqrstuvwxyz'
+    allowed = letters + '0123456789_-*/'
+    for member in value.split(','):
+        member = member.strip(' \t')
+        if not member:
+            continue
+        key, separator, entry = member.partition('=')
+        if not separator or not entry or len(key) > 256 or len(entry) > 256 or key in seen:
+            return False
+        pieces = key.split('@')
+        if len(pieces) == 1:
+            if not key or key[0] not in letters:
+                return False
+        elif len(pieces) == 2:
+            tenant, system = pieces
+            if (not tenant or len(tenant) > 241 or tenant[0] not in letters + '0123456789'
+                    or not system or len(system) > 14 or system[0] not in letters):
+                return False
+        else:
+            return False
+        if any(char not in allowed for piece in pieces for char in piece):
+            return False
+        if any(not 32 <= ord(char) <= 126 or char in ',=' for char in entry):
+            return False
+        seen.add(key)
+    return True
+
+
 def valid_notification_meta(meta: Any) -> bool:
     """Check notification metadata before it can affect pending requests."""
     return (isinstance(meta, dict) and all(valid_meta_key(key) for key in meta)
             and ("traceparent" not in meta or valid_traceparent(meta["traceparent"]))
+            and ("tracestate" not in meta or valid_tracestate(meta["tracestate"]))
             and (META_PREFIX + "subscriptionId" not in meta
                  or type(meta[META_PREFIX + "subscriptionId"]) in {str, int}))
 
@@ -286,6 +322,8 @@ class RuntimeGuard:
         meta = params.get("_meta", {})
         if "traceparent" in meta and not valid_traceparent(meta["traceparent"]):
             return rpc_error(identifier, -32602, "Invalid traceparent metadata")
+        if "tracestate" in meta and not valid_tracestate(meta["tracestate"]):
+            return rpc_error(identifier, -32602, "Invalid tracestate metadata")
         modern = any(key.startswith(META_PREFIX) for key in meta) or method == "server/discover"
         if modern:
             if type(identifier) not in {str, int}:

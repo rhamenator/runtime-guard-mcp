@@ -16,34 +16,34 @@ INVALID = [None, {}, True, '', VALID.upper(), 'ff' + VALID[2:], VALID + '-synthe
            VALID.replace('0af7651916cd43dd8448eb211c80319c', '0' * 32)]
 
 
-def frames(modern):
-    values = INVALID + [VALID, '01' + VALID[2:] + '-future']
+def frames(modern, field='traceparent', invalid=INVALID, valid=(VALID, '01' + VALID[2:] + '-future')):
+    values = invalid + list(valid)
     result = []
     for index, value in enumerate(values):
-        meta = {'traceparent': value}
+        meta = {field: value}
         if modern:
             meta.update({PREFIX + 'protocolVersion': '2026-07-28', PREFIX + 'clientCapabilities': {}})
         params = {'_meta': meta, 'name': 'budget_guard', 'arguments': {
-            'session_id': 'trace', 'commands': 1 if index < len(INVALID) else 120 if index == len(INVALID) else 0,
+            'session_id': 'trace', 'commands': 1 if index < len(invalid) else 120 if index == len(invalid) else 0,
             'consume': True}}
         result.append({'jsonrpc': '2.0', 'id': index, 'method': 'tools/call', 'params': params})
     result.append({'jsonrpc': '2.0', 'id': len(result), 'method': 'ping'})
     return result
 
 
-def check(replies):
-    assert len(replies) == len(INVALID) + 3
+def check(replies, field='traceparent', invalid=INVALID, valid_count=2):
+    assert len(replies) == len(invalid) + valid_count + 1
     for index, reply in enumerate(replies):
         assert reply['id'] == index
-        if index < len(INVALID):
-            assert reply['error'] == {'code': -32602, 'message': 'Invalid traceparent metadata'}, reply
-        elif index < len(INVALID) + 2:
+        if index < len(invalid):
+            assert reply['error'] == {'code': -32602, 'message': f'Invalid {field} metadata'}, reply
+        elif index < len(invalid) + valid_count:
             assert reply['result']['structuredContent']['status'] == 'SAFE', reply
         else:
             assert 'result' in reply
 
 
-def http_review(executable):
+def http_review(executable, field='traceparent', invalid=INVALID, valid=(VALID, '01' + VALID[2:] + '-future')):
     with tempfile.TemporaryDirectory(prefix='runtime-guard-trace-') as root:
         with socket.socket() as reservation:
             reservation.bind(('127.0.0.1', 0)); port = reservation.getsockname()[1]
@@ -61,11 +61,11 @@ def http_review(executable):
                         raise
                     time.sleep(.02)
             replies = []
-            for frame in frames(False):
+            for frame in frames(False, field, invalid, valid):
                 status, raw = request(port, token, json.dumps(frame).encode())
                 assert status == 200
                 replies.append(json.loads(raw))
-            check(replies)
+            check(replies, field, invalid, len(valid))
         finally:
             p.terminate(); p.wait(timeout=5)
 
