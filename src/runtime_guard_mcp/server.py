@@ -220,11 +220,38 @@ def valid_tracestate(value: Any) -> bool:
     return True
 
 
+def valid_baggage(value: Any) -> bool:
+    """Validate bounded wire grammar without decoding or assigning properties."""
+    if not isinstance(value, str) or len(value) > 8192 or not value.isascii() or value.count(',') >= 64:
+        return False
+    token = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&'*+-.^_`|~"
+    for member in value.split(','):
+        for index, part in enumerate(member.split(';')):
+            key, separator, entry = part.strip(' \t').partition('=')
+            key = key.rstrip(' \t')
+            if not key or any(char not in token for char in key) or (index == 0 and not separator):
+                return False
+            entry = entry.strip(' \t')
+            offset = 0
+            while offset < len(entry):
+                char = entry[offset]
+                if char == '%':
+                    if offset + 2 >= len(entry) or any(c not in '0123456789abcdefABCDEF' for c in entry[offset + 1:offset + 3]):
+                        return False
+                    offset += 3
+                    continue
+                if not 33 <= ord(char) <= 126 or char in '";,\\':
+                    return False
+                offset += 1
+    return True
+
+
 def valid_notification_meta(meta: Any) -> bool:
     """Check notification metadata before it can affect pending requests."""
     return (isinstance(meta, dict) and all(valid_meta_key(key) for key in meta)
             and ("traceparent" not in meta or valid_traceparent(meta["traceparent"]))
             and ("tracestate" not in meta or valid_tracestate(meta["tracestate"]))
+            and ("baggage" not in meta or valid_baggage(meta["baggage"]))
             and (META_PREFIX + "subscriptionId" not in meta
                  or type(meta[META_PREFIX + "subscriptionId"]) in {str, int}))
 
@@ -324,6 +351,8 @@ class RuntimeGuard:
             return rpc_error(identifier, -32602, "Invalid traceparent metadata")
         if "tracestate" in meta and not valid_tracestate(meta["tracestate"]):
             return rpc_error(identifier, -32602, "Invalid tracestate metadata")
+        if "baggage" in meta and not valid_baggage(meta["baggage"]):
+            return rpc_error(identifier, -32602, "Invalid baggage metadata")
         modern = any(key.startswith(META_PREFIX) for key in meta) or method == "server/discover"
         if modern:
             if type(identifier) not in {str, int}:
