@@ -186,3 +186,7 @@ A negative control with the formerly declared setuptools 68.0.0 floor fails to p
 ## Forced-process audit recovery
 
 Eight installed-server SIGKILL cycles under audited request traffic now check acknowledged-write retention, SQLite integrity, startup hash verification and successful subsequent audit append. The campaign runs in all supported Python CI jobs. See [scope and limits](AUDIT_RESOURCE_EVIDENCE.md#forced-process-termination-during-write-traffic). This addresses the prior missing forced-kill evidence; exact commit interruption, physical power-loss/inode/storage failure and volatile application-state recovery remain explicitly unproven.
+
+## Stored audit-field corruption fix
+
+SQLite BLOB corruption formerly escaped as a serialization TypeError. Hash input types now fail through the controlled integrity/rollback path; verification and startup reject malformed rows. Five-field corruption/repair, restart and atomic legacy-migration regression fixtures plus installed HTTP/stdio refusal/recovery evidence cover the change. No stronger continuous-chain or policy rollback claim is made. Final candidate scope, protocol risk disposition and independent human approval remain open.

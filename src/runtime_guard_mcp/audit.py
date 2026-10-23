@@ -97,6 +97,10 @@ class AuditLog:
 
     @staticmethod
     def _hash(previous: str, timestamp: int, caller: str, tool: str, status: str, rule: str) -> str:
+        # SQLite column affinity does not prevent BLOB or REAL corruption.
+        # Normalize such corruption to the same fail-closed integrity path.
+        if type(timestamp) is not int or any(type(value) is not str for value in (previous, caller, tool, status, rule)):
+            raise AuditIntegrityError("Invalid audit field types")
         payload = json.dumps([previous, timestamp, caller, tool, status, rule], separators=(",", ":"))
         return hashlib.sha256(payload.encode()).hexdigest()
 
@@ -135,7 +139,11 @@ class AuditLog:
                 previous = "0" * 64
                 checked = 0
                 for rowid, timestamp, caller, tool, status, rule, prev_hash, content_hash in rows:
-                    if prev_hash != previous or content_hash != self._hash(previous, timestamp, caller, tool, status, rule):
+                    try:
+                        expected = self._hash(previous, timestamp, caller, tool, status, rule)
+                    except AuditIntegrityError:
+                        return {"valid": False, "records_checked": checked, "failed_rowid": rowid}
+                    if prev_hash != previous or content_hash != expected:
                         return {"valid": False, "records_checked": checked, "failed_rowid": rowid}
                     previous = content_hash
                     checked += 1
