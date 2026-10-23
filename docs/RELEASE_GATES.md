@@ -138,3 +138,7 @@ Malformed traceparent values now reject before policy/admission on all request r
 ## Tracestate admission
 
 Bounded tracestate grammar now rejects before policy/cancellation effects, with installed three-route rejection, budget preservation/recovery, boundary and cancellation fixtures. B10 remains partial: baggage grammar and context association/propagation disposition stay open. See MODERN_CONFORMANCE.md. Versioning/caching/full-cancellation clause review, application-state decisions, final candidate/client/adversarial/package evidence and independent human review remain required.
+
+## Baggage wire admission
+
+Bounded baggage wire grammar now rejects malformed input before policy/cancellation effects, with installed three-route preservation/recovery and combined-context cancellation fixtures. Metadata stays encoded/opaque, with no decoding, identity authority or forwarding. B10 still needs context association/propagation disposition; broader versioning/caching/full-cancellation review, application-state decisions and exact candidate/client/adversarial/package/human-review gates remain open. See MODERN_CONFORMANCE.md.

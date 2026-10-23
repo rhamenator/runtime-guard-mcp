@@ -23,7 +23,7 @@ serve_stdio(Fixture('/tmp/work'))
 """
     env = {k: v for k, v in os.environ.items()
            if k not in {'PYTHONPATH', 'PYTHONHOME'} and not k.startswith('RUNTIME_GUARD_')}
-    invalid = [None, [], {'tracestate': 'a=x,a=y'}, {'tracestate': None}, {'traceparent': 'synthetic-invalid'}, {'traceparent': None}, {'bad!': {}}, {PREFIX + 'subscriptionId': True},
+    invalid = [None, [], {'baggage': 'a=%XX'}, {'baggage': None}, {'tracestate': 'a=x,a=y'}, {'tracestate': None}, {'traceparent': 'synthetic-invalid'}, {'traceparent': None}, {'bad!': {}}, {PREFIX + 'subscriptionId': True},
                {PREFIX + 'subscriptionId': None}, {PREFIX + 'subscriptionId': []}]
     for valid in (False, True):
         process = subprocess.Popen([str(Path(sys.argv[1]).absolute()), '-c', fixture],
@@ -35,7 +35,7 @@ serve_stdio(Fixture('/tmp/work'))
                 'name': 'dry_run_command', 'arguments': {'command': 'git status'}}}
             process.stdin.write(json.dumps(request).encode() + b'\n'); process.stdin.flush()
             assert process.stderr.readline() == b'STARTED\n'
-            metas = invalid + ([{'com.example/probe': {}, PREFIX + 'subscriptionId': 7, 'traceparent': '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01', 'tracestate': 'a=x,1@system=y'}] if valid else [])
+            metas = invalid + ([{'com.example/probe': {}, PREFIX + 'subscriptionId': 7, 'traceparent': '00-0af7651916cd43dd8448eb211c80319c-00f067aa0ba902b7-01', 'tracestate': 'a=x,1@system=y', 'baggage': 'a=%00;property,dup=x,dup=y'}] if valid else [])
             frames = [{'jsonrpc': '2.0', 'method': 'notifications/cancelled',
                        'params': {'requestId': 1, '_meta': meta}} for meta in metas]
             frames.append({'jsonrpc': '2.0', 'id': 2, 'method': 'ping'})
