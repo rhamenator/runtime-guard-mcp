@@ -130,3 +130,7 @@ T06 now has a constant-memory atomic fixed-minute governor before all tool polic
 ## Offline schema-client boundary
 
 B09 now has explicit no-retrieval client-harness evidence: bounded inline-only schema admission, an explicit refusing registry, an authorized loopback negative control, thirteen rejected hostile schemas and inline recovery. The real installed schema/result probe uses this constructor. See MODERN_CONFORMANCE.md for commands, scope and deliberately unsupported references/dialects. Versioning/caching/full-cancellation clause review, application-state/tracing decisions, final candidate/client/adversarial/package evidence and independent human release approval remain open.
+
+## Traceparent admission
+
+Malformed traceparent values now reject before policy/admission on all request routes and cannot cancel active stdio replies. Installed three-route budget preservation/recovery and reader/worker cancellation fixtures cover this bounded milestone. B10 remains partial: finish tracestate/baggage grammar and propagation review; no tracing or authentication claim is added. See MODERN_CONFORMANCE.md. Remaining versioning/caching/full-cancellation review, application-state decisions and exact candidate/client/adversarial/package/human-review gates stay open.
