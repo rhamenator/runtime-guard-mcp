@@ -219,6 +219,21 @@ def run(server: str | None = None) -> dict:
             _, recovered = send(port, rpc(512, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
             expect("audit lock release recovers", recovered["result"]["structuredContent"]["rule"], "READ_ONLY_COMMAND", results)
             with sqlite3.connect(audit) as database:
+                rowid, original_rule = database.execute("SELECT rowid, rule FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
+                count_before_blob = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+                database.execute("UPDATE decisions SET rule=? WHERE rowid=?", (b"synthetic-private-blob", rowid))
+            _, blob_response = send(port, rpc(513, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+            expect("BLOB audit field fails closed", (blob_response["result"]["isError"], blob_response["result"]["structuredContent"]["rule"]), (True, "AUDIT_UNAVAILABLE"), results)
+            expect("BLOB audit marker not reflected", "synthetic-private-blob" in json.dumps(blob_response), False, results)
+            expect("ping survives BLOB audit corruption", send(port, rpc(514, "ping"), token)[1]["result"], {}, results)
+            blob_restart = subprocess.run([*launcher, "--config", str(config)], input=rpc(515, "ping") + b"\n", capture_output=True, env=environment, timeout=5, **child_options)
+            expect("BLOB audit refuses restart without traceback", (blob_restart.returncode, blob_restart.stdout, b"Traceback" in blob_restart.stderr, b"synthetic-private-blob" in blob_restart.stderr), (2, b"", False, False), results)
+            with sqlite3.connect(audit) as database:
+                expect("BLOB audit adds no record", database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0], count_before_blob, results)
+                database.execute("UPDATE decisions SET rule=? WHERE rowid=?", (original_rule, rowid))
+            _, blob_recovered = send(port, rpc(516, "tools/call", {"name": "dry_run_command", "arguments": {"command": "git status"}}), token)
+            expect("BLOB audit repair recovers", blob_recovered["result"]["structuredContent"]["rule"], "READ_ONLY_COMMAND", results)
+            with sqlite3.connect(audit) as database:
                 tail = database.execute("SELECT * FROM decisions ORDER BY rowid DESC LIMIT 1").fetchone()
                 count = database.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
                 database.execute("DELETE FROM decisions WHERE rowid=(SELECT MAX(rowid) FROM decisions)")
