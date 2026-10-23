@@ -126,3 +126,7 @@ See CORE_CONFORMANCE_INVENTORY.md for frozen source hashes, observed/conditional
 ## Process-wide invocation admission
 
 T06 now has a constant-memory atomic fixed-minute governor before all tool policy dispatch. See README actual invocation limits for defaults, configuration, audit-denial omission and process/burst limitations. Unit races and installed two-era real-minute recovery cover bounded admission and unchanged budget state on denial. Resource saturation probes explicitly raise this allowance to isolate their existing audit/masker capacity targets. Remaining frozen-source clause review (versioning, caching, full cancellation), application-state/trust decisions, broader/native-client and final exact-candidate adversarial/package evidence, and independent human release review remain open.
+
+## Offline schema-client boundary
+
+B09 now has explicit no-retrieval client-harness evidence: bounded inline-only schema admission, an explicit refusing registry, an authorized loopback negative control, thirteen rejected hostile schemas and inline recovery. The real installed schema/result probe uses this constructor. See MODERN_CONFORMANCE.md for commands, scope and deliberately unsupported references/dialects. Versioning/caching/full-cancellation clause review, application-state/tracing decisions, final candidate/client/adversarial/package evidence and independent human release approval remain open.
