@@ -1,0 +1,189 @@
+{
+  "status": "PASS_BOUNDED_INSTALLED_SCANNER_REPLAY",
+  "run_started_utc": "2026-10-23T15:17:30Z",
+  "local_completed_utc": "2026-10-23T15:19:48.974711+00:00",
+  "source_commit": "bd56ecae8f26f6b9b4cc9ef32db11d1fbaf6681f",
+  "target": "fresh installed wheel rebuilt from inspected committed source archive; owned ephemeral loopback only",
+  "python": "Python 3.14.4",
+  "nmap": "Nmap version 7.98 ( https://nmap.org )",
+  "sdist": {
+    "members": 145,
+    "sha256": "18d1ab285bcc975e151efa17222838a5e8a3d20b5e7bfddd6b587a7865c615ce",
+    "source_commit": "bd56ecae8f26f6b9b4cc9ef32db11d1fbaf6681f",
+    "status": "PASS"
+  },
+  "wheel": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "c90aa21e829c29735dbc0f6fb18607d19ac6a8c68b5278c872b8a29d228a6701",
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "wfuzz": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 28092,
+        "peak_rss_kib": 28092,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29904,
+        "peak_rss_kib": 29904,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28980,
+        "peak_rss_kib": 28980,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 21,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "localhost:bad": 400,
+      "evil.example": 403
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "api": {
+    "status": "PASS",
+    "checks": [
+      "unauthenticated",
+      "HTTP error excludes request data",
+      "loopback nmap port",
+      "wrong bearer",
+      "same-length near-match bearer",
+      "non-ASCII bearer",
+      "host rejection",
+      "origin rejection",
+      "invalid Host port",
+      "invalid Origin scheme",
+      "duplicate content length",
+      "transfer encoding rejection",
+      "non-JSON media type",
+      "duplicate Host rejection",
+      "duplicate Authorization rejection",
+      "duplicate media type rejection",
+      "framing recovery",
+      "invalid initialize missing",
+      "invalid initialize capabilities",
+      "invalid initialize clientInfo",
+      "initialize",
+      "tool discovery",
+      "malformed JSON",
+      "non-finite JSON",
+      "duplicate JSON key",
+      "nested duplicate JSON key",
+      "overflow JSON number",
+      "invalid UTF-8 JSON",
+      "deep JSON nesting",
+      "wide JSON structure",
+      "JSON parser recovery",
+      "invalid ID",
+      "malformed envelope boolean ID",
+      "malformed envelope array ID",
+      "malformed envelope object ID",
+      "scalar params null",
+      "scalar params boolean",
+      "scalar params number",
+      "scalar params string",
+      "scalar params array",
+      "invalid argument type",
+      "unknown method",
+      "oversized request",
+      "sensitive proc read",
+      "find side effect",
+      "instruction-like shell text",
+      "invalid metadata NoneType",
+      "invalid metadata list",
+      "invalid metadata bool",
+      "invalid metadata str",
+      "metadata extension recovery",
+      "budget exhaustion",
+      "stream secret redaction",
+      "audit excludes synthetic secret",
+      "masker stream limit",
+      "masker stream recovery",
+      "handler saturation with 32 accepted requests",
+      "recovery after saturation",
+      "byte-drip absolute deadline",
+      "byte-drip recovery",
+      "stdio oversized frame recovery",
+      "busy audit fails closed",
+      "busy audit adds no record",
+      "ping survives audit contention",
+      "audit lock release recovers",
+      "deleted audit tail blocks tool result",
+      "tampered audit blocks tool result",
+      "cleared audit hash refuses stdio restart"
+    ],
+    "count": 68,
+    "python": "3.14.4",
+    "platform": "Linux",
+    "transport": "loopback HTTP JSON-RPC and stdio",
+    "target": "installed entry point"
+  },
+  "tests": {
+    "count": 107,
+    "status": "PASS"
+  },
+  "elapsed_seconds": {
+    "build": 2.06,
+    "wfuzz": 4.66,
+    "api": 8.46,
+    "tests": 11.72
+  },
+  "probe_sha256": {
+    "wfuzz_loopback_review.py": "e525be46bfd01945f20c39a15614498e396a19f1c4823e54cd3a2d7ffe90b77d",
+    "live_adversarial_test.py": "8305655233b45d5a384b27379cf4daa5b47ebb1b9c3792c32fe1ac4f9c30696f",
+    "inspect_sdist.py": "45ae5d5941bbf53ce6141a55f07023fac52e2d68a33865eb2d77a5fafb54401d",
+    "inspect_wheel.py": "3897457487979057fc1d8d2b8a8425641e53b13039ea9b29d5486d7f15bec13b"
+  },
+  "limitations": [
+    "Finite scanner corpus and same-host loopback only; not a comprehensive penetration test.",
+    "No authenticated native coding-client replay in this run.",
+    "Not a final release candidate designation, signed provenance or independent human approval.",
+    "No VMs or third-party runtime dependencies introduced."
+  ]
+}
