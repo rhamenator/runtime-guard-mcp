@@ -146,3 +146,7 @@ Bounded baggage wire grammar now rejects malformed input before policy/cancellat
 ## Explicit request-context disposition
 
 REQUEST_CONTEXT_REVIEW.md now maps protocol context, masking handles, caller-wide resource admission and persistent operator state to their actual scopes. Installed three-route metadata-spoofing/interleaving fixtures verify the boundary; no runtime behavior changes. Process-local portability remains a documented recommendation departure for human release disposition. Trace association grants no identity and downstream propagation is conditional on future forwarding. Next technical priority is the frozen versioning/caching/full-cancellation clause review, followed by exact candidate/client/adversarial/resource/package evidence and human review.
+
+## Frozen version/cache/cancellation review
+
+VERSION_CACHE_CANCELLATION_REVIEW.md maps the four newly frozen sources to current server, client and conditional obligations. Installed full/filtered configurations verify version recovery, discovery, private zero-TTL cache hints, extension core fallback and disabled-tool denial across legacy/modern interleaving. Cancellation nonpreemption/reason-logging and process-state portability recommendation limits remain for human disposition. This closes the previously missing scoped page review, not full protocol/native-client certification. Next: final candidate/client/adversarial/resource/package/provenance evidence and independent human review, with residual normative/schema gaps explicitly reviewed.
