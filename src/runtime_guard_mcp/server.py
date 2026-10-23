@@ -169,9 +169,26 @@ def valid_meta_key(key: str) -> bool:
     return not name or (name[0].isalnum() and name[-1].isalnum() and all(char.isalnum() or char in "-_." for char in name))
 
 
+def valid_traceparent(value: Any) -> bool:
+    """Validate the W3C v00 fields; future additive fields remain opaque."""
+    if not isinstance(value, str) or len(value) < 55 or not value.isascii():
+        return False
+    if value[2] != '-' or value[35] != '-' or value[52] != '-':
+        return False
+    version, trace, parent, flags = value[:2], value[3:35], value[36:52], value[53:55]
+    if any(char not in '0123456789abcdef' for char in version + trace + parent + flags):
+        return False
+    if version == 'ff' or trace == '0' * 32 or parent == '0' * 16:
+        return False
+    if version == '00':
+        return len(value) == 55
+    return len(value) == 55 or value[55] == '-'
+
+
 def valid_notification_meta(meta: Any) -> bool:
     """Check notification metadata before it can affect pending requests."""
     return (isinstance(meta, dict) and all(valid_meta_key(key) for key in meta)
+            and ("traceparent" not in meta or valid_traceparent(meta["traceparent"]))
             and (META_PREFIX + "subscriptionId" not in meta
                  or type(meta[META_PREFIX + "subscriptionId"]) in {str, int}))
 
@@ -267,6 +284,8 @@ class RuntimeGuard:
             return rpc_error(identifier, -32602, "Invalid request metadata")
         method = message["method"]
         meta = params.get("_meta", {})
+        if "traceparent" in meta and not valid_traceparent(meta["traceparent"]):
+            return rpc_error(identifier, -32602, "Invalid traceparent metadata")
         modern = any(key.startswith(META_PREFIX) for key in meta) or method == "server/discover"
         if modern:
             if type(identifier) not in {str, int}:

@@ -47,6 +47,7 @@ jobs:
           timeout 30s python scripts/audit_capacity_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 30s python scripts/stdio_adversarial_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 25s python scripts/peer_response_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
+          timeout 25s python scripts/traceparent_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 40s python scripts/request_id_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
           timeout 25s python scripts/cancellation_metadata_review.py "$RUNNER_TEMP/runtime-guard-client/bin/python"
           timeout 25s python scripts/queued_cancellation_review.py "$RUNNER_TEMP/runtime-guard-client/bin/runtime-guard-mcp"
