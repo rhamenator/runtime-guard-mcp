@@ -32,6 +32,12 @@ jobs:
         run: PYTHONPATH=src python -m unittest discover -s tests -q
       - name: Probe live HTTP security boundary
         run: PYTHONPATH=src python scripts/live_adversarial_test.py
+      - name: Inspect deterministic draft skill package
+        run: |
+          python scripts/package_draft_skill.py --output "$RUNNER_TEMP/skill-a"
+          python scripts/package_draft_skill.py --output "$RUNNER_TEMP/skill-b"
+          cmp "$RUNNER_TEMP/skill-a/runtime-guard-draft.zip" "$RUNNER_TEMP/skill-b/runtime-guard-draft.zip"
+          cmp "$RUNNER_TEMP/skill-a/runtime-guard-draft.manifest.json" "$RUNNER_TEMP/skill-b/runtime-guard-draft.manifest.json"
       - name: Build wheel
         run: python -m pip wheel --no-deps . -w dist
       - name: Probe freshly installed wheel

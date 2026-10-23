@@ -150,3 +150,7 @@ REQUEST_CONTEXT_REVIEW.md now maps protocol context, masking handles, caller-wid
 ## Frozen version/cache/cancellation review
 
 VERSION_CACHE_CANCELLATION_REVIEW.md maps the four newly frozen sources to current server, client and conditional obligations. Installed full/filtered configurations verify version recovery, discovery, private zero-TTL cache hints, extension core fallback and disabled-tool denial across legacy/modern interleaving. Cancellation nonpreemption/reason-logging and process-state portability recommendation limits remain for human disposition. This closes the previously missing scoped page review, not full protocol/native-client certification. Next: final candidate/client/adversarial/resource/package/provenance evidence and independent human review, with residual normative/schema gaps explicitly reviewed.
+
+## Deterministic draft companion package
+
+DRAFT_SKILL_PACKAGE.md documents an allowlisted immutable-Git-source ZIP builder, injected draft warning, content inspection, external checksums/provenance and reproducibility comparisons. Dirty/untracked source contamination and overwrite regressions are tested. CI pairs draft inspection with fresh installed-server client/API probes. This is not marketplace submission or stable readiness: final source-archive/wheel, native-client/adversarial/package claims and human release approval remain required.
