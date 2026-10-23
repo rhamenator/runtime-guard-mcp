@@ -45,6 +45,10 @@ jobs:
           python -m pip install 'setuptools>=77' wheel
           (cd "$RUNNER_TEMP/source-checkout" && python -c 'from setuptools.build_meta import build_sdist; build_sdist("dist")')
           python scripts/inspect_sdist.py "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz --ref "$GITHUB_SHA"
+      - name: Run tests from inspected source archive
+        run: |
+          python -c 'import glob, os, tarfile; archive = tarfile.open(glob.glob(os.environ["RUNNER_TEMP"] + "/source-checkout/dist/*.tar.gz")[0]); archive.extractall(os.environ["RUNNER_TEMP"] + "/source-unpacked", filter="data"); archive.close()'
+          (cd "$RUNNER_TEMP"/source-unpacked/runtime_guard_mcp-* && PYTHONPATH=src python -m unittest discover -s tests -q)
       - name: Build wheel from inspected source archive
         run: python -m pip wheel --no-deps "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz -w dist
       - name: Inspect wheel contents and integrity
