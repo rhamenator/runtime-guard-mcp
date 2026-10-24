@@ -18,10 +18,11 @@ from wfuzz_loopback_review import installed_environment, request
 WORKERS, CYCLES, SECONDS, CAPACITY = 4, 128, 8, 1024
 
 
-def review(executable, root, extended=False, successful_writes=False):
+def review(executable, root, extended=False, successful_writes=False, ten_minute=False):
     cycles, seconds, cpu_limit = (2048, 120, 90) if extended else (CYCLES, SECONDS, 20)
+    successful_writes = successful_writes or ten_minute
     if successful_writes:
-        cycles, seconds, cpu_limit = 256, 180, 60
+        cycles, seconds, cpu_limit = (800, 600, 120) if ten_minute else (256, 180, 60)
     capacity = WORKERS * cycles * 3 + 1 if successful_writes else CAPACITY
     token_budget = WORKERS * cycles if successful_writes else 64
     audit, config = root / 'audit.sqlite', root / 'config.json'
@@ -141,13 +142,14 @@ def main():
     parser.add_argument('installed_server')
     profiles = parser.add_mutually_exclusive_group()
     profiles.add_argument('--successful-writes', action='store_true', help='180-second / 3,072-call all-successful audited-write profile')
+    profiles.add_argument('--ten-minute', action='store_true', help='600-second / 9,600-call all-successful audited-write review')
     profiles.add_argument('--extended', action='store_true', help='bounded 120-second / 24,576-call profile')
     args = parser.parse_args()
     if not Path('/proc/self/status').exists():
         parser.error('Linux procfs is required')
     with tempfile.TemporaryDirectory(prefix='runtime-guard-concurrent-') as directory:
         executable, root = str(Path(args.installed_server).absolute()), Path(directory)
-        results = review(executable, root, args.extended, args.successful_writes)
+        results = review(executable, root, args.extended, args.successful_writes, args.ten_minute)
         restarted = subprocess.run([executable, '--config', str(root / 'config.json')],
                                    input='{"jsonrpc":"2.0","id":1,"method":"ping"}\n', text=True,
                                    env=installed_environment(''), cwd=root, capture_output=True, timeout=6, check=True)
