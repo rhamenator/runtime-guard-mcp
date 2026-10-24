@@ -6,7 +6,7 @@ The uploaded `provenance.jsonl` bundle contains the signatures; it is not includ
 
 ## Verify downloaded artifacts
 
-Obtain the expected source commit and Git ref from the reviewed candidate record through a trusted channel. Do not accept an arbitrary branch or derive the expected values solely from the downloaded bundle. With a GitHub CLI supporting these flags (tested with 2.103.2; 2.46.0 lacks the attestation command):
+Obtain the expected source commit and Git ref from the reviewed candidate record through a trusted channel. Do not accept an arbitrary branch or derive the expected values solely from the downloaded bundle. With a GitHub CLI supporting these flags (verified on the hosted packaging runner; older 2.46.0 lacks the attestation command):
 
 ```sh
 sha256sum --check SHA256SUMS
@@ -20,3 +20,5 @@ gh attestation verify runtime_guard_mcp-0.1.0-py3-none-any.whl \
 Repeat signature verification for the source archive and three JSON subjects listed in SHA256SUMS. Checksums alone are consistency checks. The verifier must require the repository, signer workflow, source commit and ref; trusting just any signature from the owner is insufficient for a designated candidate. The default verifier predicate is SLSA provenance v1. Verification may need network access for trust material; no offline availability guarantee is made.
 
 GitHub provenance is separate from the independent human release-readiness record, final native-client/platform scope and residual-risk acceptance. Normal installed-server users do not require signing tooling, write tokens or additional runtime packages.
+
+The packaging job first verifies all five genuine subjects, then requires rejection of the wrong source commit, wrong ref, wrong signing workflow and a byte-modified wheel. A trust-root/network initialization failure must block verification; it is not an artifact-integrity verdict and must not be bypassed by disabling identity or signature checks.
