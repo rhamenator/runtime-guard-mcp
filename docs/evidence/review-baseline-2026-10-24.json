@@ -320,5 +320,13 @@
     "Native client probes expose one delayed advisory tool and exercise control APIs, not desktop UI or all native tool workflows.",
     "Codex/Cursor omitted MCP cancellation; completed negative observations do not meet cancellation-delivery acceptance.",
     "Normative scope, platform/deployment/soak evidence and residual-risk decisions remain open in the review packet."
-  ]
+  ],
+  "verification_tools": {
+    "nmap": "Nmap version 7.98 ( https://nmap.org )",
+    "github_cli": "gh version 2.103.2 (2026-10-23)"
+  },
+  "local_source_tests": {
+    "count": 114,
+    "status": "PASS"
+  }
 }
