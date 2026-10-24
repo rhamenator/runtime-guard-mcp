@@ -194,3 +194,7 @@ SQLite BLOB corruption formerly escaped as a serialization TypeError. Hash input
 ## Wheel payload-to-source binding
 
 The wheel inspector now optionally resolves a Git commit once and compares every packaged runtime module plus license/notice bytes to committed blobs. CI requires this mode for all supported Python versions. Regression fixtures alter module/notice bytes and recompute a fully consistent RECORD: standalone consistency inspection passes, committed-source binding rejects. The result records whether source comparison occurred and the resolved commit. This connects inspected source-to-wheel payload identity; it is not signed publisher provenance or generated-metadata reproduction. Final candidate acceptance and independent human release approval remain open.
+
+## Review-artifact workflow alignment
+
+The tag/manual artifact workflow now builds and inspects an actual source archive, tests its unpacked contents, rebuilds/binds the wheel to the workflow commit, and runs fresh installed stdio/API checks. Only then does it checksum packages plus machine-readable inspection/API reports and upload the review bundle. This replaces an unverified wheel plus `pip download .` path that did not establish the required source-distribution round trip. It does not publish a GitHub/PyPI release, enforce human approval or supply signed attestations. Those release acceptance/provenance gates stay open; no tag or manual release run is created by this change.
