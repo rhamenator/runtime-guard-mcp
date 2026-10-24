@@ -22,7 +22,7 @@ Source commit: `271ecc9accafdd9b83a3c869fa67c22953b2af80`, initial five sources 
 | --- | --- | --- |
 | B01 | basic: request IDs are non-null strings/integers | OBSERVED: `request_id_review.py`, both stdio eras and legacy HTTP. |
 | B02 | basic: correlated result/error envelopes and complete result types | OBSERVED: protocol tests, modern smoke and SDK probes. |
-| B03 | basic: integer error codes and reserved-code meanings | OBSERVED: generic errors, version error, seeded stdio corpus; exhaustive branch review remains part of final packet. |
+| B03 | basic: integer error codes and reserved-code meanings | OBSERVED: all seven emitted numeric allocations and their branch categories reviewed in ERROR_CODE_REVIEW.md against the frozen runtime; existing representative wire fixtures linked. Exhaustive branch coverage and independent normative acceptance remain open. |
 | B04 | basic: no response to notifications | OBSERVED: request-ID and cancellation probes; malformed envelopes are distinct. |
 | B05 | basic: per-request version/capabilities, required-field errors | OBSERVED: modern validation, unsupported-version smoke; no capability inheritance. |
 | B06 | basic: metadata identifier grammar | OBSERVED: linear key validator and malformed request/notification tests. |
