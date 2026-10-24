@@ -1,0 +1,395 @@
+{
+  "status": "CURRENT_REVIEW_BASELINE_NOT_APPROVED",
+  "reviewer": "UNASSIGNED",
+  "recorded_utc": "2026-10-24T21:10:26.336171+00:00",
+  "source_commit": "c945f65138dfcc5494cc20bb3055b6aa0838a0f2",
+  "source_ref": "refs/heads/main",
+  "matrix_ci_run": 40126650509,
+  "artifact_workflow_run": 40132714702,
+  "artifact_workflow_seconds": 77,
+  "artifacts": {
+    "SHA256SUMS": "ba9b2d86c88cf968451febd233ef6f6928c628eef0c87a06e8dc3621014e0e20",
+    "installed-api-review.json": "e2ae6c413123b7b40a77c99def49594ff30f4eae4ab6b0508684ed85f851a2fd",
+    "provenance.jsonl": "59316df715809e9d4b1d1f1180f65c95a32b05b2d36a19c83e07f8e65751f8f5",
+    "runtime_guard_mcp-0.1.0-py3-none-any.whl": "c61dcaf4a770674cc50a6f3aabc270e28221603fff1fd347ed40557a0eac7c1d",
+    "runtime_guard_mcp-0.1.0.tar.gz": "ddef60a19b1ee0a9af1f5888c5d5e960a233b4d6da8ee878e3ebc210b7409e87",
+    "source-inspection.json": "1f9201e317117016d523aa96cadc66aa8b159e6a692eded1b9090eaf4476ca73",
+    "wheel-inspection.json": "5d2f11f59893e61d835c6e0b087a595621aeab13b4c81a60f24c147b8c6fb970"
+  },
+  "source_inspection": {
+    "members": 164,
+    "sha256": "ddef60a19b1ee0a9af1f5888c5d5e960a233b4d6da8ee878e3ebc210b7409e87",
+    "source_commit": "c945f65138dfcc5494cc20bb3055b6aa0838a0f2",
+    "status": "PASS"
+  },
+  "wheel_inspection": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "c61dcaf4a770674cc50a6f3aabc270e28221603fff1fd347ed40557a0eac7c1d",
+    "source_commit": "c945f65138dfcc5494cc20bb3055b6aa0838a0f2",
+    "source_verified": true,
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "signatures": {
+    "positive": [
+      {
+        "subject": "runtime_guard_mcp-0.1.0-py3-none-any.whl",
+        "sha256": "c61dcaf4a770674cc50a6f3aabc270e28221603fff1fd347ed40557a0eac7c1d",
+        "verified": true
+      },
+      {
+        "subject": "runtime_guard_mcp-0.1.0.tar.gz",
+        "sha256": "ddef60a19b1ee0a9af1f5888c5d5e960a233b4d6da8ee878e3ebc210b7409e87",
+        "verified": true
+      },
+      {
+        "subject": "source-inspection.json",
+        "sha256": "1f9201e317117016d523aa96cadc66aa8b159e6a692eded1b9090eaf4476ca73",
+        "verified": true
+      },
+      {
+        "subject": "wheel-inspection.json",
+        "sha256": "5d2f11f59893e61d835c6e0b087a595621aeab13b4c81a60f24c147b8c6fb970",
+        "verified": true
+      },
+      {
+        "subject": "installed-api-review.json",
+        "sha256": "e2ae6c413123b7b40a77c99def49594ff30f4eae4ab6b0508684ed85f851a2fd",
+        "verified": true
+      }
+    ],
+    "negative": [
+      {
+        "case": "--source-digest",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryDigest to be 0000000000000000000000000000000000000000, got c945f65138dfcc5494cc20bb3055b6aa0838a0f2"
+      },
+      {
+        "case": "--source-ref",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryRef to be refs/heads/untrusted, got refs/heads/main"
+      },
+      {
+        "case": "--signer-workflow",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      },
+      {
+        "case": "modified bytes",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      }
+    ],
+    "tls_interception": false,
+    "custom_trust_root": false
+  },
+  "api": {
+    "status": "PASS",
+    "checks": [
+      "unauthenticated",
+      "HTTP error excludes request data",
+      "loopback nmap port",
+      "wrong bearer",
+      "same-length near-match bearer",
+      "non-ASCII bearer",
+      "host rejection",
+      "origin rejection",
+      "invalid Host port",
+      "invalid Origin scheme",
+      "duplicate content length",
+      "transfer encoding rejection",
+      "non-JSON media type",
+      "duplicate Host rejection",
+      "duplicate Authorization rejection",
+      "duplicate media type rejection",
+      "framing recovery",
+      "invalid initialize missing",
+      "invalid initialize capabilities",
+      "invalid initialize clientInfo",
+      "initialize",
+      "tool discovery",
+      "malformed JSON",
+      "non-finite JSON",
+      "duplicate JSON key",
+      "nested duplicate JSON key",
+      "overflow JSON number",
+      "invalid UTF-8 JSON",
+      "deep JSON nesting",
+      "wide JSON structure",
+      "JSON parser recovery",
+      "invalid ID",
+      "malformed envelope boolean ID",
+      "malformed envelope array ID",
+      "malformed envelope object ID",
+      "scalar params null",
+      "scalar params boolean",
+      "scalar params number",
+      "scalar params string",
+      "scalar params array",
+      "invalid argument type",
+      "unknown method",
+      "oversized request",
+      "background shell control",
+      "process substitution control",
+      "git output option",
+      "find output option",
+      "ripgrep subprocess option",
+      "sensitive proc read",
+      "find side effect",
+      "instruction-like shell text",
+      "invalid metadata NoneType",
+      "invalid metadata list",
+      "invalid metadata bool",
+      "invalid metadata str",
+      "metadata extension recovery",
+      "budget exhaustion",
+      "stream secret redaction",
+      "audit excludes synthetic secret",
+      "masker stream limit",
+      "masker stream recovery",
+      "handler saturation with 32 accepted requests",
+      "recovery after saturation",
+      "byte-drip absolute deadline",
+      "byte-drip recovery",
+      "stdio oversized frame recovery",
+      "symlink loop path fails closed",
+      "symlink loop marker not reflected",
+      "missing path advisory recovers",
+      "busy audit fails closed",
+      "busy audit adds no record",
+      "ping survives audit contention",
+      "audit lock release recovers",
+      "BLOB audit field fails closed",
+      "BLOB audit marker not reflected",
+      "ping survives BLOB audit corruption",
+      "BLOB audit refuses restart without traceback",
+      "BLOB audit adds no record",
+      "BLOB audit repair recovers",
+      "deleted audit tail blocks tool result",
+      "tampered audit blocks tool result",
+      "cleared audit hash refuses stdio restart"
+    ],
+    "count": 82,
+    "python": "3.14.4",
+    "platform": "Linux",
+    "transport": "loopback HTTP JSON-RPC and stdio",
+    "target": "installed entry point"
+  },
+  "wfuzz": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 27936,
+        "peak_rss_kib": 27936,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29688,
+        "peak_rss_kib": 29688,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28764,
+        "peak_rss_kib": 28764,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 21,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "evil.example": 403,
+      "localhost:bad": 400
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "clients": {
+    "claude": {
+      "status": "PASS_OBSERVATION",
+      "client": "claude",
+      "client_version": "2.1.301 (Claude Code)",
+      "control_path": "stream-json interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": true,
+      "cancelled_call_replied": false,
+      "cancel_notifications": 1,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2026-07-28"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "codex": {
+      "status": "PASS_OBSERVATION",
+      "client": "codex",
+      "client_version": "codex-cli 0.151.0",
+      "control_path": "app-server turn/interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.313,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "cursor": {
+      "status": "PASS_OBSERVATION",
+      "client": "cursor",
+      "client_version": "2026.10.19-6bbf2c4",
+      "control_path": "ACP session/cancel",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    }
+  },
+  "local_seconds": {
+    "tests": 11.15,
+    "signatures": 36.07,
+    "api": 8.51,
+    "wfuzz": 4.65,
+    "claude": 5.18,
+    "codex": 13.82,
+    "cursor": 17.22
+  },
+  "tests": 117,
+  "draft_skill": {
+    "builder_sha256": "685d17454e6dd474b093fffe91696ada2eaab2ff977f6ec600a46cb2db70b28e",
+    "status": "DRAFT_NOT_FOR_SUBMISSION",
+    "source_commit": "c945f65138dfcc5494cc20bb3055b6aa0838a0f2",
+    "archive_sha256": "dce708579d0d46e5ab62965416256c1117dfebac80a768192b82418272a4f63f",
+    "members": {
+      "runtime-guard/LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "runtime-guard/NOTICE": "f8086257665b671cc627864626092af16eabec74667a694c215fe07e60b8b282",
+      "runtime-guard/SKILL.md": "8ddb7024462901829a0b56b3ec61544c18865c94a56bb94e895f6e88a8fa69e5"
+    },
+    "server_binaries_included": false,
+    "independent_release_review": "pending"
+  },
+  "ten_minute_reference": {
+    "workflow_run": 40118875726,
+    "source_commit": "0dc582b959e9c178e0cabe626dbd3692fb10943d",
+    "same_runtime_bytes": {
+      "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+      "src/runtime_guard_mcp/audit.py": "756a3c44a4da62af1681afa55ae6769d74a2c683f8fa049060bd6839a217e7ce",
+      "src/runtime_guard_mcp/policy.py": "aa75d3b1a4954c5b745cfe91bb17141650373c609428086fc99c4c66a2cb8e2a",
+      "src/runtime_guard_mcp/server.py": "9bb10408bce4508db0053e3343bc46c83353e5129567503d5fee6aa0f1f72305",
+      "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+    },
+    "report": {
+      "status": "PASS",
+      "results": {
+        "workers": 4,
+        "cycles_per_worker": 800,
+        "target_seconds": 600,
+        "cpu_limit_seconds": 120,
+        "elapsed_seconds": 600.025,
+        "requests": 9600,
+        "counts": {
+          "budget_guard/WITHIN_BUDGET": 3200,
+          "secret_masker/MASKED": 3200,
+          "dry_run_command/READ_ONLY_COMMAND": 3200
+        },
+        "samples": 11859,
+        "baseline": {
+          "rss_bytes": 25755648,
+          "fds": 7,
+          "threads": 1,
+          "disk_bytes": 45136,
+          "cpu_seconds": 0.06
+        },
+        "peak": {
+          "rss_bytes": 28618752,
+          "fds": 12,
+          "threads": 11,
+          "disk_bytes": 1970568,
+          "cpu_seconds": 13.23
+        },
+        "final": {
+          "rss_bytes": 28495872,
+          "fds": 7,
+          "threads": 1,
+          "disk_bytes": 1925200,
+          "cpu_seconds": 13.23
+        },
+        "audit_records": 9600,
+        "successful_write_profile": true,
+        "post_load_ping": true,
+        "restart_integrity_ping": true
+      },
+      "scope": "finite paced four-worker loopback HTTP workload; not long-duration soak, latency guarantee, multi-user isolation or exact physical quota"
+    },
+    "scope": "Earlier source/wheel workload, not this downloaded wheel. Five runtime modules compared byte for byte; dev/packaging revisions differ."
+  },
+  "open_decisions": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07"
+  ]
+}
