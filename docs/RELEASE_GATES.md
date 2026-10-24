@@ -218,3 +218,7 @@ Real loop fixtures reproduced SAFE decisions on non-strict resolution in newer P
 ## Assembled technical review baseline
 
 REVIEW_BASELINE_2026-10-24.md binds source `14c1edd`, its passing matrix CI and a newly built signed main-ref review bundle to fresh local signature controls, Wfuzz/Nmap/API and all three native-client control observations on the same downloaded wheel. It maps implementation claims to evidence and enumerates unaccepted normative/state/client/platform/soak/distribution/human decisions. This is a concrete review packet, not stable release approval; reviewer identity and all R01–R07 dispositions are pending. Runtime changes after the baseline require affected evidence to be refreshed.
+
+## RPC error allocation review
+
+ERROR_CODE_REVIEW.md records every emitted numeric allocation and its branch categories against the immutable runtime baseline. All seven use standard/specification-defined meanings or the application integer space; no retired or newly allocated legacy-range code was found. B03 now has a concrete allocation review. This documentation adds no runtime behavior and does not close exhaustive branch coverage, R01 normative acceptance or independent human review.
