@@ -683,7 +683,17 @@ def serve_http(guard: RuntimeGuard, host: str, port: int, auth_token: str | None
             except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
                 self._json(200, rpc_error(None, -32700, "Parse error"))
                 return
-            response = guard.handle(message, "http")
+            try:
+                response = guard.handle(message, "http")
+            except Exception:
+                # Match stdio's non-reflective internal-error boundary. Valid
+                # notifications still receive no JSON-RPC response.
+                identifier = message.get("id") if isinstance(message, dict) else None
+                if type(identifier) not in {str, int}:
+                    identifier = None
+                notification = (isinstance(message, dict) and message.get("jsonrpc") == "2.0"
+                                and isinstance(message.get("method"), str) and "id" not in message)
+                response = None if notification else rpc_error(identifier, -32603, "Internal error")
             self._json(202 if response is None else 200, response)
 
     BoundedHTTPServer((host, port), Handler).serve_forever()
