@@ -238,3 +238,7 @@ String-only regression fixtures reproduced SAFE results for background command l
 ## Companion instruction consistency review
 
 A bounded R06 review removed stale companion statements that called modern negotiation unfinished, implied all clients require legacy initialization, treated tested Cursor cancellation omission as unobserved, and obscured separate audit storage limits. Cancellation instructions now explicitly exclude an already-writing response frame. These corrections retain draft status, historical client-version evidence and independent release review requirements. Fresh installed legacy/modern smoke and inspected draft ZIP evidence verify the documented workflows; this does not approve marketplace submission or resolve every final claims/platform decision.
+
+## Generated wheel identity metadata binding
+
+The wheel inspector now compares Name, Version and Requires-Python with the exact committed pyproject.toml when --ref is supplied, rejects duplicate/missing identity headers and requires the dist-info directory version to match METADATA. Synthetic wheels with recomputed valid RECORD hashes demonstrate that altered Python requirements or a coherently renamed version can pass consistency-only inspection but fail committed-source identity checks. Runtime/license byte comparison remains separate. This narrows generated metadata uncertainty; it does not validate every backend field, authenticate the publisher or grant independent release approval.
