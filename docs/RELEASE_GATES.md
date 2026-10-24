@@ -226,3 +226,7 @@ ERROR_CODE_REVIEW.md records every emitted numeric allocation and its branch cat
 ## Explicit command side-effect options
 
 Inspection found SAFE classifications for explicit Git file output, find file-output actions and ripgrep subprocess options. These now require confirmation; benign plain-command controls remain advisory SAFE. Unit text fixtures and installed API checks cover the regression without executing submitted commands. This does not solve shell semantics, configuration-dependent helpers or whole-agent enforcement. Runtime changes invalidate the earlier immutable review baseline for affected claims; a new candidate replay is required before release.
+
+## Signed command-option fix refresh
+
+COMMAND_OPTION_REVIEW_REFRESH.md binds PR #104 runtime source 825ca1b to successful main CI, a new signed main-ref review build, local signature negative controls and fresh downloaded-wheel API/scanner/stdio checks. It closes the stale artifact evidence for the affected explicit-option claim. Earlier native-client observations remain tied to the earlier wheel; R01–R07 and final candidate/human acceptance remain open.
