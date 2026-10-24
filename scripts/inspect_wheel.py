@@ -7,6 +7,7 @@ import io
 import json
 import re
 import subprocess
+import tomllib
 from email.parser import BytesParser
 from pathlib import Path
 import zipfile
@@ -43,6 +44,16 @@ def inspect(path, source=None):
             if any(source.get(original) != content[member] for member, original in bindings.items()):
                 raise ValueError('wheel bytes differ from committed source')
         meta = BytesParser().parsebytes(content[metadata[0]])
+        for field in ('Name', 'Version', 'License-Expression', 'Requires-Python'):
+            if len(meta.get_all(field, [])) != 1:
+                raise ValueError('missing or duplicate package identity metadata')
+        if prefix != 'runtime_guard_mcp-' + meta['Version'] + '.dist-info/':
+            raise ValueError('wheel directory and metadata version differ')
+        if source is not None:
+            project = tomllib.loads(source['pyproject.toml'].decode('utf-8'))['project']
+            if any(meta[field] != project[key] for field, key in (
+                    ('Name', 'name'), ('Version', 'version'), ('Requires-Python', 'requires-python'))):
+                raise ValueError('wheel identity metadata differs from committed project')
         if (meta['Name'] != 'runtime-guard-mcp' or meta.get_all('Requires-Dist')
                 or meta['License-Expression'] != 'GPL-3.0-or-later'):
             raise ValueError('unexpected package metadata or runtime dependencies')
@@ -79,7 +90,7 @@ if __name__ == '__main__':
     source, commit = None, None
     if args.ref is not None:
         commit = subprocess.check_output(['git', 'rev-parse', '--verify', args.ref + '^{commit}'], text=True).strip()
-        paths = ['src/runtime_guard_mcp/' + name for name in MODULES] + ['LICENSE', 'NOTICE']
+        paths = ['src/runtime_guard_mcp/' + name for name in MODULES] + ['LICENSE', 'NOTICE', 'pyproject.toml']
         source = {name: subprocess.check_output(['git', 'show', commit + ':' + name]) for name in paths}
     result = inspect(args.wheel, source)
     if commit is not None:
