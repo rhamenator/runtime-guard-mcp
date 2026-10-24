@@ -222,3 +222,7 @@ REVIEW_BASELINE_2026-10-24.md binds source `14c1edd`, its passing matrix CI and 
 ## RPC error allocation review
 
 ERROR_CODE_REVIEW.md records every emitted numeric allocation and its branch categories against the immutable runtime baseline. All seven use standard/specification-defined meanings or the application integer space; no retired or newly allocated legacy-range code was found. B03 now has a concrete allocation review. This documentation adds no runtime behavior and does not close exhaustive branch coverage, R01 normative acceptance or independent human review.
+
+## Explicit command side-effect options
+
+Inspection found SAFE classifications for explicit Git file output, find file-output actions and ripgrep subprocess options. These now require confirmation; benign plain-command controls remain advisory SAFE. Unit text fixtures and installed API checks cover the regression without executing submitted commands. This does not solve shell semantics, configuration-dependent helpers or whole-agent enforcement. Runtime changes invalidate the earlier immutable review baseline for affected claims; a new candidate replay is required before release.
