@@ -214,3 +214,7 @@ An installed fault fixture reproduced a connection close instead of a JSON-RPC r
 ## Path-resolution fail-closed consistency
 
 Real loop fixtures reproduced SAFE decisions on non-strict resolution in newer Python and exceptions in older/error paths. Path policy now attempts strict resolution, falls back only for absent targets, and blocks reported resolution faults generically. Candidate/configured-root loop, injected permission/OS/runtime fault and missing-target recovery tests cover the change; installed POSIX API checks require blocked loop/no marker reflection and a subsequent valid new-file advisory decision. Native Windows junction and race/slow-filesystem limitations remain open; this does not authorize actual file access.
+
+## Assembled technical review baseline
+
+REVIEW_BASELINE_2026-10-24.md binds source `14c1edd`, its passing matrix CI and a newly built signed main-ref review bundle to fresh local signature controls, Wfuzz/Nmap/API and all three native-client control observations on the same downloaded wheel. It maps implementation claims to evidence and enumerates unaccepted normative/state/client/platform/soak/distribution/human decisions. This is a concrete review packet, not stable release approval; reviewer identity and all R01–R07 dispositions are pending. Runtime changes after the baseline require affected evidence to be refreshed.

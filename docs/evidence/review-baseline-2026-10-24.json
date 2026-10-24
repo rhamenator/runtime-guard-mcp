@@ -1,0 +1,324 @@
+{
+  "status": "REVIEW_BASELINE_NOT_APPROVED",
+  "run_started_utc": "2026-10-24T09:10:01Z",
+  "recorded_utc": "2026-10-24T09:18:48.087344+00:00",
+  "source_commit": "14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390",
+  "source_ref": "refs/heads/main",
+  "matrix_ci": {
+    "conclusion": "success",
+    "databaseId": 40076053646,
+    "headSha": "14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390",
+    "status": "completed"
+  },
+  "artifact_workflow_run": 40081020664,
+  "artifacts": {
+    "SHA256SUMS": "ebcf63a908520390b49072c92f93bc537612f00153319998311df7c83ea5393a",
+    "installed-api-review.json": "23db04304c58a46f27a3f0679fc7e8e2f8227d802c07152a7b1fedd3b254eb8f",
+    "provenance.jsonl": "a50b85465e5945040d228c12e75612515e13185d9b143a2bea15829dfb5030e9",
+    "runtime_guard_mcp-0.1.0-py3-none-any.whl": "5750962b858e721b3167985e7d1cae7fb21b8033c7fe8b579afe8cfee0bde7c8",
+    "runtime_guard_mcp-0.1.0.tar.gz": "4a995790d211c771fd6cdea0ca07cf7fdaedba334a1a9805f19e93cef63e8e78",
+    "source-inspection.json": "63496c5201a19a8286c1cf510f2189e48d2a8c5160bba84e53ff9c33d7cfd130",
+    "wheel-inspection.json": "c09719144b70137db560b79d4aa872c2b63487a6609c331058a472fc0bded61f"
+  },
+  "wheel_inspection": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "5750962b858e721b3167985e7d1cae7fb21b8033c7fe8b579afe8cfee0bde7c8",
+    "source_commit": "14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390",
+    "source_verified": true,
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "source_inspection": {
+    "members": 159,
+    "sha256": "4a995790d211c771fd6cdea0ca07cf7fdaedba334a1a9805f19e93cef63e8e78",
+    "source_commit": "14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390",
+    "status": "PASS"
+  },
+  "local_signature_controls": {
+    "positive": [
+      {
+        "subject": "runtime_guard_mcp-0.1.0-py3-none-any.whl",
+        "sha256": "5750962b858e721b3167985e7d1cae7fb21b8033c7fe8b579afe8cfee0bde7c8",
+        "verified": true
+      },
+      {
+        "subject": "runtime_guard_mcp-0.1.0.tar.gz",
+        "sha256": "4a995790d211c771fd6cdea0ca07cf7fdaedba334a1a9805f19e93cef63e8e78",
+        "verified": true
+      },
+      {
+        "subject": "source-inspection.json",
+        "sha256": "63496c5201a19a8286c1cf510f2189e48d2a8c5160bba84e53ff9c33d7cfd130",
+        "verified": true
+      },
+      {
+        "subject": "wheel-inspection.json",
+        "sha256": "c09719144b70137db560b79d4aa872c2b63487a6609c331058a472fc0bded61f",
+        "verified": true
+      },
+      {
+        "subject": "installed-api-review.json",
+        "sha256": "23db04304c58a46f27a3f0679fc7e8e2f8227d802c07152a7b1fedd3b254eb8f",
+        "verified": true
+      }
+    ],
+    "negative": [
+      {
+        "case": "--source-digest",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryDigest to be 0000000000000000000000000000000000000000, got 14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390"
+      },
+      {
+        "case": "--source-ref",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryRef to be refs/heads/untrusted, got refs/heads/main"
+      },
+      {
+        "case": "--signer-workflow",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      },
+      {
+        "case": "modified bytes",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      }
+    ],
+    "tls_interception": false,
+    "custom_trust_root": false
+  },
+  "local_api": {
+    "status": "PASS",
+    "checks": [
+      "unauthenticated",
+      "HTTP error excludes request data",
+      "loopback nmap port",
+      "wrong bearer",
+      "same-length near-match bearer",
+      "non-ASCII bearer",
+      "host rejection",
+      "origin rejection",
+      "invalid Host port",
+      "invalid Origin scheme",
+      "duplicate content length",
+      "transfer encoding rejection",
+      "non-JSON media type",
+      "duplicate Host rejection",
+      "duplicate Authorization rejection",
+      "duplicate media type rejection",
+      "framing recovery",
+      "invalid initialize missing",
+      "invalid initialize capabilities",
+      "invalid initialize clientInfo",
+      "initialize",
+      "tool discovery",
+      "malformed JSON",
+      "non-finite JSON",
+      "duplicate JSON key",
+      "nested duplicate JSON key",
+      "overflow JSON number",
+      "invalid UTF-8 JSON",
+      "deep JSON nesting",
+      "wide JSON structure",
+      "JSON parser recovery",
+      "invalid ID",
+      "malformed envelope boolean ID",
+      "malformed envelope array ID",
+      "malformed envelope object ID",
+      "scalar params null",
+      "scalar params boolean",
+      "scalar params number",
+      "scalar params string",
+      "scalar params array",
+      "invalid argument type",
+      "unknown method",
+      "oversized request",
+      "sensitive proc read",
+      "find side effect",
+      "instruction-like shell text",
+      "invalid metadata NoneType",
+      "invalid metadata list",
+      "invalid metadata bool",
+      "invalid metadata str",
+      "metadata extension recovery",
+      "budget exhaustion",
+      "stream secret redaction",
+      "audit excludes synthetic secret",
+      "masker stream limit",
+      "masker stream recovery",
+      "handler saturation with 32 accepted requests",
+      "recovery after saturation",
+      "byte-drip absolute deadline",
+      "byte-drip recovery",
+      "stdio oversized frame recovery",
+      "symlink loop path fails closed",
+      "symlink loop marker not reflected",
+      "missing path advisory recovers",
+      "busy audit fails closed",
+      "busy audit adds no record",
+      "ping survives audit contention",
+      "audit lock release recovers",
+      "BLOB audit field fails closed",
+      "BLOB audit marker not reflected",
+      "ping survives BLOB audit corruption",
+      "BLOB audit refuses restart without traceback",
+      "BLOB audit adds no record",
+      "BLOB audit repair recovers",
+      "deleted audit tail blocks tool result",
+      "tampered audit blocks tool result",
+      "cleared audit hash refuses stdio restart"
+    ],
+    "count": 77,
+    "python": "3.14.4",
+    "platform": "Linux",
+    "transport": "loopback HTTP JSON-RPC and stdio",
+    "target": "installed entry point"
+  },
+  "wfuzz": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 28012,
+        "peak_rss_kib": 28012,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29828,
+        "peak_rss_kib": 29828,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28900,
+        "peak_rss_kib": 28900,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 21,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "localhost:bad": 400,
+      "evil.example": 403
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "clients": {
+    "claude": {
+      "status": "PASS_OBSERVATION",
+      "client": "claude",
+      "client_version": "2.1.301 (Claude Code)",
+      "control_path": "stream-json interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": true,
+      "cancelled_call_replied": false,
+      "cancel_notifications": 1,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2026-07-28"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "codex": {
+      "status": "PASS_OBSERVATION",
+      "client": "codex",
+      "client_version": "codex-cli 0.151.0",
+      "control_path": "app-server turn/interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.313,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "cursor": {
+      "status": "PASS_OBSERVATION",
+      "client": "cursor",
+      "client_version": "2026.10.19-6bbf2c4",
+      "control_path": "ACP session/cancel",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    }
+  },
+  "elapsed_seconds": {
+    "tests": 10.9,
+    "signatures": 37.44,
+    "wfuzz": 4.81,
+    "api": 8.64,
+    "claude": 5.95,
+    "codex": 13.67,
+    "cursor": 17.79
+  },
+  "human_review": "PENDING_UNASSIGNED",
+  "stable_release_authorized": false,
+  "limits": [
+    "Local signature verification used the documented two-TUF-host loopback CONNECT relay with default roots and end-to-end TLS.",
+    "Native client probes expose one delayed advisory tool and exercise control APIs, not desktop UI or all native tool workflows.",
+    "Codex/Cursor omitted MCP cancellation; completed negative observations do not meet cancellation-delivery acceptance.",
+    "Normative scope, platform/deployment/soak evidence and residual-risk decisions remain open in the review packet."
+  ]
+}
