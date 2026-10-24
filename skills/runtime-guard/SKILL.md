@@ -85,3 +85,5 @@ Modern stdio discovery/tool-list results use `ttlMs: 0` and `cacheScope: private
 Unexpected legacy HTTP server failures return generic JSON-RPC `-32603`; notifications have no JSON-RPC reply. Treat the interrupted tool outcome as unknown and use the documented recovery procedure. Do not automatically replay consuming budgets or masking chunks; prior state changes are not rolled back. HTTP remains legacy JSON-RPC, not Streamable HTTP.
 
 If `audit_path_access` returns `PATH_RESOLUTION_FAILED`, restore path accessibility or remove the symlink loop before retrying. Missing targets may still receive an advisory decision for a proposed new file. A SAFE decision does not prove existence, grant permissions or prevent a later filesystem race.
+
+Read-oriented command names can have side effects. Explicit Git `--output`, find file-output actions and ripgrep `--pre`/`--hostname-bin` options require confirmation. This is conservative text inspection, including option-like quoted operands; configuration, aliases, external helpers and unrecognized syntax can still change effects. Never execute solely because the advisory result is `SAFE`.

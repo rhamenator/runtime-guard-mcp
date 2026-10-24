@@ -87,6 +87,16 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
         return verdict("NEEDS_CONFIRMATION", "NESTED_SHELL", "Review the nested script separately.")
     if any(x in command for x in ("|", ">", ";", "&&", "||", "\n")):
         return verdict("NEEDS_CONFIRMATION", "COMPOUND_COMMAND", "Review each command and redirection separately.")
+    # Read-oriented programs can still write files or invoke subprocesses.
+    # Conservative option matching also flags quoted operands with these names.
+    option_names = {token.split("=", 1)[0] for token in tokens[1:]}
+    side_effect_options = {
+        "git": {"--output"},
+        "find": {"-fprint", "-fprint0", "-fprintf", "-fls"},
+        "rg": {"--pre", "--hostname-bin"},
+    }
+    if option_names & side_effect_options.get(tokens[0], set()):
+        return verdict("NEEDS_CONFIRMATION", "COMMAND_SIDE_EFFECT_OPTION", "Review file-output and subprocess options and their targets before execution.")
     key = " ".join(tokens[:2]) if tokens[0] == "git" else tokens[0]
     if key in READ_ONLY:
         return verdict("SAFE", "READ_ONLY_COMMAND", "No remediation needed.")

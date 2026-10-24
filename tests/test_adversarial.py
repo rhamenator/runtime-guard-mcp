@@ -18,6 +18,19 @@ class AdversarialPolicyTests(unittest.TestCase):
         self.assertEqual(dry_run_command("find . -exec rm -rf /tmp/example {} +")["status"], "BLOCKED")
         self.assertEqual(dry_run_command("find . -exec git push --force {} +")["status"], "BLOCKED")
 
+    def test_read_oriented_commands_with_side_effect_options(self):
+        commands = ("git diff --output=review.patch", "git log --output history.txt",
+                    "find . -fprint names.txt", "find . -fprint0 names.bin",
+                    "find . -fprintf names.txt %p", "find . -fls names.txt",
+                    "rg --pre=formatter pattern .", "rg --pre formatter pattern .",
+                    "rg --hostname-bin=hostname-helper pattern .")
+        for command in commands:
+            with self.subTest(command=command):
+                self.assertEqual(dry_run_command(command)["status"], "NEEDS_CONFIRMATION")
+        for command in ("git diff", "git log -1", "find . -print", "rg pattern ."):
+            with self.subTest(command=command):
+                self.assertEqual(dry_run_command(command)["status"], "SAFE")
+
     def test_sensitive_virtual_paths_never_safe(self):
         for command in ("cat /proc/self/environ", "cat ~/.config/gcloud/application_default_credentials.json"):
             with self.subTest(command=command):
