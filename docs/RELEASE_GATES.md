@@ -206,3 +206,7 @@ The review-artifact workflow now signs the wheel/source/report subjects with pin
 ## Local provenance verification resolution
 
 The prior local verifier failure was reproduced as a static Go CLI direct-DNS timeout, despite working native host resolution. A temporary, two-host-only loopback CONNECT relay selected per invocation preserved end-to-end TLS and default trust roots. All five signed review subjects then verified locally and all four negative controls rejected. ARTIFACT_PROVENANCE.md documents the diagnosed scope and evidence; no global resolver/cache setting or server behavior changed. This closes that bundle's unexplained local verification observation, not general network portability, offline verification or independent human release approval.
+
+## HTTP unexpected-error recovery
+
+An installed fault fixture reproduced a connection close instead of a JSON-RPC result when legacy HTTP policy dispatch raised unexpectedly. The HTTP boundary now uses a generic correlated -32603 response, suppresses notification replies and permits ping/tool recovery; private exception text is not reflected. CI runs the fixture against installed packages on all four Python versions. This closes the HTTP/stdio internal-error parity gap; it does not promise rollback or modern HTTP conformance. Final candidate and independent human review remain open.
