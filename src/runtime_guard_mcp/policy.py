@@ -85,7 +85,7 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
         return verdict("BLOCKED", "EMPTY_COMMAND", "Supply a command.")
     if tokens[0] in {"bash", "sh", "pwsh"} and any(x in tokens for x in {"-c", "-Command"}):
         return verdict("NEEDS_CONFIRMATION", "NESTED_SHELL", "Review the nested script separately.")
-    if any(x in command for x in ("|", ">", ";", "&&", "||", "\n")):
+    if any(x in command for x in ("|", ">", "<", ";", "&", "(", ")", "\n", "\r")):
         return verdict("NEEDS_CONFIRMATION", "COMPOUND_COMMAND", "Review each command and redirection separately.")
     # Read-oriented programs can still write files or invoke subprocesses.
     # Conservative option matching also flags quoted operands with these names.

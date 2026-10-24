@@ -87,3 +87,5 @@ Unexpected legacy HTTP server failures return generic JSON-RPC `-32603`; notific
 If `audit_path_access` returns `PATH_RESOLUTION_FAILED`, restore path accessibility or remove the symlink loop before retrying. Missing targets may still receive an advisory decision for a proposed new file. A SAFE decision does not prove existence, grant permissions or prevent a later filesystem race.
 
 Read-oriented command names can have side effects. Explicit Git `--output`, find file-output actions and ripgrep `--pre`/`--hostname-bin` options require confirmation. This is conservative text inspection, including option-like quoted operands; configuration, aliases, external helpers and unrecognized syntax can still change effects. Never execute solely because the advisory result is `SAFE`.
+
+Shell background/control characters, input redirection and parentheses also require confirmation, including when quoted as literal operands. This deliberately conservative check covers process-substitution text without evaluating shell syntax. A plain read-oriented command result still cannot account for aliases, configuration or external helpers.
