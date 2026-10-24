@@ -209,6 +209,15 @@ def run(server: str | None = None) -> dict:
             if len(responses) != 2:
                 raise AssertionError("stdio returned an unexpected number of frames")
             expect("stdio oversized frame recovery", (len(responses), responses[0]["error"]["code"], responses[1]["id"], responses[1]["result"]), (2, -32600, 500, {}), results)
+            if os.name == "posix":
+                loop = root / "workspace" / "synthetic-private-loop"
+                loop.symlink_to(loop.name)
+                _, loop_response = send(port, rpc(520, "tools/call", {"name": "audit_path_access", "arguments": {"path": "synthetic-private-loop/file"}}), token)
+                expect("symlink loop path fails closed", (loop_response["result"]["isError"], loop_response["result"]["structuredContent"]["rule"]), (True, "PATH_RESOLUTION_FAILED"), results)
+                expect("symlink loop marker not reflected", "synthetic-private-loop" in json.dumps(loop_response), False, results)
+                _, path_recovered = send(port, rpc(521, "tools/call", {"name": "audit_path_access", "arguments": {"path": "new-directory/new-file.txt"}}), token)
+                expect("missing path advisory recovers", path_recovered["result"]["structuredContent"]["rule"], "WORKSPACE_PATH", results)
+                loop.unlink()
             with sqlite3.connect(audit) as holder:
                 holder.execute("BEGIN IMMEDIATE")
                 count = holder.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
