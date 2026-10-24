@@ -9,6 +9,8 @@ Reviewed 2026-10-23 against `bd56eca`. This current queue supersedes stale “ne
 | 3 | Exact candidate adversarial evidence | The installed source-to-wheel artifact at `bd56eca` now has fresh bounded Wfuzz/Nmap/API evidence (see below). Bind the eventual designated candidate and its native-client/resource/package evidence to immutable artifacts, review findings and explicitly accept residual risk. A finite loopback corpus does not certify all attacks or deployments. |
 | 4 | Final distribution and human approval | Source/wheel inspection and round-trip tests plus deterministic draft skill ZIP checks now run in CI. Assemble final checksums/provenance, changelog and claim-to-test mapping for the designated candidate; obtain independent human readiness approval before stable tagging or skill submission. Generated backend metadata, unsigned provenance and draft packaging limitations remain explicit. |
 
+For the latest immutable source, signed artifacts, fresh scanner/native-client replay and open human decisions, use [the current review baseline](CURRENT_REVIEW_BASELINE.md). Historical milestone identities below are retained.
+
 ## Current foundation
 
 Main CI and CodeQL passed for `7068ddb`. CI covers Python 3.11–3.14, source and installed adversarial probes, wheel installation without third-party runtime requirements, and an isolated official Python SDK client. The previous PR #32 is merged; only two dependency-update PRs were open at this review.
