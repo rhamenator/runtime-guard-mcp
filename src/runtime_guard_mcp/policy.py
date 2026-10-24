@@ -21,6 +21,15 @@ SENSITIVE_PARTS = {".ssh", ".aws", ".gnupg", ".kube", "gcloud"}
 SENSITIVE_FILES = {".env", ".env.local", "id_rsa", "id_ed25519", "credentials", "shadow", "secrets.json"}
 
 
+def _resolve_policy_path(path: Path) -> Path:
+    # Strict resolution consistently reports loops/access failures across Python
+    # versions. Missing targets remain valid advisory candidates for new files.
+    try:
+        return path.resolve(strict=True)
+    except FileNotFoundError:
+        return path.resolve(strict=False)
+
+
 def audit_path_access(path: str, workspace_root: str, operation: str = "read", allowed_roots: list[str] | None = None) -> dict[str, Any]:
     if not path or not workspace_root:
         return verdict("BLOCKED", "INVALID_PATH", "Supply a path and workspace root.")
@@ -28,15 +37,18 @@ def audit_path_access(path: str, workspace_root: str, operation: str = "read", a
         return verdict("BLOCKED", "INVALID_PATH", "Remove NUL bytes.")
     if operation not in {"read", "write", "delete"}:
         return verdict("BLOCKED", "INVALID_OPERATION", "Use read, write, or delete.")
-    root = Path(workspace_root).expanduser().resolve(strict=False)
-    candidate = Path(path).expanduser()
-    if not candidate.is_absolute():
-        candidate = root / candidate
-    resolved = candidate.resolve(strict=False)
+    try:
+        root = _resolve_policy_path(Path(workspace_root).expanduser())
+        candidate = Path(path).expanduser()
+        if not candidate.is_absolute():
+            candidate = root / candidate
+        resolved = _resolve_policy_path(candidate)
+        roots = [root] + [_resolve_policy_path(Path(p).expanduser()) for p in (allowed_roots or [])]
+    except (OSError, RuntimeError):
+        return verdict("BLOCKED", "PATH_RESOLUTION_FAILED", "Restore path accessibility or remove symlink loops before retrying.")
     parts = {p.lower() for p in resolved.parts}
     if any(p.lower() in SENSITIVE_FILES or p.lower().startswith(".env.") for p in resolved.parts) or parts & SENSITIVE_PARTS:
         return verdict("BLOCKED", "SENSITIVE_PATH", "Use a project-safe file instead.", resolved_path=str(resolved))
-    roots = [root] + [Path(p).expanduser().resolve(strict=False) for p in (allowed_roots or [])]
     if not any(resolved == item or item in resolved.parents for item in roots):
         return verdict("BLOCKED", "OUTSIDE_WORKSPACE", "Choose a path inside the configured workspace.", resolved_path=str(resolved))
     if operation == "delete":

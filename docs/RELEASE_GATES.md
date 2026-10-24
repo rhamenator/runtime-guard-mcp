@@ -210,3 +210,7 @@ The prior local verifier failure was reproduced as a static Go CLI direct-DNS ti
 ## HTTP unexpected-error recovery
 
 An installed fault fixture reproduced a connection close instead of a JSON-RPC result when legacy HTTP policy dispatch raised unexpectedly. The HTTP boundary now uses a generic correlated -32603 response, suppresses notification replies and permits ping/tool recovery; private exception text is not reflected. CI runs the fixture against installed packages on all four Python versions. This closes the HTTP/stdio internal-error parity gap; it does not promise rollback or modern HTTP conformance. Final candidate and independent human review remain open.
+
+## Path-resolution fail-closed consistency
+
+Real loop fixtures reproduced SAFE decisions on non-strict resolution in newer Python and exceptions in older/error paths. Path policy now attempts strict resolution, falls back only for absent targets, and blocks reported resolution faults generically. Candidate/configured-root loop, injected permission/OS/runtime fault and missing-target recovery tests cover the change; installed POSIX API checks require blocked loop/no marker reflection and a subsequent valid new-file advisory decision. Native Windows junction and race/slow-filesystem limitations remain open; this does not authorize actual file access.
