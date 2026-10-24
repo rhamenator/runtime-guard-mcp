@@ -153,6 +153,8 @@ def run(server: str | None = None) -> dict:
             expect("unknown method", send(port, rpc(8, "server/execute"), token)[1]["error"]["code"], -32601, results)
             expect("oversized request", send(port, b"x" * (MAX_MESSAGE + 1), token)[0], 413, results)
             for label, command, expected in (
+                ("background shell control", "cat example.txt & touch marker.txt", "NEEDS_CONFIRMATION"),
+                ("process substitution control", "cat <(printf fixture)", "NEEDS_CONFIRMATION"),
                 ("git output option", "git diff --output=review.patch", "NEEDS_CONFIRMATION"),
                 ("find output option", "find . -fprint names.txt", "NEEDS_CONFIRMATION"),
                 ("ripgrep subprocess option", "rg --pre=formatter pattern .", "NEEDS_CONFIRMATION"),

@@ -31,6 +31,17 @@ class AdversarialPolicyTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(dry_run_command(command)["status"], "SAFE")
 
+    def test_shell_control_syntax_requires_review(self):
+        # Classify strings only: none of these proposed commands are executed.
+        for shell in ("bash", "sh", "pwsh"):
+            for command in ("cat example.txt & touch marker.txt", "cat example.txt &",
+                            "cat <(printf fixture)", "cat example.txt < input.txt",
+                            "cat (helper)", "cat example.txt\rtouch marker.txt",
+                            "cat 'literal&name'", "rg 'pattern(group)' ."):
+                with self.subTest(shell=shell, command=command):
+                    self.assertEqual(dry_run_command(command, shell)["status"], "NEEDS_CONFIRMATION")
+            self.assertEqual(dry_run_command("cat example.txt", shell)["status"], "SAFE")
+
     def test_sensitive_virtual_paths_never_safe(self):
         for command in ("cat /proc/self/environ", "cat ~/.config/gcloud/application_default_credentials.json"):
             with self.subTest(command=command):

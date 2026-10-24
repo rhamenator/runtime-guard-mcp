@@ -230,3 +230,7 @@ Inspection found SAFE classifications for explicit Git file output, find file-ou
 ## Signed command-option fix refresh
 
 COMMAND_OPTION_REVIEW_REFRESH.md binds PR #104 runtime source 825ca1b to successful main CI, a new signed main-ref review build, local signature negative controls and fresh downloaded-wheel API/scanner/stdio checks. It closes the stale artifact evidence for the affected explicit-option claim. Earlier native-client observations remain tied to the earlier wheel; R01–R07 and final candidate/human acceptance remain open.
+
+## Shell control syntax review
+
+String-only regression fixtures reproduced SAFE results for background command lists and process substitution following read-oriented command names. The conservative compound-command check now additionally requires confirmation for single ampersands, input redirection, parentheses and carriage returns across all three accepted shell labels. Quoted literals can require confirmation as documented. Installed API checks cover background and process-substitution strings without executing either. This changes runtime classification after source 825ca1b; the signed supplement remains historical and affected candidate evidence must be refreshed before release. Shell parsing, configuration-dependent effects and host enforcement remain outside these heuristics.
