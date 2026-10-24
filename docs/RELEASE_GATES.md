@@ -190,3 +190,7 @@ Eight installed-server SIGKILL cycles under audited request traffic now check ac
 ## Stored audit-field corruption fix
 
 SQLite BLOB corruption formerly escaped as a serialization TypeError. Hash input types now fail through the controlled integrity/rollback path; verification and startup reject malformed rows. Five-field corruption/repair, restart and atomic legacy-migration regression fixtures plus installed HTTP/stdio refusal/recovery evidence cover the change. No stronger continuous-chain or policy rollback claim is made. Final candidate scope, protocol risk disposition and independent human approval remain open.
+
+## Wheel payload-to-source binding
+
+The wheel inspector now optionally resolves a Git commit once and compares every packaged runtime module plus license/notice bytes to committed blobs. CI requires this mode for all supported Python versions. Regression fixtures alter module/notice bytes and recompute a fully consistent RECORD: standalone consistency inspection passes, committed-source binding rejects. The result records whether source comparison occurred and the resolved commit. This connects inspected source-to-wheel payload identity; it is not signed publisher provenance or generated-metadata reproduction. Final candidate acceptance and independent human release approval remain open.

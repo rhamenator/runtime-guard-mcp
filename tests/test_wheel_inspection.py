@@ -61,3 +61,20 @@ class WheelInspectionTests(unittest.TestCase):
                     archive.writestr(name, data)
             with self.assertRaisesRegex(ValueError, 'integrity'):
                 module.inspect(path)
+
+    def test_rehashed_changes_need_committed_source_comparison(self):
+        source = {'src/runtime_guard_mcp/' + name: b'# source\n' for name in module.MODULES}
+        source.update({'LICENSE': b'GNU GENERAL PUBLIC LICENSE', 'NOTICE': b'Copyright notice'})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.assertTrue(module.inspect(self.wheel(root), source)['source_verified'])
+            changes = [lambda f, p: f.update({'runtime_guard_mcp/server.py': b'altered source with valid RECORD'}),
+                       lambda f, p: f.update({p + 'licenses/NOTICE': b'altered nonempty notice'})]
+            for change in changes:
+                with self.subTest(change=change):
+                    path = self.wheel(root, change)
+                    # The fixture recomputes every RECORD hash: consistency alone
+                    # cannot distinguish this artifact from committed source.
+                    self.assertFalse(module.inspect(path)['source_verified'])
+                    with self.assertRaisesRegex(ValueError, 'committed source'):
+                        module.inspect(path, source)

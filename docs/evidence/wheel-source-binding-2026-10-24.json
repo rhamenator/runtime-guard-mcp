@@ -1,0 +1,30 @@
+{
+  "status": "PASS_WHEEL_PAYLOAD_SOURCE_BINDING",
+  "started_utc": "2026-10-24T00:15:00Z",
+  "local_completed_utc": "2026-10-24T00:17:14.734643+00:00",
+  "wheel": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "3feab5a09a0dc06d2ae375da89d98af3828441b34cd071c06fd03b011f3a0b52",
+    "source_commit": "6b833fd77af812cf0785edcff48b77cd60f47026",
+    "source_verified": true,
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "tests": {
+    "count": 111,
+    "status": "PASS",
+    "elapsed_seconds": 11.45
+  },
+  "build_seconds": 1.96,
+  "fresh_installed_stdio_smoke": "PASS",
+  "negative_controls": [
+    "Modified runtime module with recomputed RECORD passes internal consistency but fails committed-source binding.",
+    "Modified nonempty NOTICE with recomputed RECORD passes internal consistency but fails committed-source binding."
+  ],
+  "limits": [
+    "Seven payload members compared; generated metadata is subject to separate consistency/policy checks, not exact Git reproduction.",
+    "A source commit identity does not authenticate its publisher or provide a cryptographic signature.",
+    "No runtime changes; final candidate and independent human acceptance remain open."
+  ]
+}
