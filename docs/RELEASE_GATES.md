@@ -234,3 +234,7 @@ COMMAND_OPTION_REVIEW_REFRESH.md binds PR #104 runtime source 825ca1b to success
 ## Shell control syntax review
 
 String-only regression fixtures reproduced SAFE results for background command lists and process substitution following read-oriented command names. The conservative compound-command check now additionally requires confirmation for single ampersands, input redirection, parentheses and carriage returns across all three accepted shell labels. Quoted literals can require confirmation as documented. Installed API checks cover background and process-substitution strings without executing either. This changes runtime classification after source 825ca1b; the signed supplement remains historical and affected candidate evidence must be refreshed before release. Shell parsing, configuration-dependent effects and host enforcement remain outside these heuristics.
+
+## Companion instruction consistency review
+
+A bounded R06 review removed stale companion statements that called modern negotiation unfinished, implied all clients require legacy initialization, treated tested Cursor cancellation omission as unobserved, and obscured separate audit storage limits. Cancellation instructions now explicitly exclude an already-writing response frame. These corrections retain draft status, historical client-version evidence and independent release review requirements. Fresh installed legacy/modern smoke and inspected draft ZIP evidence verify the documented workflows; this does not approve marketplace submission or resolve every final claims/platform decision.
