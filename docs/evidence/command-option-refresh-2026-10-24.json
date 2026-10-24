@@ -1,0 +1,253 @@
+{
+  "status": "AFFECTED_CLAIM_REFRESH_NOT_APPROVED",
+  "source_commit": "825ca1bb10a107dd0e95f097cec10f64a1ec1a53",
+  "source_ref": "refs/heads/main",
+  "recorded_utc": "2026-10-24T13:43:30.414053+00:00",
+  "artifact_workflow_run": 40099041612,
+  "workflow_elapsed_seconds": 87,
+  "matrix_ci_run": 40093231859,
+  "prior_baseline_source": "14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390",
+  "artifacts": {
+    "SHA256SUMS": "d329b7caaf8c964360a6bed4929a0d61f130383428d5b3cefd85660bda7f8e2a",
+    "installed-api-review.json": "9c8a2f34d8d004bfec3ff324d8e2b01eba7729ea8418ad2c19e1caf66237199c",
+    "provenance.jsonl": "c2d31fe1e7213f9cb2aaf903e478ea8c3c45b7d195c0d682ee4cc6c2ceebf406",
+    "runtime_guard_mcp-0.1.0-py3-none-any.whl": "1572b70be69392c9710dcd89a6721a091f334554f761a2c48afe3509b4402c0c",
+    "runtime_guard_mcp-0.1.0.tar.gz": "0722bee9a9f74ed85a2b5c7151e87738d231a1bdea378d267c6d7995a8add6f8",
+    "source-inspection.json": "308788302819b76a6d822f3d54cb514eaf0a5b31aa11419039fd356682e35c05",
+    "wheel-inspection.json": "5174443d753d17d2f6ad363ea7a49b30a6acfa9d452923800815e28b00b519dc"
+  },
+  "wheel_inspection": {
+    "members": 12,
+    "runtime_dependencies": [],
+    "sha256": "1572b70be69392c9710dcd89a6721a091f334554f761a2c48afe3509b4402c0c",
+    "source_commit": "825ca1bb10a107dd0e95f097cec10f64a1ec1a53",
+    "source_verified": true,
+    "status": "PASS",
+    "version": "0.1.0"
+  },
+  "source_inspection": {
+    "members": 162,
+    "sha256": "0722bee9a9f74ed85a2b5c7151e87738d231a1bdea378d267c6d7995a8add6f8",
+    "source_commit": "825ca1bb10a107dd0e95f097cec10f64a1ec1a53",
+    "status": "PASS"
+  },
+  "signatures": {
+    "positive": [
+      {
+        "subject": "runtime_guard_mcp-0.1.0-py3-none-any.whl",
+        "sha256": "1572b70be69392c9710dcd89a6721a091f334554f761a2c48afe3509b4402c0c",
+        "verified": true
+      },
+      {
+        "subject": "runtime_guard_mcp-0.1.0.tar.gz",
+        "sha256": "0722bee9a9f74ed85a2b5c7151e87738d231a1bdea378d267c6d7995a8add6f8",
+        "verified": true
+      },
+      {
+        "subject": "source-inspection.json",
+        "sha256": "308788302819b76a6d822f3d54cb514eaf0a5b31aa11419039fd356682e35c05",
+        "verified": true
+      },
+      {
+        "subject": "wheel-inspection.json",
+        "sha256": "5174443d753d17d2f6ad363ea7a49b30a6acfa9d452923800815e28b00b519dc",
+        "verified": true
+      },
+      {
+        "subject": "installed-api-review.json",
+        "sha256": "9c8a2f34d8d004bfec3ff324d8e2b01eba7729ea8418ad2c19e1caf66237199c",
+        "verified": true
+      }
+    ],
+    "negative": [
+      {
+        "case": "--source-digest",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryDigest to be 0000000000000000000000000000000000000000, got 825ca1bb10a107dd0e95f097cec10f64a1ec1a53"
+      },
+      {
+        "case": "--source-ref",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryRef to be refs/heads/untrusted, got refs/heads/main"
+      },
+      {
+        "case": "--signer-workflow",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      },
+      {
+        "case": "modified bytes",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      }
+    ],
+    "tls_interception": false,
+    "custom_trust_root": false
+  },
+  "installed_api": {
+    "status": "PASS",
+    "checks": [
+      "unauthenticated",
+      "HTTP error excludes request data",
+      "loopback nmap port",
+      "wrong bearer",
+      "same-length near-match bearer",
+      "non-ASCII bearer",
+      "host rejection",
+      "origin rejection",
+      "invalid Host port",
+      "invalid Origin scheme",
+      "duplicate content length",
+      "transfer encoding rejection",
+      "non-JSON media type",
+      "duplicate Host rejection",
+      "duplicate Authorization rejection",
+      "duplicate media type rejection",
+      "framing recovery",
+      "invalid initialize missing",
+      "invalid initialize capabilities",
+      "invalid initialize clientInfo",
+      "initialize",
+      "tool discovery",
+      "malformed JSON",
+      "non-finite JSON",
+      "duplicate JSON key",
+      "nested duplicate JSON key",
+      "overflow JSON number",
+      "invalid UTF-8 JSON",
+      "deep JSON nesting",
+      "wide JSON structure",
+      "JSON parser recovery",
+      "invalid ID",
+      "malformed envelope boolean ID",
+      "malformed envelope array ID",
+      "malformed envelope object ID",
+      "scalar params null",
+      "scalar params boolean",
+      "scalar params number",
+      "scalar params string",
+      "scalar params array",
+      "invalid argument type",
+      "unknown method",
+      "oversized request",
+      "git output option",
+      "find output option",
+      "ripgrep subprocess option",
+      "sensitive proc read",
+      "find side effect",
+      "instruction-like shell text",
+      "invalid metadata NoneType",
+      "invalid metadata list",
+      "invalid metadata bool",
+      "invalid metadata str",
+      "metadata extension recovery",
+      "budget exhaustion",
+      "stream secret redaction",
+      "audit excludes synthetic secret",
+      "masker stream limit",
+      "masker stream recovery",
+      "handler saturation with 32 accepted requests",
+      "recovery after saturation",
+      "byte-drip absolute deadline",
+      "byte-drip recovery",
+      "stdio oversized frame recovery",
+      "symlink loop path fails closed",
+      "symlink loop marker not reflected",
+      "missing path advisory recovers",
+      "busy audit fails closed",
+      "busy audit adds no record",
+      "ping survives audit contention",
+      "audit lock release recovers",
+      "BLOB audit field fails closed",
+      "BLOB audit marker not reflected",
+      "ping survives BLOB audit corruption",
+      "BLOB audit refuses restart without traceback",
+      "BLOB audit adds no record",
+      "BLOB audit repair recovers",
+      "deleted audit tail blocks tool result",
+      "tampered audit blocks tool result",
+      "cleared audit hash refuses stdio restart"
+    ],
+    "count": 80,
+    "python": "3.14.4",
+    "platform": "Linux",
+    "transport": "loopback HTTP JSON-RPC and stdio",
+    "target": "installed entry point"
+  },
+  "wfuzz": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 28084,
+        "peak_rss_kib": 28084,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29900,
+        "peak_rss_kib": 29900,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28972,
+        "peak_rss_kib": 28972,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 21,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "localhost:bad": 400,
+      "evil.example": 403
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "installed_stdio_smoke": "PASS: installed stdio initialize, tools/list schemas, and tools/call",
+  "local_seconds": {
+    "tests": 11.59,
+    "signatures": 37.66,
+    "api": 8.47,
+    "wfuzz": 5.79
+  },
+  "tests": 115,
+  "scope": "Affected explicit command-option classification replay and signed package refresh; native model clients were not rerun. Earlier client observations remain historical and are not assigned to this wheel. R01-R07 remain unaccepted."
+}

@@ -2,6 +2,8 @@
 
 Status: **REVIEW BASELINE, NOT APPROVED**. Reviewer: **UNASSIGNED**. This packet assembles evidence for the independent review required by [release policy](RELEASE-READINESS-REVIEW.md). It authorizes no stable tag, GitHub/PyPI release or marketplace submission. Findings and risk decisions remain pending; automated checks and this packet are self-review evidence.
 
+A later [affected-command-claim supplement](COMMAND_OPTION_REVIEW_REFRESH.md) records a separately identified signed artifact after PR #104. The source and client observations below retain their original identities.
+
 ## Exact material to review
 
 - Source: `14c1edd54f35db1fe5d3a01d8c3d0fd3ede28390`, package version `0.1.0`, source ref `refs/heads/main` at build time. Review this commit, not a moving branch tip.
