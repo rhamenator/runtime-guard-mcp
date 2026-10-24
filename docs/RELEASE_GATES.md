@@ -202,3 +202,7 @@ The tag/manual artifact workflow now builds and inspects an actual source archiv
 ## Signed review provenance
 
 The review-artifact workflow now signs the wheel/source/report subjects with pinned GitHub Actions provenance and verifies repository, workflow, source commit/ref and hosted-runner identity before upload. The public Sigstore/GitHub trust model and consumer verification commands are documented in ARTIFACT_PROVENANCE.md. This supplies workflow identity evidence, not source correctness, reproducibility, human acceptance or stable-release authorization. Branch-only verification and downloaded-bundle positive/negative controls are required before merging this milestone.
+
+## Local provenance verification resolution
+
+The prior local verifier failure was reproduced as a static Go CLI direct-DNS timeout, despite working native host resolution. A temporary, two-host-only loopback CONNECT relay selected per invocation preserved end-to-end TLS and default trust roots. All five signed review subjects then verified locally and all four negative controls rejected. ARTIFACT_PROVENANCE.md documents the diagnosed scope and evidence; no global resolver/cache setting or server behavior changed. This closes that bundle's unexplained local verification observation, not general network portability, offline verification or independent human release approval.
