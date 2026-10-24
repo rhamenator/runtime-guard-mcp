@@ -1,0 +1,70 @@
+{
+  "positive": [
+    {
+      "subject": "runtime_guard_mcp-0.1.0-py3-none-any.whl",
+      "sha256": "e107d1118b00d292d0f301fe3a01fbc7ee7038fed11e9c13a07f8fd1ac843a43",
+      "verified": true
+    },
+    {
+      "subject": "runtime_guard_mcp-0.1.0.tar.gz",
+      "sha256": "587a388e304edce6327d7ff9f6e1690f48586a967cf386495d88c7a451cd03d2",
+      "verified": true
+    },
+    {
+      "subject": "source-inspection.json",
+      "sha256": "866746cb6410c70b20a28449fd50f930fc0a0109928971bbfc1c12bfcacda630",
+      "verified": true
+    },
+    {
+      "subject": "wheel-inspection.json",
+      "sha256": "46199a1236174f7aa9a644101742100ff54c002459a59ed42307b634e30fd6f2",
+      "verified": true
+    },
+    {
+      "subject": "installed-api-review.json",
+      "sha256": "96fb43f27f81842bde861d8614c719c8c9be319a2d10b0cee363fde310769820",
+      "verified": true
+    }
+  ],
+  "negative": [
+    {
+      "case": "--source-digest",
+      "rejected": true,
+      "reason": "Error: expected SourceRepositoryDigest to be 0000000000000000000000000000000000000000, got 71cb8935cf72e3aea7c308f989b2b77eb0898a77"
+    },
+    {
+      "case": "--source-ref",
+      "rejected": true,
+      "reason": "Error: expected SourceRepositoryRef to be refs/heads/untrusted, got refs/heads/codex/signed-review-provenance"
+    },
+    {
+      "case": "--signer-workflow",
+      "rejected": true,
+      "reason": "Error: verifying with issuer \"sigstore.dev\""
+    },
+    {
+      "case": "modified bytes",
+      "rejected": true,
+      "reason": "Error: verifying with issuer \"sigstore.dev\""
+    }
+  ],
+  "tls_interception": false,
+  "custom_trust_root": false,
+  "status": "PASS_LOCAL_PROVENANCE_VERIFICATION",
+  "run_started_utc": "2026-10-24T04:45:30Z",
+  "local_completed_utc": "2026-10-24T04:50:57.722494+00:00",
+  "cli": "2.103.2, isolated official release binary with published archive checksum checked",
+  "source_commit": "71cb8935cf72e3aea7c308f989b2b77eb0898a77",
+  "source_ref": "refs/heads/codex/signed-review-provenance",
+  "signer_workflow": "rhamenator/runtime-guard-mcp/.github/workflows/release.yml",
+  "artifact_workflow_run": 40058099797,
+  "diagnosis": "static Go resolver DNS requests to 8.8.8.8:53 timed out; native resolver succeeded",
+  "workaround": "per-invocation HTTPS_PROXY through temporary loopback CONNECT relay restricted to the two TUF hosts on port 443",
+  "relay_sha256": "4254b763a00414592511f18f64ce540d6b33a9ee2f7915f1a3f602ca5f776661",
+  "verification_seconds": 36.95,
+  "limits": [
+    "No permanent host DNS repair or offline availability guarantee.",
+    "No custom root, TLS bypass, weakened identity policy or server runtime change.",
+    "Review branch artifact identity, not a designated stable candidate or human approval."
+  ]
+}
