@@ -198,3 +198,7 @@ The wheel inspector now optionally resolves a Git commit once and compares every
 ## Review-artifact workflow alignment
 
 The tag/manual artifact workflow now builds and inspects an actual source archive, tests its unpacked contents, rebuilds/binds the wheel to the workflow commit, and runs fresh installed stdio/API checks. Only then does it checksum packages plus machine-readable inspection/API reports and upload the review bundle. This replaces an unverified wheel plus `pip download .` path that did not establish the required source-distribution round trip. It does not publish a GitHub/PyPI release, enforce human approval or supply signed attestations. Those release acceptance/provenance gates stay open; no tag or manual release run is created by this change.
+
+## Signed review provenance
+
+The review-artifact workflow now signs the wheel/source/report subjects with pinned GitHub Actions provenance and verifies repository, workflow, source commit/ref and hosted-runner identity before upload. The public Sigstore/GitHub trust model and consumer verification commands are documented in ARTIFACT_PROVENANCE.md. This supplies workflow identity evidence, not source correctness, reproducibility, human acceptance or stable-release authorization. Branch-only verification and downloaded-bundle positive/negative controls are required before merging this milestone.
