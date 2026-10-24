@@ -56,7 +56,7 @@ jobs:
       - name: Build wheel from inspected source archive
         run: python -m pip wheel --no-deps --no-build-isolation "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz -w dist
       - name: Inspect wheel contents and integrity
-        run: python scripts/inspect_wheel.py dist/*.whl
+        run: python scripts/inspect_wheel.py dist/*.whl --ref "$GITHUB_SHA"
       - name: Probe freshly installed wheel
         run: |
           python -m venv "$RUNNER_TEMP/runtime-guard-client"
