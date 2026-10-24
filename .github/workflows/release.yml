@@ -10,6 +10,10 @@ permissions:
 
 jobs:
   package:
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,6 +43,21 @@ jobs:
           PYTHONPATH=src python scripts/live_adversarial_test.py --server "$RUNNER_TEMP/release-client/bin/runtime-guard-mcp" > dist/installed-api-review.json
       - name: Checksum reviewed artifacts and reports
         run: (cd dist && sha256sum *.whl *.tar.gz *.json > SHA256SUMS && sha256sum --check SHA256SUMS)
+      - name: Attest reviewed packages and reports
+        id: provenance
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-checksums: dist/SHA256SUMS
+          create-storage-record: false
+      - name: Verify attested source and workflow identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+        run: |
+          cp "$PROVENANCE_BUNDLE" dist/provenance.jsonl
+          for artifact in dist/*.whl dist/*.tar.gz dist/*inspection.json dist/installed-api-review.json; do
+            gh attestation verify "$artifact" --bundle dist/provenance.jsonl --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" --source-digest "$GITHUB_SHA" --source-ref "$GITHUB_REF" --deny-self-hosted-runners
+          done
       - name: Upload release artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
