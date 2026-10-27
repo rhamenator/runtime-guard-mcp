@@ -70,6 +70,8 @@ def review(executable):
                 p.modern = modern
                 if not modern:
                     exchange(0, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "rate-review", "version": "1"}})
+                    p.stdin.write('{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
+                    p.stdin.flush()
                 accepted = exchange(1, 'tools/call', {'name': 'dry_run_command', 'arguments': {'command': 'pwd'}})
                 assert 'result' in accepted, accepted
                 assert accepted['result']['structuredContent']['status'] == 'SAFE', accepted

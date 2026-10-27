@@ -96,7 +96,8 @@ def review(executable, era, workspace):
     deadline = threading.Timer(20, process.kill)
     deadline.daemon = True
     deadline.start()
-    initialize_legacy(process)
+    if era == "legacy":
+        initialize_legacy(process)
     reader = threading.Thread(target=read, daemon=True)
     reader.start()
 
@@ -117,9 +118,7 @@ def review(executable, era, workspace):
     cases = corpus(era)
     digest = hashlib.sha256()
     try:
-        if era == "legacy":
-            exchange(encode(frame(era, method="initialize", protocolVersion="2025-06-18", capabilities={}, clientInfo={"name": "corpus", "version": "1"})))
-        else:
+        if era == "modern":
             discovered = exchange(encode(frame(era, method="server/discover")))
             if VERSION not in discovered["result"]["supportedVersions"]:
                 raise AssertionError("modern discovery missing version")
