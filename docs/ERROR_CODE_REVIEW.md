@@ -27,3 +27,7 @@ Policy denials such as AUDIT_UNAVAILABLE, PATH_RESOLUTION_FAILED and INVOCATION_
 No conflicting, retired or newly allocated legacy-range code was found. HeaderMismatch and MissingRequiredClientCapability are not emitted: this server does not implement header-mapped modern HTTP or server-originated capability-dependent input requests. Adding those features requires a fresh requirements review.
 
 B03 allocation review is now recorded for this exact runtime. It remains a self-review: malformed-envelope classification, exhaustive branch coverage, future specification changes and the broader R01 normative review still require disposition in the release packet. No runtime behavior, transport support or signed baseline artifact changed.
+
+## Post-baseline lifecycle admission allocation
+
+The legacy stdio handshake fix adds application code 1002 for tools/list or tools/call before successful initialize plus notifications/initialized. It is outside JSON-RPC's reserved interval. Duplicate successful legacy initialize uses -32600; malformed initialization uses existing validation errors. Notifications remain silent. This adds an eighth allocation after the frozen seven-code baseline and needs final-candidate review; it does not silently alter that historical inventory.

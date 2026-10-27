@@ -3,6 +3,7 @@
 Default: rootless user/mount namespace. --mount-only requires root and is for
 controlled CI runners. Never fills the host filesystem or changes its mounts.
 """
+from stdio_review_helpers import initialize_legacy
 import argparse
 import errno
 import json
@@ -36,6 +37,9 @@ def review(executable, era):
             deadline = threading.Timer(15, process.kill)
             deadline.daemon = True
             deadline.start()
+
+            if era == "legacy":
+                initialize_legacy(process)
 
             def request(identifier, method='tools/call'):
                 arguments = {} if method == 'ping' else {'name': 'dry_run_command', 'arguments': {'command': 'git status'}}

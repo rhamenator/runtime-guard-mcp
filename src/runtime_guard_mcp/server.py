@@ -452,6 +452,7 @@ class StdioDispatcher:
 
     def __init__(self, guard: RuntimeGuard, emit: Any, capacity: int = MAX_STDIO_REQUESTS, emit_deferred: Any = None):
         self.guard, self.emit = guard, emit
+        self.legacy_phase = "new"  # Worker-owned; modern requests never establish legacy state.
         self.emit_deferred = emit_deferred
         self.pending: dict[Any, Event] = {}
         self.initializations: set[Any] = set()
@@ -476,7 +477,10 @@ class StdioDispatcher:
                         event = self.pending.get(identifier)
                         if event and identifier not in self.initializations:
                             event.set()
-            return
+            # Preserve receive order with initialize and normal requests. Only
+            # this notification needs policy-worker admission; others stay silent.
+            if message.get("method") != "notifications/initialized":
+                return
         identifier = message.get("id") if isinstance(message, dict) else None
         tracked = type(identifier) in {str, int}
         with self.lock:
@@ -503,7 +507,7 @@ class StdioDispatcher:
             try:
                 if not cancelled.is_set():
                     try:
-                        response = self.guard.handle(message, "stdio", modern_stdio=True)
+                        response = self._handle(message)
                     except Exception:
                         response = rpc_error(identifier if tracked else None, -32603, "Internal error")
                     with self.lock:
@@ -517,6 +521,31 @@ class StdioDispatcher:
                 if not deferred:
                     self._finish(identifier, tracked, cancelled)
                 self.queue.task_done()
+
+    def _handle(self, message: Any) -> dict[str, Any] | None:
+        params = message.get("params", {}) if isinstance(message, dict) else None
+        meta = params.get("_meta", {}) if isinstance(params, dict) else None
+        envelope = (isinstance(message, dict) and message.get("jsonrpc") == "2.0"
+                    and isinstance(message.get("method"), str))
+        modern = (isinstance(meta, dict) and any(key.startswith(META_PREFIX) for key in meta))
+        if envelope and message["method"] == "server/discover":
+            modern = True
+        if envelope and "id" not in message and message["method"] == "notifications/initialized":
+            if (not modern and isinstance(params, dict) and isinstance(meta, dict)
+                    and valid_notification_meta(meta) and self.legacy_phase == "awaiting_notification"):
+                self.legacy_phase = "ready"
+            return None
+        request = envelope and type(message.get("id")) in {str, int}
+        if request and not modern and isinstance(params, dict) and isinstance(meta, dict):
+            if message["method"] in {"tools/list", "tools/call"} and self.legacy_phase != "ready":
+                return rpc_error(message["id"], 1002, "Complete initialize and notifications/initialized before legacy tool requests")
+            if message["method"] == "initialize" and self.legacy_phase != "new":
+                return rpc_error(message["id"], -32600, "Legacy initialization already completed; reconnect to initialize again")
+        response = self.guard.handle(message, "stdio", modern_stdio=True)
+        if (request and not modern and message["method"] == "initialize"
+                and response is not None and "result" in response):
+            self.legacy_phase = "awaiting_notification"
+        return response
 
     def _finish(self, identifier: Any, tracked: bool, cancelled: Event) -> None:
         with self.lock:

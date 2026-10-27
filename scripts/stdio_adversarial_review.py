@@ -3,6 +3,7 @@
 Usage: python3 scripts/stdio_adversarial_review.py /path/to/runtime-guard-mcp
 No inference, external target, or nonstandard-library dependency is used.
 """
+from stdio_review_helpers import initialize_legacy
 import hashlib
 import json
 import os
@@ -95,6 +96,7 @@ def review(executable, era, workspace):
     deadline = threading.Timer(20, process.kill)
     deadline.daemon = True
     deadline.start()
+    initialize_legacy(process)
     reader = threading.Thread(target=read, daemon=True)
     reader.start()
 

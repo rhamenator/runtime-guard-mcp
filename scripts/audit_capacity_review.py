@@ -1,4 +1,5 @@
 """Installed stdio audit-capacity/restart/backup/fresh-file review, both protocol eras."""
+from stdio_review_helpers import prepare_frames, remove_handshake
 import json
 import os
 from pathlib import Path
@@ -23,9 +24,10 @@ def review(executable, root, era):
             if era == "modern":
                 params["_meta"] = {PREFIX + "protocolVersion": "2026-07-28", PREFIX + "clientCapabilities": {}}
             frames.append({"jsonrpc": "2.0", "id": index + 1, "method": method, "params": params})
+        frames = prepare_frames(frames)
         result = subprocess.run([executable, "--config", str(config)], input=b"".join(json.dumps(frame).encode() + b"\n" for frame in frames), capture_output=True, cwd=root, env=env, timeout=8, check=True)
-        replies = [json.loads(line) for line in result.stdout.splitlines()]
-        assert [reply["id"] for reply in replies] == list(range(1, len(frames) + 1)), replies
+        replies = remove_handshake([json.loads(line) for line in result.stdout.splitlines()])
+        assert [reply["id"] for reply in replies] == list(range(1, len(methods) + 1)), replies
         return [reply["result"] for reply in replies]
 
     def rows(path):

@@ -1,4 +1,5 @@
 """Bounded POSIX process-kill recovery under installed HTTP audit traffic."""
+from stdio_review_helpers import handshake_frames
 import argparse
 from contextlib import closing
 import json
@@ -80,11 +81,11 @@ def review(executable):
                     assert db.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
                     rows = db.execute('SELECT count(*) FROM decisions').fetchone()[0]
                 assert len(acknowledged) <= rows <= len(acknowledged) + 1
-                recovery_frame = frame.decode()
+                recovery_frame = ''.join(json.dumps(f) + '\n' for f in handshake_frames()) + frame.decode()
                 restarted = subprocess.run([executable, '--config', str(config)],
                                            input=recovery_frame + '\n', text=True, capture_output=True,
                                            env=installed_environment(''), cwd=root, timeout=8, check=True)
-                assert json.loads(restarted.stdout)['result']['structuredContent']['rule'] == 'READ_ONLY_COMMAND'
+                assert json.loads(restarted.stdout.splitlines()[-1])['result']['structuredContent']['rule'] == 'READ_ONLY_COMMAND'
                 with closing(sqlite3.connect(audit)) as db:
                     assert db.execute('SELECT count(*) FROM decisions').fetchone()[0] == rows + 1
                 results.append({'iteration': iteration, 'acknowledged': len(acknowledged),

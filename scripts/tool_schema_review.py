@@ -1,4 +1,5 @@
 """Validate installed tool declarations/results with an independent JSON Schema engine."""
+from stdio_review_helpers import initialize_legacy
 from contextlib import closing
 import json
 from pathlib import Path
@@ -51,6 +52,8 @@ def review(executable, root, modern):
         return response
 
     try:
+        if not modern:
+            initialize_legacy(process)
         tools = rpc('tools/list')['result']['tools']
         assert {t['name'] for t in tools} == {'audit_path_access', 'dry_run_command', 'budget_guard', 'secret_masker'}
         validators = {}

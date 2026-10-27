@@ -1,4 +1,5 @@
 """Bounded Linux installed-server resource review, not an indefinite soak guarantee."""
+from stdio_review_helpers import initialize_legacy
 import json
 import os
 from pathlib import Path
@@ -35,6 +36,8 @@ def review(executable, root, era):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
     watchdog = threading.Timer(40, process.kill)
     watchdog.start()
+    if era == "legacy":
+        initialize_legacy(process)
     identifier = 0
 
     def call(method='tools/call'):

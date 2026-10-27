@@ -1,4 +1,5 @@
 """Installed database-ceiling and concurrent HTTP pinned-reader/WAL recovery."""
+from stdio_review_helpers import prepare_frames, remove_handshake
 import concurrent.futures
 from contextlib import closing
 import json
@@ -25,8 +26,9 @@ def review(executable, root):
     config.write_text(json.dumps({'workspace_root': str(root), 'audit_db': str(audit), 'audit_max_db_bytes': 8192}))
     frames = [{'jsonrpc': '2.0', 'id': i, 'method': 'tools/call', 'params': {'name': 'dry_run_command', 'arguments': {'command': 'git status'}}} for i in range(30)]
     frames.append({'jsonrpc': '2.0', 'id': 30, 'method': 'ping'})
+    frames = prepare_frames(frames)
     result = subprocess.run([executable, '--config', str(config)], input=''.join(json.dumps(f) + '\n' for f in frames), text=True, capture_output=True, env=env, cwd=root, timeout=10, check=True)
-    replies = [json.loads(line) for line in result.stdout.splitlines()]
+    replies = remove_handshake([json.loads(line) for line in result.stdout.splitlines()])
     assert [r['id'] for r in replies] == list(range(31))
     rules = [r['result']['structuredContent']['rule'] for r in replies[:-1]]
     assert 'AUDIT_UNAVAILABLE' in rules and set(rules) == {'READ_ONLY_COMMAND', 'AUDIT_UNAVAILABLE'}

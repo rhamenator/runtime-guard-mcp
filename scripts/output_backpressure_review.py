@@ -1,4 +1,5 @@
 """Installed stdio stalled/disconnected reader and resumed-reading probes."""
+from stdio_review_helpers import initialize_legacy
 import json
 from pathlib import Path
 import subprocess
@@ -27,6 +28,8 @@ def main():
                                            env=installed_environment(''), stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 try:
+                    if not modern:
+                        initialize_legacy(process)
                     process.stdin.write(b'{"jsonrpc":"2.0","id":0,"method":"ping"}\n'); process.stdin.flush()
                     assert json.loads(process.stdout.readline())['result'] == {}
                     params = {'name': 'secret_masker', 'arguments': {'session_id': 'pressure', 'stream_id': 'one',
