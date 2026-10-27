@@ -37,6 +37,23 @@ class ReviewFixTests(unittest.TestCase):
                     again = masker.mask('owner', 'session', 'again', text, True)
                     self.assertEqual(output, again['text'])
 
+    def test_truncated_quoted_assignments_at_final_flush(self):
+        for assignment in ('password="SyntheticPass123!', "token='SyntheticPass123!",
+                           '{"password":"SyntheticPass123!',
+                           '"secret":"Synthetic value with spaces',
+                           'password="SyntheticPass123!\\'):
+            prefix = 'public ' * 3000
+            text = prefix + assignment
+            for split in range(len(prefix), len(text) + 1):
+                with self.subTest(assignment=assignment, split=split):
+                    masker = SecretMasker()
+                    first = masker.mask('owner', 'session', 'stream', text[:split], False)
+                    last = masker.mask('owner', 'session', 'stream', text[split:], True)
+                    output = first['text'] + last['text']
+                    self.assertNotIn('Synthetic', output)
+                    self.assertIn('[REDACTED_PASSWORD_ASSIGNMENT_1]', output)
+                    self.assertIn('public ', output)
+
     def test_nonsecret_json_and_short_values_remain_unchanged(self):
         text = '{"public":"keep","password":"short"}'
         self.assertEqual(SecretMasker().mask('owner', 's', 'x', text, True)['text'], text)
