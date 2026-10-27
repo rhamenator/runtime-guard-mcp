@@ -54,6 +54,17 @@ class ReviewFixTests(unittest.TestCase):
                     self.assertIn('[REDACTED_PASSWORD_ASSIGNMENT_1]', output)
                     self.assertIn('public ', output)
 
+    def test_unquoted_assignment_punctuation_coverage_is_preserved(self):
+        for secret in ('Demo,Pass123!', 'Demo}Pass123!', 'Demo]Pass123!',
+                       'LongerPrefix,privateSuffix123!', 'LongerPrefix}privateSuffix123!'):
+            text = 'password=' + secret
+            for split in range(len(text) + 1):
+                with self.subTest(secret=secret, split=split):
+                    masker = SecretMasker()
+                    first = masker.mask('owner', 's', 'x', text[:split], False)
+                    last = masker.mask('owner', 's', 'x', text[split:], True)
+                    self.assertEqual(first['text'] + last['text'], '[REDACTED_PASSWORD_ASSIGNMENT_1]')
+
     def test_nonsecret_json_and_short_values_remain_unchanged(self):
         text = '{"public":"keep","password":"short"}'
         self.assertEqual(SecretMasker().mask('owner', 's', 'x', text, True)['text'], text)
