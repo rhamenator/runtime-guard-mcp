@@ -10,4 +10,4 @@ class VersionCacheTests(unittest.TestCase):
     def test_version_cache_and_tool_authority_across_eras(self):
         for restricted in (False, True):
             guard = RuntimeGuard('/tmp/work', enabled_tools=['dry_run_command'] if restricted else None)
-            review.check([guard.handle(f, modern_stdio=True) for f in review.frames()], restricted)
+            review.check([reply for frame in review.frames() if (reply := guard.handle(frame, modern_stdio=True)) is not None], restricted)
