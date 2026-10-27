@@ -181,6 +181,9 @@ def run(server: str | None = None) -> dict:
             emitted.append(response["result"]["structuredContent"]["text"])
             output = "".join(emitted)
             expect("stream secret redaction", (synthetic in output, "[REDACTED_GITHUB_TOKEN_1]" in output), (False, True), results)
+            _, response = send(port, rpc(205, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "json-assignment", "stream_id": "one", "chunk": '{"password":"SyntheticPass123!"}', "final": True}}), token)
+            masked = response["result"]["structuredContent"]["text"]
+            expect("quoted JSON password redaction", ("SyntheticPass123!" in masked, "[REDACTED_PASSWORD_ASSIGNMENT_" in masked), (False, True), results)
             expect("audit excludes synthetic secret", audit_contains_secret(audit, synthetic.encode()), False, results)
             for index in range(MAX_MASKER_STREAMS):
                 _, response = send(port, rpc(210 + index, "tools/call", {"name": "secret_masker", "arguments": {"session_id": "resource", "stream_id": f"stream-{index}", "chunk": "", "final": False}}), token)

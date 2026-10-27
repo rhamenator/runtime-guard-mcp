@@ -108,9 +108,9 @@ class ProtocolTests(unittest.TestCase):
 
     def test_stdio_process(self):
         env = dict(os.environ, PYTHONPATH="src")
-        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--workspace-root", "/tmp/work"], input=b'{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n', stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=5)
+        process = subprocess.run([sys.executable, "-m", "runtime_guard_mcp.server", "--workspace-root", "/tmp/work"], input=b'{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}\n{"jsonrpc":"2.0","method":"notifications/initialized"}\n{"jsonrpc":"2.0","id":1,"method":"tools/list"}\n', stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, timeout=5)
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(len(json.loads(process.stdout)["result"]["tools"]), 4)
+        self.assertEqual(len(json.loads(process.stdout.splitlines()[-1])["result"]["tools"]), 4)
 
     def test_stdio_oversized_line_is_drained_before_next_request(self):
         env = dict(os.environ, PYTHONPATH="src")

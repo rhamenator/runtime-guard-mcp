@@ -33,6 +33,7 @@ def frames():
     add('tools/list')
     del result[-1]['params']['_meta'][PREFIX + 'clientCapabilities']
     result.append({'jsonrpc': '2.0', 'id': len(result), 'method': 'ping'})
+    result.insert(9, {'jsonrpc': '2.0', 'method': 'notifications/initialized'})
     return result
 
 

@@ -1,4 +1,5 @@
 """Installed cancellation of a completed policy result waiting behind a blocked pipe."""
+from stdio_review_helpers import initialize_legacy
 from contextlib import closing
 import json
 from pathlib import Path
@@ -18,6 +19,9 @@ def review(executable, root, modern):
     process = subprocess.Popen([executable, '--config', str(config)], cwd=root,
                                env=installed_environment(''), stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if not modern:
+        initialize_legacy(process)
 
     def call(identifier, name, arguments):
         params = {'name': name, 'arguments': arguments}

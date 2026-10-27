@@ -1,4 +1,5 @@
 """Installed stdio review of modern capability validation and terminal pagination."""
+from stdio_review_helpers import prepare_frames, remove_handshake
 import json
 import os
 from pathlib import Path
@@ -24,8 +25,9 @@ def run_frames(executable, frames, config=None):
             config_path = Path(root) / "config.json"
             config_path.write_text(json.dumps(config))
             command.extend(["--config", str(config_path)])
+        frames = prepare_frames(frames)
         result = subprocess.run(command, input=''.join(json.dumps(frame) + '\n' for frame in frames), text=True, capture_output=True, cwd=root, env=env, timeout=15, check=True)
-    return [json.loads(line) for line in result.stdout.splitlines()]
+    return remove_handshake([json.loads(line) for line in result.stdout.splitlines()])
 
 
 def main():

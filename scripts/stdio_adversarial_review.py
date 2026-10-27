@@ -3,6 +3,7 @@
 Usage: python3 scripts/stdio_adversarial_review.py /path/to/runtime-guard-mcp
 No inference, external target, or nonstandard-library dependency is used.
 """
+from stdio_review_helpers import initialize_legacy
 import hashlib
 import json
 import os
@@ -95,6 +96,8 @@ def review(executable, era, workspace):
     deadline = threading.Timer(20, process.kill)
     deadline.daemon = True
     deadline.start()
+    if era == "legacy":
+        initialize_legacy(process)
     reader = threading.Thread(target=read, daemon=True)
     reader.start()
 
@@ -115,9 +118,7 @@ def review(executable, era, workspace):
     cases = corpus(era)
     digest = hashlib.sha256()
     try:
-        if era == "legacy":
-            exchange(encode(frame(era, method="initialize", protocolVersion="2025-06-18", capabilities={}, clientInfo={"name": "corpus", "version": "1"})))
-        else:
+        if era == "modern":
             discovered = exchange(encode(frame(era, method="server/discover")))
             if VERSION not in discovered["result"]["supportedVersions"]:
                 raise AssertionError("modern discovery missing version")
