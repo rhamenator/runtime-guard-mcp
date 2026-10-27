@@ -2,6 +2,8 @@
 
 Status: bounded client-control observations, not production approval or a universal UI guarantee. The [redacted record](evidence/runtime-client-cancellation-2026-10-22.json) pins server revision `9bfe3b6` and the fresh wheel digest. No production server code was changed for these probes.
 
+The owner-accepted [initial release scope](INITIAL_RELEASE_SCOPE.md) retains Codex/Cursor as limited advisory/recovery clients; their tested cancellation delivery remains unsupported. This scope decision does not supply independent-human release approval.
+
 ## Fixture and reused work
 
 The optional development harness adapts Outbound Guard's control orchestration and transparent wire bridge (GPL-3.0-or-later; control-harness source `f5aaf302ec756c02bddb8c7246ba3c9aef4eeed5`). It removes the network namespace/DNS/HTTP fixture: Runtime Guard has advisory policy functions, not outbound HTTP sockets.

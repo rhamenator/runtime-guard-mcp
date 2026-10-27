@@ -4,6 +4,8 @@
 
 An MCP server for **advisory** runtime safety checks in coding agents. It inspects proposed file paths and shell commands, tracks caller budgets, detects repeated actions, and masks common credentials in output. It never executes shell commands or opens the target files. It is separate from [request-guard-mcp](https://github.com/rhamenator/request-guard-mcp), which handles request classification and is being extended for HTTP egress.
 
+Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human release approval remains pending.
+
 ## Run locally
 
 Python 3.11 or newer; CI exercises Python 3.11 through 3.14. The runtime uses only the standard library. See [dependency decisions](docs/dependencies.md) for the packaging and protocol tradeoffs.
