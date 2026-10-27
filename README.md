@@ -4,6 +4,8 @@
 
 An MCP server for **advisory** runtime safety checks in coding agents. It inspects proposed file paths and shell commands, tracks caller budgets, detects repeated actions, and masks common credentials in output. It never executes shell commands or opens the target files. It is separate from [request-guard-mcp](https://github.com/rhamenator/request-guard-mcp), which handles request classification and is being extended for HTTP egress.
 
+Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human release approval remains pending.
+
 ## Run locally
 
 Python 3.11 or newer; CI exercises Python 3.11 through 3.14. The runtime uses only the standard library. See [dependency decisions](docs/dependencies.md) for the packaging and protocol tradeoffs.
@@ -34,7 +36,7 @@ Copy [the config example](runtime-guard.example.json), set `RUNTIME_GUARD_CONFIG
 | `budget_guard` | Caller-wide token, payload, command, and loop budget | Agents must report usage; this does not meter other tools automatically |
 | `secret_masker` | Text with stable `[REDACTED_*]` placeholders | Signature based; unknown formats can remain unmasked |
 
-Blocked tool calls return an MCP tool result with `isError: true`, structured JSON, and a text fallback. Protocol errors use JSON-RPC errors. Initialization requires string `protocolVersion`, object `capabilities`, and `clientInfo` with string `name` and `version`; malformed fields return `-32602`. When `params` is present it must be an object; arrays and scalar values return `-32602`. Modern request IDs are checked before metadata/version dispatch, and optional `clientInfo.title` must be a string. Optional request `_meta` must also be an object; extension keys are preserved. This validates the legacy envelope and does not implement 2026 per-request negotiation. Invalid ID types return `-32600` with a null response ID, including malformed request envelopes. Both transports require UTF-8 JSON and return `-32700` for duplicate object keys, non-finite numbers, more than 64 levels of nesting, or more than 8192 structural markers outside strings. [Tool declarations](schemas/tools.json) include input and output schemas.
+Blocked tool calls return an MCP tool result with `isError: true`, structured JSON, and a text fallback. Protocol errors use JSON-RPC errors. Initialization requires string `protocolVersion`, object `capabilities`, and `clientInfo` with string `name` and `version`; malformed fields return `-32602`. When `params` is present it must be an object; arrays and scalar values return `-32602`. Modern request IDs are checked before metadata/version dispatch, and optional `clientInfo.title` must be a string. Optional request `_meta` must also be an object; extension keys are preserved. These envelope checks apply to both eras; modern stdio additionally implements the per-request metadata/discovery workflow below. HTTP remains legacy JSON-RPC. Invalid ID types return `-32600` with a null response ID, including malformed request envelopes. Both transports require UTF-8 JSON and return `-32700` for duplicate object keys, non-finite numbers, more than 64 levels of nesting, or more than 8192 structural markers outside strings. [Tool declarations](schemas/tools.json) include input and output schemas.
 
 ## Test
 

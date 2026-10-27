@@ -2,6 +2,8 @@
 
 Status: **REVIEW BASELINE, NOT APPROVED**. Independent reviewer: **UNASSIGNED**. This is the current assembled self-review packet; the [earlier baseline](REVIEW_BASELINE_2026-10-24.md) and [affected-claim supplement](COMMAND_OPTION_REVIEW_REFRESH.md) retain their historical source/artifact identities. No stable release, tag or marketplace submission is approved.
 
+The owner accepted the limited [initial scope](INITIAL_RELEASE_SCOPE.md) on 2026-10-27. A later [separate Daybreak Blue technical review](reviews/DAYBREAK_BLUE_2026-10-27.md) reports required follow-up before stable release. The immutable baseline below retains its exact source/artifact identity; model review and scope acceptance are separate from qualified human approval.
+
 ## Exact material
 
 Source: `c945f65138dfcc5494cc20bb3055b6aa0838a0f2`, version 0.1.0, build ref `refs/heads/main`. [Main matrix CI](https://github.com/rhamenator/runtime-guard-mcp/actions/runs/40126650509) passed all four supported Python versions. [Signed review build](https://github.com/rhamenator/runtime-guard-mcp/actions/runs/40132714702) ran 21:05:59–21:07:16 UTC (77 seconds), including packaged tests, installed API inspection and signature controls.
