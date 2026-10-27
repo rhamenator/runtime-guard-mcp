@@ -11,6 +11,10 @@ Reviewed 2026-10-23 against `bd56eca`. This current queue supersedes stale “ne
 
 For the latest immutable source, signed artifacts, fresh scanner/native-client replay and open human decisions, use [the current review baseline](CURRENT_REVIEW_BASELINE.md). Historical milestone identities below are retained.
 
+## Separate-model review follow-up, 2026-10-27
+
+Owner-accepted scope is in INITIAL_RELEASE_SCOPE.md. The separate requested Daybreak Blue/xhigh report is in reviews/DAYBREAK_BLUE_2026-10-27.md; it recommends no stable release yet. Next technical priorities: (1) validate and enforce the legacy stdio initialization admission boundary with state-preservation/modern-interleaving evidence; the cited lifecycle includes client obligations, so do not call this an authentication bypass, (2) decide and test explicit quoted JSON assignment masking coverage, then (3) refresh exact-candidate affected protocol/client/artifact evidence. The reported README contradiction is corrected in this documentation change. Model findings and source checks do not satisfy independent qualified human approval. Initial scope acceptance does not waive workload/retention sizing or all residual-risk dispositions.
+
 ## Current foundation
 
 Main CI and CodeQL passed for `7068ddb`. CI covers Python 3.11–3.14, source and installed adversarial probes, wheel installation without third-party runtime requirements, and an isolated official Python SDK client. The previous PR #32 is merged; only two dependency-update PRs were open at this review.
