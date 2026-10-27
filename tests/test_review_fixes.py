@@ -1,6 +1,9 @@
 import importlib.util
 from pathlib import Path
 import sys
+import threading
+import time
+from runtime_guard_mcp.server import StdioDispatcher, META_PREFIX, MODERN_VERSION
 import unittest
 from runtime_guard_mcp.policy import SecretMasker
 
@@ -37,3 +40,34 @@ class ReviewFixTests(unittest.TestCase):
     def test_nonsecret_json_and_short_values_remain_unchanged(self):
         text = '{"public":"keep","password":"short"}'
         self.assertEqual(SecretMasker().mask('owner', 's', 'x', text, True)['text'], text)
+
+    def test_initialized_notification_is_silent_when_saturated(self):
+        started, release = threading.Event(), threading.Event()
+        replies = []
+        class Guard:
+            def handle(self, message, caller, modern_stdio=False):
+                started.set()
+                if not release.wait(2):
+                    raise RuntimeError('fixture deadline')
+                return {'jsonrpc': '2.0', 'id': message['id'], 'result': {}}
+        dispatcher = StdioDispatcher(Guard(), replies.append, capacity=1)
+        frame = lambda identifier: {'jsonrpc': '2.0', 'id': identifier, 'method': 'ping', 'params': {
+            '_meta': {META_PREFIX + 'protocolVersion': MODERN_VERSION, META_PREFIX + 'clientCapabilities': {}}}}
+        try:
+            dispatcher.submit(frame(1))
+            self.assertTrue(started.wait(1))
+            dispatcher.submit({'jsonrpc': '2.0', 'method': 'notifications/initialized'})
+            self.assertEqual(replies, [])
+            self.assertEqual(dispatcher.legacy_phase, 'new')
+            release.set()
+            deadline = time.monotonic() + 2
+            while dispatcher.queue.unfinished_tasks and time.monotonic() < deadline:
+                time.sleep(.005)
+            self.assertEqual(dispatcher.queue.unfinished_tasks, 0)
+            dispatcher.submit(frame(2))
+            while dispatcher.queue.unfinished_tasks and time.monotonic() < deadline:
+                time.sleep(.005)
+            self.assertEqual([reply['id'] for reply in replies], [1, 2])
+        finally:
+            release.set()
+            dispatcher.close()

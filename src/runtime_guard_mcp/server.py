@@ -468,7 +468,9 @@ class StdioDispatcher:
         # Never reply to a reply, route it by a client-request ID, or admit work.
         if is_peer_response(message):
             return
-        if isinstance(message, dict) and "id" not in message and message.get("jsonrpc") == "2.0" and isinstance(message.get("method"), str):
+        notification = (isinstance(message, dict) and "id" not in message
+                        and message.get("jsonrpc") == "2.0" and isinstance(message.get("method"), str))
+        if notification:
             params = message.get("params")
             if message.get("jsonrpc") == "2.0" and message.get("method") == "notifications/cancelled" and isinstance(params, dict) and valid_notification_meta(params.get("_meta", {})):
                 identifier = params.get("requestId")
@@ -488,7 +490,8 @@ class StdioDispatcher:
                 self.emit(rpc_error(identifier, -32600, "Request ID already in flight"))
                 return
             if not self.slots.acquire(blocking=False):
-                self.emit(rpc_error(identifier if tracked else None, 1001, "Request capacity exceeded; retry after pending work completes"))
+                if not notification:
+                    self.emit(rpc_error(identifier if tracked else None, 1001, "Request capacity exceeded; retry after pending work completes"))
                 return
             cancelled = Event()
             if tracked:

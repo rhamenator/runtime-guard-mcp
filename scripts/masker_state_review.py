@@ -1,4 +1,5 @@
 """Installed secret-map/unfinished-stream saturation and recovery (Linux)."""
+from stdio_review_helpers import initialize_legacy
 import json
 from pathlib import Path
 import subprocess
@@ -47,6 +48,8 @@ def review(executable, root, modern):
         return value.get('text', '')
 
     try:
+        if not modern:
+            initialize_legacy(process)
         process.stdin.write(b'{"jsonrpc":"2.0","id":"warmup","method":"ping"}\n'); process.stdin.flush()
         assert json.loads(process.stdout.readline()) == {"jsonrpc": "2.0", "id": "warmup", "result": {}}
         baseline = snapshot(process.pid, root)
