@@ -85,7 +85,7 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
         return verdict("BLOCKED", "EMPTY_COMMAND", "Supply a command.")
     # Lexical credential components only: do not expand variables, execute the
     # shell or open paths. Quoted operands are conservative matches too.
-    parts = {part.lower() for token in tokens[1:]
+    parts = {part.strip("\"'").lower() for token in tokens[1:]
              for part in re.split(r"[/=:]", (token[2:] if token.startswith("-f") else token).strip("\"'").replace("\\", "/"))}
     if parts & (SENSITIVE_PARTS | SENSITIVE_FILES) or any(part.startswith('.env.') for part in parts):
         return verdict("BLOCKED", "SENSITIVE_COMMAND_PATH", "Use project-safe operands instead of credential paths.")

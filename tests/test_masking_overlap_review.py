@@ -37,9 +37,12 @@ class MaskingOverlapReviewTests(unittest.TestCase):
         for command in ('cat /root/.ssh/id_rsa', 'cat ~/./.ssh/id_rsa',
                         'cat ~root/.ssh/id_rsa', 'cat ".env"', 'cat $HOME/.ssh/id_rsa',
                         'git show HEAD:.env', 'git show HEAD:id_rsa',
-                        'grep -f.env x', 'grep --file=.env x'):
+                        'grep -f.env x', 'grep --file=.env x',
+                        'rg --file=.ssh/config README.md',
+                        'rg --file=".env" README.md', 'grep --file=\'.env\' target'):
             self.assertEqual(dry_run_command(command)['status'], 'BLOCKED')
-        self.assertEqual(dry_run_command('cat README.md')['rule'], 'READ_ONLY_COMMAND')
+        for command in ('cat README.md', 'grep --file=patterns.txt target', 'rg -fpatterns.txt README.md'):
+            self.assertEqual(dry_run_command(command)['rule'], 'READ_ONLY_COMMAND')
 
     def test_stream_cutoff_does_not_create_a_false_partial_signature(self):
         for size in (257, 600):
