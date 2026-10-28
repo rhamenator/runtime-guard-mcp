@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "members": 7,
+  "source_commit": "2fe923267dd6648b999b94e3f58a1ed600625943",
+  "artifact_workflow_run": 40595971974,
+  "scope": "retrieval bytes match trusted review record; no new signature verification, backup durability or release approval",
+  "retrieved_from_workflow_run": 40595971974,
+  "archive_copy_rechecked": true,
+  "archive_scope": "Owner-account local working archive; private location omitted; not an independent backup or owner custody acceptance",
+  "signatures": "No new signature verification; all seven bytes match previously verified trusted record, including provenance bundle"
+}

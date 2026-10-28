@@ -34,3 +34,16 @@ With CLI 2.103.2, all five downloaded subjects verified locally against the expe
 ## Review retention and archival handoff
 
 New review-artifact uploads request 90-day retention explicitly. This is a finite GitHub retention request, subject to repository/organization policy; it does not retroactively extend older runs or provide permanent availability. Do not designate a final candidate whose required package/report bundle has expired. Before release review, download the exact named run artifact, verify all SHA256SUMS subjects and provenance identities, and preserve the complete verified directory (packages, inspection/API reports, checksums and provenance.jsonl) in the owner's controlled backup/archive. Record the run, source/ref, wheel and bundle hashes, archive owner/location and an actual retrieval check in the human review record; keep credentials and private local archive paths out of the public repository. A source archive or checksum list alone cannot replace the signed package/report bundle. This policy does not publish a stable release or establish backup durability.
+
+## Repeatable retrieval integrity check
+
+After the original signing/identity verification is recorded, check a retrieved copy against the independently trusted, reviewed repository inventory:
+
+```sh
+python3 scripts/verify_review_bundle.py \
+  docs/evidence/review-baseline-2026-10-27.json /path/to/retrieved-bundle
+```
+
+This Linux development helper requires exactly the seven recorded package/report/checksum/provenance members, checks all their recorded SHA-256 values and rejects missing/extra members, unsafe inventory names, duplicate JSON keys, symlinks, nonregular members and files over 32 MiB. It does not extract or execute bundle contents. Obtain the expected inventory from a trusted reviewed repository revision, not from the downloaded bundle itself. This is byte-retrieval verification, not new signature verification or publisher authentication; retain the signature/commit/ref/workflow checks above for initial acceptance.
+
+On 2026-10-27 the full build `40595971974` bundle was downloaded again after a host restart removed temporary files. All seven digests matched the trusted `2fe9232` inventory, including the previously verified provenance bundle. A copy was preserved in the owner's local account archive and checked again; [retrieval evidence](evidence/review-bundle-retrieval-2026-10-27.json) omits the private path. This supplies a reproducible local retrieval check, not a second-device backup, permanent retention, owner custody acceptance or final release approval. The owner must still choose retention, backup/custody and recovery requirements. No live audit database was copied or rotated.
