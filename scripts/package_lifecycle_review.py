@@ -32,6 +32,7 @@ def isolated_environment(home):
     allowed = {'PATH', 'SYSTEMROOT', 'WINDIR', 'TMPDIR', 'TMP', 'TEMP',
                'LANG', 'LC_ALL', 'TZ', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'}
     env = {k: v for k, v in os.environ.items() if k in allowed or k.startswith('LC_')}
+    env['PATH'] = os.pathsep.join((str(Path(sys.executable).parent), '/usr/bin', '/bin', '/usr/sbin', '/sbin'))
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
                XDG_DATA_HOME=str(home / '.local/share'), PIP_NO_INDEX='1',
                PIP_DISABLE_PIP_VERSION_CHECK='1', PIP_NO_CACHE_DIR='1',

@@ -11,3 +11,5 @@ Owner authorization: 2026-10-27. Technical review is delegated to an adversarial
 7. Bind the final verdict and affected evidence to the actual candidate. Repeat reviews/tests only for changed claims or affected behavior. GitHub Actions and local builds must use committed source, with checksums and hosted provenance where available. Record finite hosted retention.
 
 Build and backup authorization is distinct from publishing an official release. No stable v1/latest designation is permitted. Linux is the current accepted platform; a GitHub runner's existence alone does not add Windows/macOS support.
+
+Initial separate Daybreak and Claude reports are archived under `docs/reviews/` for source `46b7d73`; their supplied-versus-repeated evidence and limitations are preserved. Successor masking/command changes and experimental macOS development tooling need affected re-review and exact-candidate artifacts before a final recommendation.

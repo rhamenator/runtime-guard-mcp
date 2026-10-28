@@ -1,3 +1,5 @@
+> Later candidate note: the new adversarial review found masking overlap/boundary and lexical command coverage improvements. Those changes require fresh artifact/affected verification evidence; the immutable `2fe9232` packet and ten-minute run below remain historical and are not relabeled as the successor runtime.
+
 > Policy update, 2026-10-27: the [current release policy](RELEASE-READINESS-REVIEW.md) supersedes this packet's earlier mandatory-human-approval wording. Independent human review has not occurred. Adversarial LLM review and all applicable production-quality gates remain required for a pre-1.0 candidate. Historical evidence and model reports are unchanged.
 
 # Current technical review baseline
