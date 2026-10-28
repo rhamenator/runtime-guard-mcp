@@ -1,3 +1,5 @@
+> Policy update, 2026-10-27: the [current release policy](RELEASE-READINESS-REVIEW.md) supersedes this packet's earlier mandatory-human-approval wording. Independent human review has not occurred. Owner self-review and all applicable production-quality gates remain required for a pre-1.0 candidate. Historical evidence and model reports are unchanged.
+
 # Current technical review baseline
 
 Status: **REVIEW BASELINE, NOT APPROVED**. Independent reviewer: **UNASSIGNED**. This is the current assembled self-review packet; the [earlier baseline](REVIEW_BASELINE_2026-10-24.md) and [affected-claim supplement](COMMAND_OPTION_REVIEW_REFRESH.md) retain their historical source/artifact identities. No stable release, tag or marketplace submission is approved.
