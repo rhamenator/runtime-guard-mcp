@@ -86,7 +86,7 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
     # Lexical credential components only: do not expand variables, execute the
     # shell or open paths. Quoted operands are conservative matches too.
     parts = {part.lower() for token in tokens[1:]
-             for part in token.strip("\"'").replace("\\", "/").split("/")}
+             for part in re.split(r"[/=:]", (token[2:] if token.startswith("-f") else token).strip("\"'").replace("\\", "/"))}
     if parts & (SENSITIVE_PARTS | SENSITIVE_FILES) or any(part.startswith('.env.') for part in parts):
         return verdict("BLOCKED", "SENSITIVE_COMMAND_PATH", "Use project-safe operands instead of credential paths.")
     if tokens[0] in {"bash", "sh", "pwsh"} and any(x in tokens for x in {"-c", "-Command"}):
@@ -223,8 +223,9 @@ class SecretMasker:
         return [(start, end, kind, text[start:end], kinds)
                 for start, end, kind, kinds in merged]
 
-    def _mask(self, caller: str, text: str) -> tuple[str, list[str]] | None:
-        matches = self._matches(text)
+    def _mask(self, caller: str, text: str, matches=None) -> tuple[str, list[str]] | None:
+        if matches is None:
+            matches = self._matches(text)
         mapping = self._secrets[caller]
         new_digests = set()
         cursor = 0
@@ -285,12 +286,13 @@ class SecretMasker:
                 return verdict("SAFE", "MASKED", "No remediation needed.", text=masked, secret_types=kinds)
             # Hold a conservative tail so a token split across chunks is not emitted early.
             cutoff = max(0, len(raw) - 16384)
-            for start, end, _, _, _ in self._matches(raw):
+            matches = self._matches(raw)
+            for start, end, _, _, _ in matches:
                 if start < cutoff < end:
                     cutoff = start
             prefix, tail = raw[:cutoff], raw[cutoff:]
             try:
-                result = self._mask(caller, prefix)
+                result = self._mask(caller, prefix, [match for match in matches if match[1] <= cutoff])
             except UnicodeEncodeError:
                 self._buffers[key] = None
                 return verdict("BLOCKED", "INVALID_UNICODE", "Remove invalid Unicode from the stream.")

@@ -35,6 +35,18 @@ class MaskingOverlapReviewTests(unittest.TestCase):
 
     def test_credential_operand_components_are_conservatively_blocked(self):
         for command in ('cat /root/.ssh/id_rsa', 'cat ~/./.ssh/id_rsa',
-                        'cat ~root/.ssh/id_rsa', 'cat ".env"', 'cat $HOME/.ssh/id_rsa'):
+                        'cat ~root/.ssh/id_rsa', 'cat ".env"', 'cat $HOME/.ssh/id_rsa',
+                        'git show HEAD:.env', 'git show HEAD:id_rsa',
+                        'grep -f.env x', 'grep --file=.env x'):
             self.assertEqual(dry_run_command(command)['status'], 'BLOCKED')
         self.assertEqual(dry_run_command('cat README.md')['rule'], 'READ_ONLY_COMMAND')
+
+    def test_stream_cutoff_does_not_create_a_false_partial_signature(self):
+        for size in (257, 600):
+            text = 'token=' + 'Z' * size + ' ' + 'x' * 15884
+            masker = SecretMasker()
+            first = masker.mask('owner', 's', 'x', text, False)
+            last = masker.mask('owner', 's', 'x', '', True)
+            self.assertEqual(first['text'] + last['text'], text)
+            self.assertEqual(first['secret_types'], [])
+            self.assertEqual(last['secret_types'], [])
