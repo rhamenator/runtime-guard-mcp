@@ -1,6 +1,13 @@
 name: Experimental macOS package review
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/macos-package-review.yml'
+      - 'scripts/package_lifecycle_review.py'
+      - 'scripts/client_smoke.py'
+      - 'src/**'
+      - 'pyproject.toml'
   workflow_dispatch:
 
 permissions:
