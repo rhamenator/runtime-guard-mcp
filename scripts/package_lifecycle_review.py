@@ -13,7 +13,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import venv
 import zipfile
 from email.parser import BytesParser
 
@@ -25,6 +24,19 @@ def identity(wheel):
         meta = BytesParser().parsebytes(archive.read(names[0]))
         assert meta['Name'] == 'runtime-guard-mcp' and not meta.get_all('Requires-Dist')
         return meta['Version']
+
+
+def isolated_environment(home):
+    # Keep interpreter loader/locale/platform essentials, not shell hooks,
+    # package-manager targets, user startup files or inherited tool state.
+    allowed = {'PATH', 'SYSTEMROOT', 'WINDIR', 'TMPDIR', 'TMP', 'TEMP',
+               'LANG', 'LC_ALL', 'TZ', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'}
+    env = {k: v for k, v in os.environ.items() if k in allowed or k.startswith('LC_')}
+    env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
+               XDG_DATA_HOME=str(home / '.local/share'), PIP_NO_INDEX='1',
+               PIP_DISABLE_PIP_VERSION_CHECK='1', PIP_NO_CACHE_DIR='1',
+               PIP_CONFIG_FILE=os.devnull)
+    return env
 
 
 def main():
@@ -42,12 +54,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='runtime-guard-package-') as temporary:
         root = Path(temporary)
         home = root / 'home'; home.mkdir()
-        env = {k: v for k, v in os.environ.items() if not k.startswith(('PYTHON', 'RUNTIME_GUARD_'))}
-        env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
-                   XDG_DATA_HOME=str(home / '.local/share'), PIP_NO_INDEX='1',
-                   PIP_DISABLE_PIP_VERSION_CHECK='1', PIP_NO_CACHE_DIR='1')
+        env = isolated_environment(home)
         prefix = root / 'venv'
-        venv.EnvBuilder(with_pip=True).create(prefix)
+        subprocess.run([sys.executable, '-m', 'venv', str(prefix)], env=env,
+                       cwd=root, check=True, capture_output=True, timeout=40)
         python = prefix / 'bin/python'; entry = prefix / 'bin/runtime-guard-mcp'
 
         def run(*args):
