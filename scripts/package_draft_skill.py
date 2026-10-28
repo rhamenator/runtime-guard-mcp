@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 
 FILES = {'SKILL.md': 'skills/runtime-guard/SKILL.md', 'LICENSE': 'LICENSE', 'NOTICE': 'NOTICE'}
-DRAFT = '\nDraft companion skill: not approved for marketplace submission or a stable release. Install the server separately; final release gates and independent human review remain open.\n'
+DRAFT = '\nDraft companion skill: not approved for marketplace submission or a stable release. Install the server separately; final candidate evidence and publication authorization remain open. Independent human review has not occurred and is not required.\n'
 
 
 def git(root, *args):
