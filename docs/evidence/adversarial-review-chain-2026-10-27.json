@@ -1,0 +1,47 @@
+{
+  "status": "ready with limitations for affected runtime, conditional on exact distribution CI/artifacts",
+  "runtime_source": "5987605450d8c2bf9a28e9e05e3812299ff6cea5",
+  "runtime_sha256": {
+    "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+    "src/runtime_guard_mcp/audit.py": "756a3c44a4da62af1681afa55ae6769d74a2c683f8fa049060bd6839a217e7ce",
+    "src/runtime_guard_mcp/policy.py": "a91e4f7d9fdb0d89a51f0f1ef11d3d79114d85792677dd7ffd13e4ef48cbd994",
+    "src/runtime_guard_mcp/server.py": "a9cc1d50b445f4e4ecd3815b6895c687be1d4eb7fde97f123d5a536a6f4042bd",
+    "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+  },
+  "reports": [
+    {
+      "report": "docs/reviews/DAYBREAK_BLUE_AFFECTED_2026-10-27.md",
+      "sha256": "f79a6fb262aed84af9f791164aa45ea35bed42b665e228f1c285249d6b7032d6",
+      "reviewed_source": "995931e4a0a00b8df18dce668e49a5f09c04f005"
+    },
+    {
+      "report": "docs/reviews/CLAUDE_AFFECTED_2026-10-27.md",
+      "sha256": "2fa2fc29428a0ec8e51bcbe75e52bd2a9cc9fccf6b42cd04e15d512922168449",
+      "reviewed_source": "995931e4a0a00b8df18dce668e49a5f09c04f005"
+    },
+    {
+      "report": "docs/reviews/DAYBREAK_BLUE_STREAMING_OPTIONS_2026-10-27.md",
+      "sha256": "aa24c47e899451c4c2105455b0d096fbd4d35b8603160944ed94c9433037511f",
+      "reviewed_source": "2e4aa2c66df72583e638c28e38043c9202fd1065"
+    },
+    {
+      "report": "docs/reviews/CLAUDE_STREAMING_OPTIONS_2026-10-27.md",
+      "sha256": "497ebd09963cc4c4ed4cc06ae8cc30cd3ff35363264e0bb8f0a6d053ce44300f",
+      "reviewed_source": "2e4aa2c66df72583e638c28e38043c9202fd1065"
+    },
+    {
+      "report": "docs/reviews/DAYBREAK_BLUE_CLUSTER_CLOSURE_2026-10-27.md",
+      "sha256": "5ec519655c403d30404859c4538a94626ba3e4d0bc5b6c7df7826001eeb5b49b",
+      "reviewed_source": "5987605450d8c2bf9a28e9e05e3812299ff6cea5"
+    }
+  ],
+  "human_review": false,
+  "publication_authorized": false,
+  "accepted_limitations": [
+    "signature-only masking; values outside bounds may remain unmasked",
+    "conservative streaming overmask at discarded left context; false positives",
+    "lexical advisory command classification, not shell execution or proof",
+    "Codex/Cursor cancellation omission; no preemption or rollback",
+    "Linux initial scope; experimental macOS wheel PR merge qualification, not supported PKG/Apple signing"
+  ]
+}

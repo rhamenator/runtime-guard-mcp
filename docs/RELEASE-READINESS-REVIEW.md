@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Policy update received 2026-10-27: official candidates remain below 1.0 and must meet the same technical, security, compatibility, documentation, artifact, adversarial and adversarial LLM review gates as a production release. Independent human review is recommended but is not a hard blocker for Runtime Guard. Disclose explicitly when it has not occurred; model review is not human review. Earlier immutable review reports retain their historical policy statements.
+Policy update received 2026-10-27: official candidates remain below 1.0 and must meet the same technical, security, compatibility, documentation, artifact and adversarial LLM review gates as a production release. Independent human review is recommended but is not a hard blocker for Runtime Guard. Disclose explicitly when it has not occurred; model review is not human review. Earlier immutable review reports retain their historical policy statements.
 
 Before publication, record the adversarial LLM review and disposition of every applicable release gate. The owner has stated they cannot perform technical human review; do not require them to substitute for a security reviewer. Do not publish stable v1 or a latest designation. A pre-1.0 version alone does not establish readiness or authorize publication.
 

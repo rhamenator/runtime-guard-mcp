@@ -4,7 +4,7 @@
 
 An MCP server for **advisory** runtime safety checks in coding agents. It inspects proposed file paths and shell commands, tracks caller budgets, detects repeated actions, and masks common credentials in output. It never executes shell commands or opens the target files. It is separate from [request-guard-mcp](https://github.com/rhamenator/request-guard-mcp), which handles request classification and is being extended for HTTP egress.
 
-Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human review has not occurred; it is disclosed rather than required under the current [pre-1.0 release policy](docs/RELEASE-READINESS-REVIEW.md). Owner self-review and all applicable production-quality gates remain required.
+Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human review has not occurred; it is disclosed rather than required under the current [pre-1.0 release policy](docs/RELEASE-READINESS-REVIEW.md). Adversarial LLM technical review and all applicable production-quality gates remain required.
 
 ## Run locally
 
@@ -187,7 +187,7 @@ Read-oriented command names can have side effects. Explicit Git `--output`, find
 
 Shell background/control characters, input redirection and parentheses also require confirmation, including when quoted as literal operands. This deliberately conservative check covers process-substitution text without evaluating shell syntax. A plain read-oriented command result still cannot account for aliases, configuration or external helpers.
 
-With `inspect_wheel.py --ref COMMIT`, package Name, Version and Requires-Python must also match that commit's `pyproject.toml`. Duplicate/missing identity headers and directory/metadata version conflicts reject. This supplements runtime/license byte binding; it does not validate every generated backend metadata field or replace provenance and human review.
+With `inspect_wheel.py --ref COMMIT`, package Name, Version and Requires-Python must also match that commit's `pyproject.toml`. Duplicate/missing identity headers and directory/metadata version conflicts reject. This supplements runtime/license byte binding; it does not validate every generated backend metadata field or replace provenance and adversarial LLM technical review.
 
 Legacy stdio clients must complete `initialize` followed by `notifications/initialized` before `tools/list` or `tools/call`; otherwise error `1002` requests the handshake. Malformed/early initialization notifications do not unlock tools; a repeated successful legacy initialization returns `-32600` and requires a fresh connection. Ping is available before initialization. Modern per-request metadata remains independent; the custom HTTP endpoint retains its existing JSON-RPC behavior. These checks add no execution permissions or rollback.
 
@@ -198,3 +198,5 @@ Initialization notifications remain silent even when admission is full. A satura
 Experimental GitHub-hosted [macOS wheel qualification](docs/MACOS_PACKAGE_QUALIFICATION.md) is available for native package lifecycle testing. It does not yet add macOS to the supported platform scope or supply an Apple-signed PKG installer.
 
 Masking merges overlapping recognized signatures before replacement, so an earlier match cannot leave the extending part of another recognized match visible. Unquoted assignment values outside the documented 8–256-unit bound no longer produce a misleading partial assignment match; they remain unsupported unless another signature matches. Credential-looking command operand components are conservatively blocked after lexical tokenization, including quoted operands; this may flag literal search patterns too. No shell expansion or execution is performed.
+
+Streaming signature matching may conservatively overmask text at retained-buffer boundaries because discarded left context is unavailable. This is a known false-positive limitation, not a confidentiality guarantee or an under-redaction finding. GitHub Actions builds retain review artifacts for a requested 90 days, subject to policy, alongside local builds; this is the authorized release-artifact backup path, not whole-machine backup.
