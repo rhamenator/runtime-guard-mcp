@@ -1,6 +1,7 @@
 """Protect disposable package tests from inherited host hooks and install targets."""
 import importlib.util
 import os
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -23,8 +24,8 @@ class PackageEnvironmentTests(unittest.TestCase):
             home = Path(temporary)
             result = MODULE.isolated_environment(home)
             self.assertEqual(result['HOME'], str(home))
-            self.assertNotIn('/host', result['PATH'])
-            self.assertTrue(result['PATH'].endswith('/usr/bin:/bin:/usr/sbin:/sbin'))
+            self.assertEqual(result['PATH'].split(os.pathsep),
+                             [str(Path(sys.executable).parent), '/usr/bin', '/bin', '/usr/sbin', '/sbin'])
             self.assertEqual(result['LD_LIBRARY_PATH'], inherited['LD_LIBRARY_PATH'])
             self.assertEqual(result['PIP_CONFIG_FILE'], os.devnull)
             self.assertEqual(result['PIP_NO_INDEX'], '1')
