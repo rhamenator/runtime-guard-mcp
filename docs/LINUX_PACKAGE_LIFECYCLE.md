@@ -6,7 +6,7 @@ Runtime Guard's initial supported scope is Linux with Python 3.11–3.14 and a r
 
 The [machine-readable result](evidence/linux-package-lifecycle-2026-10-27.json) records a disposable Debian/Python 3.13 container run against the signed review wheel from workflow [40595971974](https://github.com/rhamenator/runtime-guard-mcp/actions/runs/40595971974), source `2fe923267dd6648b999b94e3f58a1ed600625943`. This remains review material, not an approved official candidate. Its wheel SHA-256 is `625472727e2bc950d3d7a6400f28e8aba10b3cc433ff330b4c0ffdab9ce808b5`.
 
-The container had no network, a read-only root and input mounts, disposable executable tmpfs, two CPUs, 768 MiB memory and a 96-process limit. It was automatically removed after execution. No host environment, system package, user configuration or existing audit database was changed. An initial noexec tmpfs prevented virtual-environment Python from launching; rerunning with executable disposable tmpfs corrected the test setup, without weakening the application's permissions.
+The final container ran as unprivileged UID/GID 65534:65534 and had no network, a read-only root and input mounts, disposable executable tmpfs, two CPUs, 768 MiB memory and a 96-process limit. It was automatically removed after execution. No host environment, system package, user configuration or existing audit database was changed. An initial noexec tmpfs prevented virtual-environment Python from launching; rerunning with executable disposable tmpfs corrected the test setup, without weakening the application's permissions.
 
 The probe checks:
 

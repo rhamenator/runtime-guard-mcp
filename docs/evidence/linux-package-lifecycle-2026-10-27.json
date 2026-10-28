@@ -10,7 +10,7 @@
   "distinct_version_upgrade_launch": true,
   "uninstall_prefix_file_residue": 0,
   "owner_data_preserved": true,
-  "seconds": 13.066,
+  "seconds": 13.58,
   "limits": "Linux pip wheel in isolated venv; synthetic lower-version fixture, not a historical release or data migration; no desktop service or native OS installer claim; empty directories not asserted absent",
   "source_commit": "2fe923267dd6648b999b94e3f58a1ed600625943",
   "artifact_workflow_run": 40595971974,
@@ -22,5 +22,7 @@
   "memory_limit_mib": 768,
   "pids_limit": 96,
   "fixture": "Reviewed source with only project.version changed to 0.0.0; not a historical release",
-  "probe_sha256": "5fd70eb86f4ed895a6e85695ea3a6a0b54163a8b83ce72946e762f4c1dc25f50"
+  "probe_sha256": "5fd70eb86f4ed895a6e85695ea3a6a0b54163a8b83ce72946e762f4c1dc25f50",
+  "container_uid": 65534,
+  "container_gid": 65534
 }
