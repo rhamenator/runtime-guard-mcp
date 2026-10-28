@@ -23,6 +23,8 @@ Provide the reviewer with:
 
 ## Review record
 
+Use the [prepared owner-review worksheet](CANDIDATE_OWNER_REVIEW.md) to record concrete dispositions against the evidence. Its blank fields are intentionally not approvals.
+
 Archive the following in a release issue, release notes, or another durable repository record:
 
 - reviewer name and relevant qualifications, identifying owner self-review, model review and independent human review separately;
