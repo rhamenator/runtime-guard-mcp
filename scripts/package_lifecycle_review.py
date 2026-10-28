@@ -1,4 +1,4 @@
-"""Disposable Linux wheel lifecycle; no root or network needed after staging wheels.
+"""Disposable Linux/macOS wheel lifecycle; no root or network needed after staging wheels.
 
 Run with a lower-version fixture wheel and the candidate wheel. The fixture is
 not a historical release; its sole purpose is exercising pip's upgrade path.
@@ -28,8 +28,8 @@ def identity(wheel):
 
 
 def main():
-    if len(sys.argv) != 3 or sys.platform != 'linux':
-        raise SystemExit('usage on Linux: package_lifecycle_review.py LOWER_FIXTURE.whl CANDIDATE.whl')
+    if len(sys.argv) != 3 or sys.platform not in {'linux', 'darwin'}:
+        raise SystemExit('usage on Linux/macOS: package_lifecycle_review.py LOWER_FIXTURE.whl CANDIDATE.whl')
     started = time.monotonic()
     old, candidate = [Path(p).resolve(strict=True) for p in sys.argv[1:]]
     old_version, version = identity(old), identity(candidate)
@@ -101,7 +101,7 @@ def main():
           'clean_install_launch_uninstall': True, 'distinct_version_upgrade_launch': True,
           'uninstall_prefix_file_residue': 0, 'owner_data_preserved': True,
           'seconds': round(time.monotonic() - started, 3),
-          'limits': 'Linux pip wheel in isolated venv; synthetic lower-version fixture, not a historical release or data migration; no desktop service or native OS installer claim; empty directories not asserted absent'}))
+          'limits': 'Python pip wheel in isolated venv; synthetic lower-version fixture, not a historical release or data migration; no desktop service or native OS installer claim; empty directories not asserted absent'}))
 
 
 if __name__ == '__main__':
