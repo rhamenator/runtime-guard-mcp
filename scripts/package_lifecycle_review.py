@@ -1,4 +1,4 @@
-"""Disposable Linux wheel lifecycle; no root or network needed after staging wheels.
+"""Disposable Linux/macOS wheel lifecycle; no root or network needed after staging wheels.
 
 Run with a lower-version fixture wheel and the candidate wheel. The fixture is
 not a historical release; its sole purpose is exercising pip's upgrade path.
@@ -13,7 +13,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import venv
 import zipfile
 from email.parser import BytesParser
 
@@ -27,9 +26,23 @@ def identity(wheel):
         return meta['Version']
 
 
+def isolated_environment(home):
+    # Keep interpreter loader/locale/platform essentials, not shell hooks,
+    # package-manager targets, user startup files or inherited tool state.
+    allowed = {'PATH', 'SYSTEMROOT', 'WINDIR', 'TMPDIR', 'TMP', 'TEMP',
+               'LANG', 'LC_ALL', 'TZ', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'}
+    env = {k: v for k, v in os.environ.items() if k in allowed or k.startswith('LC_')}
+    env['PATH'] = os.pathsep.join((str(Path(sys.executable).parent), '/usr/bin', '/bin', '/usr/sbin', '/sbin'))
+    env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
+               XDG_DATA_HOME=str(home / '.local/share'), PIP_NO_INDEX='1',
+               PIP_DISABLE_PIP_VERSION_CHECK='1', PIP_NO_CACHE_DIR='1',
+               PIP_CONFIG_FILE=os.devnull)
+    return env
+
+
 def main():
-    if len(sys.argv) != 3 or sys.platform != 'linux':
-        raise SystemExit('usage on Linux: package_lifecycle_review.py LOWER_FIXTURE.whl CANDIDATE.whl')
+    if len(sys.argv) != 3 or sys.platform not in {'linux', 'darwin'}:
+        raise SystemExit('usage on Linux/macOS: package_lifecycle_review.py LOWER_FIXTURE.whl CANDIDATE.whl')
     started = time.monotonic()
     old, candidate = [Path(p).resolve(strict=True) for p in sys.argv[1:]]
     old_version, version = identity(old), identity(candidate)
@@ -42,12 +55,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='runtime-guard-package-') as temporary:
         root = Path(temporary)
         home = root / 'home'; home.mkdir()
-        env = {k: v for k, v in os.environ.items() if not k.startswith(('PYTHON', 'RUNTIME_GUARD_'))}
-        env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / '.config'),
-                   XDG_DATA_HOME=str(home / '.local/share'), PIP_NO_INDEX='1',
-                   PIP_DISABLE_PIP_VERSION_CHECK='1', PIP_NO_CACHE_DIR='1')
+        env = isolated_environment(home)
         prefix = root / 'venv'
-        venv.EnvBuilder(with_pip=True).create(prefix)
+        subprocess.run([sys.executable, '-m', 'venv', str(prefix)], env=env,
+                       cwd=root, check=True, capture_output=True, timeout=40)
         python = prefix / 'bin/python'; entry = prefix / 'bin/runtime-guard-mcp'
 
         def run(*args):
@@ -101,7 +112,7 @@ def main():
           'clean_install_launch_uninstall': True, 'distinct_version_upgrade_launch': True,
           'uninstall_prefix_file_residue': 0, 'owner_data_preserved': True,
           'seconds': round(time.monotonic() - started, 3),
-          'limits': 'Linux pip wheel in isolated venv; synthetic lower-version fixture, not a historical release or data migration; no desktop service or native OS installer claim; empty directories not asserted absent'}))
+          'limits': 'Python pip wheel in isolated venv; synthetic lower-version fixture, not a historical release or data migration; no desktop service or native OS installer claim; empty directories not asserted absent'}))
 
 
 if __name__ == '__main__':

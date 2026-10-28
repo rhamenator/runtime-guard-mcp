@@ -83,6 +83,18 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
         return verdict("NEEDS_CONFIRMATION", "UNPARSEABLE_COMMAND", "Review shell syntax manually.")
     if not tokens:
         return verdict("BLOCKED", "EMPTY_COMMAND", "Supply a command.")
+    # Lexical credential components only: do not expand variables, execute the
+    # shell or open paths. Quoted operands are conservative matches too.
+    operands = []
+    for token in tokens[1:]:
+        normalized = token.strip("\"'").replace("\\", "/")
+        # grep/rg -f consumes the rest of a short-option cluster as a filename.
+        attached = re.match(r"^-[A-Za-z]*?f(.+)$", normalized) if tokens[0] in {"grep", "rg"} else None
+        operands.append(attached.group(1) if attached else normalized)
+    parts = {part.strip("\"'").lower() for operand in operands
+             for part in re.split(r"[/=:]", operand)}
+    if parts & (SENSITIVE_PARTS | SENSITIVE_FILES) or any(part.startswith('.env.') for part in parts):
+        return verdict("BLOCKED", "SENSITIVE_COMMAND_PATH", "Use project-safe operands instead of credential paths.")
     if tokens[0] in {"bash", "sh", "pwsh"} and any(x in tokens for x in {"-c", "-Command"}):
         return verdict("NEEDS_CONFIRMATION", "NESTED_SHELL", "Review the nested script separately.")
     if any(x in command for x in ("|", ">", "<", ";", "&", "(", ")", "\n", "\r")):
@@ -184,7 +196,7 @@ SECRET_PATTERNS = [
     ("GITHUB_TOKEN", re.compile(r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,255}")),
     ("OPENAI_KEY", re.compile(r"sk-[A-Za-z0-9_-]{20,255}")),
     ("PRIVATE_KEY", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\s\S]{0,8192}?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
-    ("PASSWORD_ASSIGNMENT", re.compile(r"""\b(?:password|api[_-]?key|secret|token)["']?\s*[:=]\s*(?:"(?:\\.|[^"\\\r\n]){8,256}(?:"|\\?(?=\r|\n|$))|'(?:\\.|[^'\\\r\n]){8,256}(?:'|\\?(?=\r|\n|$))|[^\s'"]{8,256})""", re.I)),
+    ("PASSWORD_ASSIGNMENT", re.compile(r"""\b(?:password|api[_-]?key|secret|token)["']?\s*[:=]\s*(?:"(?:\\.|[^"\\\r\n]){8,256}(?:"|\\?(?=\r|\n|$))|'(?:\\.|[^'\\\r\n]){8,256}(?:'|\\?(?=\r|\n|$))|[^\s'"]{8,256}(?=[\s'"]|$))""", re.I)),
     ("EMAIL_ADDRESS", re.compile(r"(?<![\w.+-])[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,24}\b")),
     ("US_SSN", re.compile(r"\b(?!000|666|9\d\d)\d{3}[- ](?!00)\d{2}[- ](?!0000)\d{4}\b")),
 ]
@@ -201,15 +213,29 @@ class SecretMasker:
         self.max_streams = max_streams
         self.max_secrets_per_caller = max_secrets_per_caller
 
-    def _mask(self, caller: str, text: str) -> tuple[str, list[str]] | None:
-        matches = []
-        for kind, pattern in SECRET_PATTERNS:
-            matches.extend((m.start(), m.end(), kind, m.group()) for m in pattern.finditer(text))
-        matches.sort(key=lambda m: (m[0], -m[1]))
+    @staticmethod
+    def _matches(text: str) -> list[tuple[int, int, str, str, list[str]]]:
+        spans = sorted((m.start(), m.end(), kind) for kind, pattern in SECRET_PATTERNS
+                       for m in pattern.finditer(text))
+        merged = []
+        for start, end, kind in spans:
+            if merged and start < merged[-1][1]:
+                prior = merged[-1]
+                prior[1] = max(prior[1], end)
+                if kind not in prior[3]:
+                    prior[3].append(kind)
+            else:
+                merged.append([start, end, kind, [kind]])
+        return [(start, end, kind, text[start:end], kinds)
+                for start, end, kind, kinds in merged]
+
+    def _mask(self, caller: str, text: str, matches=None) -> tuple[str, list[str]] | None:
+        if matches is None:
+            matches = self._matches(text)
         mapping = self._secrets[caller]
         new_digests = set()
         cursor = 0
-        for start, end, kind, value in matches:
+        for start, end, kind, value, detected in matches:
             if start < cursor:
                 continue
             digest = hashlib.sha256((kind + "\0" + value).encode()).hexdigest()
@@ -221,7 +247,7 @@ class SecretMasker:
         output = []
         kinds = []
         cursor = 0
-        for start, end, kind, value in matches:
+        for start, end, kind, value, detected in matches:
             if start < cursor:
                 continue
             output.append(text[cursor:start])
@@ -231,7 +257,7 @@ class SecretMasker:
                 indices[kind] = indices.get(kind, 0) + 1
                 mapping[digest] = f"[REDACTED_{kind}_{indices[kind]}]"
             output.append(mapping[digest])
-            kinds.append(kind)
+            kinds.extend(detected)
             cursor = end
         output.append(text[cursor:])
         return "".join(output), sorted(set(kinds))
@@ -266,13 +292,13 @@ class SecretMasker:
                 return verdict("SAFE", "MASKED", "No remediation needed.", text=masked, secret_types=kinds)
             # Hold a conservative tail so a token split across chunks is not emitted early.
             cutoff = max(0, len(raw) - 16384)
-            for _, pattern in SECRET_PATTERNS:
-                for match in pattern.finditer(raw):
-                    if match.start() < cutoff < match.end():
-                        cutoff = match.start()
+            matches = self._matches(raw)
+            for start, end, _, _, _ in matches:
+                if start < cutoff < end:
+                    cutoff = start
             prefix, tail = raw[:cutoff], raw[cutoff:]
             try:
-                result = self._mask(caller, prefix)
+                result = self._mask(caller, prefix, [match for match in matches if match[1] <= cutoff])
             except UnicodeEncodeError:
                 self._buffers[key] = None
                 return verdict("BLOCKED", "INVALID_UNICODE", "Remove invalid Unicode from the stream.")

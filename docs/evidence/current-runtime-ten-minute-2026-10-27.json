@@ -1,0 +1,70 @@
+{
+  "status": "PASS",
+  "results": {
+    "workers": 4,
+    "cycles_per_worker": 800,
+    "target_seconds": 600,
+    "cpu_limit_seconds": 120,
+    "elapsed_seconds": 600.019,
+    "requests": 9600,
+    "counts": {
+      "budget_guard/WITHIN_BUDGET": 3200,
+      "secret_masker/MASKED": 3200,
+      "dry_run_command/READ_ONLY_COMMAND": 3200
+    },
+    "samples": 11765,
+    "baseline": {
+      "rss_bytes": 28934144,
+      "fds": 7,
+      "threads": 1,
+      "disk_bytes": 45136,
+      "cpu_seconds": 0.08
+    },
+    "peak": {
+      "rss_bytes": 31813632,
+      "fds": 12,
+      "threads": 11,
+      "disk_bytes": 1966472,
+      "cpu_seconds": 24.49
+    },
+    "final": {
+      "rss_bytes": 31752192,
+      "fds": 7,
+      "threads": 1,
+      "disk_bytes": 1925200,
+      "cpu_seconds": 24.49
+    },
+    "audit_records": 9600,
+    "successful_write_profile": true,
+    "post_load_ping": true,
+    "restart_integrity_ping": true
+  },
+  "scope": "finite paced four-worker loopback HTTP workload; not long-duration soak, latency guarantee, multi-user isolation or exact physical quota",
+  "source_commit": "2fe923267dd6648b999b94e3f58a1ed600625943",
+  "artifact_workflow_run": 40595971974,
+  "wheel_sha256": "625472727e2bc950d3d7a6400f28e8aba10b3cc433ff330b4c0ffdab9ce808b5",
+  "probe_source_commit": "fc8b7ed3af036844e4818ef6139853c039fdd97d",
+  "probe_sha256": "cc039012dd1a11fe565c4b5dc7916bf8990913de05b269799fefe9c2f0501aec",
+  "runtime_module_sha256": {
+    "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+    "src/runtime_guard_mcp/audit.py": "756a3c44a4da62af1681afa55ae6769d74a2c683f8fa049060bd6839a217e7ce",
+    "src/runtime_guard_mcp/policy.py": "80ed17c33eac5a771ea0e393dc3806d2b0d393fc4bf4349a61a9657f03ee1ec9",
+    "src/runtime_guard_mcp/server.py": "a9cc1d50b445f4e4ecd3815b6895c687be1d4eb7fde97f123d5a536a6f4042bd",
+    "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+  },
+  "host_platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+  "python_version": "3.14.4",
+  "command_wall_seconds": 600.94,
+  "invocation_allowance_per_minute": 1000000,
+  "audit_max_records": 9601,
+  "audit_max_db_bytes": 8388608,
+  "audit_wal_checkpoint_bytes": 65536,
+  "token_budget": 3200,
+  "execution": "Fresh no-dependency venv; owned ephemeral loopback; no VM/container/model account; trusted archive bytes rechecked before install",
+  "limitations": [
+    "Finite 600-second campaign, not indefinite SLA or owner workload acceptance",
+    "Invocation allowance raised deliberately above production default",
+    "Legacy custom HTTP only; existing separate stdio and native-client evidence retained",
+    "No new signature verification, publication, physical-power-loss or backup durability claim"
+  ]
+}
