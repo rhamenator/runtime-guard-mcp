@@ -27,6 +27,6 @@ See the [prioritized release work queue](RELEASE_GATES.md) for current blockers 
 ## Product finish
 
 - No third-party runtime dependencies unless a documented security or reliability gap justifies one. CI tests all supported Python versions, builds installable artifacts, runs CodeQL and dependency review, and keeps actions pinned. Releases have checksums, provenance, changelog, GPL-3.0-or-later notice, support and vulnerability reporting, and machine-readable registry metadata when submitted.
-- An official candidate remains below 1.0 and passes all applicable production-quality gates plus owner self-review under [release policy](RELEASE-READINESS-REVIEW.md). Independent human review is disclosed when absent and is not a hard blocker. Every claimed platform has a native installer or recognized package artifact with disposable-system install, launch, upgrade, uninstall and residue evidence. Do not publish stable v1/latest.
+- An official candidate remains below 1.0 and passes all applicable production-quality gates plus adversarial LLM review under [release policy](RELEASE-READINESS-REVIEW.md). Independent human review is disclosed when absent and is not a hard blocker. Every claimed platform has a native installer or recognized package artifact with disposable-system install, launch, upgrade, uninstall and residue evidence. Do not publish stable v1/latest.
 
 Outbound Guard remains a separate HTTP egress server. Runtime Guard installs and operates without it or Request Guard.
