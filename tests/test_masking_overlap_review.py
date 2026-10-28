@@ -53,3 +53,11 @@ class MaskingOverlapReviewTests(unittest.TestCase):
             self.assertEqual(first['text'] + last['text'], text)
             self.assertEqual(first['secret_types'], [])
             self.assertEqual(last['secret_types'], [])
+
+    def test_clustered_short_file_options_and_powershell_quotes(self):
+        for shell in ('bash', 'sh', 'pwsh'):
+            for flag in ('-f', '-Hf', '-nf', '-vf', '-if'):
+                for token in (flag + '.env', '"' + flag + '.env"'):
+                    with self.subTest(shell=shell, token=token):
+                        self.assertEqual(dry_run_command('grep ' + token + ' target', shell)['status'], 'BLOCKED')
+                self.assertEqual(dry_run_command('grep ' + flag + 'patterns.txt target', shell)['rule'], 'READ_ONLY_COMMAND')
