@@ -4,7 +4,7 @@
 
 An MCP server for **advisory** runtime safety checks in coding agents. It inspects proposed file paths and shell commands, tracks caller budgets, detects repeated actions, and masks common credentials in output. It never executes shell commands or opens the target files. It is separate from [request-guard-mcp](https://github.com/rhamenator/request-guard-mcp), which handles request classification and is being extended for HTTP egress.
 
-Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human release approval remains pending.
+Initial release scope is [single-owner, single-process, Linux-tested and stdio-first](docs/INITIAL_RELEASE_SCOPE.md). Codex/Cursor advisory calls and recovery are tested, but MCP cancellation delivery is unsupported in their documented interrupt paths; consuming calls may still complete. Independent human review has not occurred; it is disclosed rather than required under the current [pre-1.0 release policy](docs/RELEASE-READINESS-REVIEW.md). Owner self-review and all applicable production-quality gates remain required.
 
 ## Run locally
 
@@ -14,6 +14,18 @@ Python 3.11 or newer; CI exercises Python 3.11 through 3.14. The runtime uses on
 python3 -m pip install --no-build-isolation -e .
 RUNTIME_GUARD_WORKSPACE_ROOT="$PWD" runtime-guard-mcp
 ```
+
+For a downloaded, checksum/provenance-verified review wheel, use a dedicated environment:
+
+```bash
+python3 -m venv .venv-runtime-guard
+.venv-runtime-guard/bin/python -m pip install --no-deps /path/to/reviewed.whl
+RUNTIME_GUARD_WORKSPACE_ROOT="$PWD" .venv-runtime-guard/bin/runtime-guard-mcp
+# After stopping the MCP client/server:
+.venv-runtime-guard/bin/python -m pip uninstall runtime-guard-mcp
+```
+
+Use the actual wheel filename. Upgrade with `pip install --no-deps --upgrade /path/to/new-reviewed.whl` through that environment's Python, after stopping the server and preserving user configuration/audit data. Package uninstall removes installed code and the entry point, not owner data outside the environment. See [disposable Linux lifecycle evidence and limits](docs/LINUX_PACKAGE_LIFECYCLE.md). Review wheels are pre-1.0 candidates, not stable releases.
 
 The default transport is MCP over stdio. Keep stdout reserved for JSON-RPC. A client can configure a local stdio server with command `runtime-guard-mcp` and environment variable `RUNTIME_GUARD_WORKSPACE_ROOT` set to the intended workspace.
 

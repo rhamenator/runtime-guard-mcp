@@ -7,6 +7,8 @@ description: Use a connected runtime-guard-mcp server to assess proposed coding-
 
 Install and connect [Runtime Guard MCP](https://github.com/rhamenator/runtime-guard-mcp) by stdio, with `RUNTIME_GUARD_WORKSPACE_ROOT` set to the intended workspace. Confirm `tools/list` advertises the needed tool before using it. This skill does not install the server or grant execution permission.
 
+For a reviewed Linux wheel, use a dedicated Python virtual environment and its Python to install with `pip install --no-deps`, or upgrade with `pip install --no-deps --upgrade`. Verify the wheel checksum/provenance first, use its actual filename, stop the server before upgrades/uninstall and preserve owner configuration/audit data separately. Uninstall with that environment's `python -m pip uninstall runtime-guard-mcp`; owner data outside the environment is retained. The Linux wheel lifecycle is tested in a disposable environment; Windows/macOS installers are not certified. This remains a draft skill and grants no installation or execution permission.
+
 ## Choose the tool
 
 - Before a file read, write, or delete with an uncertain boundary, call `audit_path_access` using the exact path and operation. Recheck after the path or filesystem state changes; a prior result does not authorize a later action.

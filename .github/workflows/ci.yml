@@ -62,6 +62,19 @@ jobs:
         run: python -m pip wheel --no-deps --no-build-isolation "$RUNNER_TEMP/source-checkout"/dist/*.tar.gz -w dist
       - name: Inspect wheel contents and integrity
         run: python scripts/inspect_wheel.py dist/*.whl --ref "$GITHUB_SHA"
+      - name: Review disposable Linux package lifecycle
+        run: |
+          cp -a "$RUNNER_TEMP/source-checkout" "$RUNNER_TEMP/lifecycle-fixture"
+          python - <<'PYTHON'
+          import os, pathlib, re
+          p = pathlib.Path(os.environ["RUNNER_TEMP"]) / "lifecycle-fixture/pyproject.toml"
+          source = p.read_text()
+          changed, count = re.subn(r'^version = ".*"$', 'version = "0.0.0"', source, count=1, flags=re.M)
+          assert count == 1
+          p.write_text(changed)
+          PYTHON
+          python -m pip wheel --no-deps --no-build-isolation "$RUNNER_TEMP/lifecycle-fixture" -w "$RUNNER_TEMP/lifecycle-wheels"
+          timeout 120s python scripts/package_lifecycle_review.py "$RUNNER_TEMP"/lifecycle-wheels/*.whl dist/*.whl
       - name: Probe freshly installed wheel
         run: |
           python -m venv "$RUNNER_TEMP/runtime-guard-client"
