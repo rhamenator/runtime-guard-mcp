@@ -13,7 +13,7 @@ Independent human review has not occurred. It is not mandatory for Runtime Guard
 
 ## Dispositions to record
 
-These are proposed dispositions for final owner self-review, not completed approvals. The technical maintainer may prepare evidence and recommendations; it must not write the owner's signature or invent the owner's workload/backup requirements.
+These are proposed dispositions for final owner self-review, not completed approvals. The technical maintainer prepares evidence and recommendations; it must not write the owner's signature. These rows are one final owner review, not seven standalone gates. Apply existing owner backup arrangements; no new backup design or workload SLA is required for the accepted advisory scope.
 
 | Decision | Prepared recommendation | Owner disposition still needed |
 | --- | --- | --- |
@@ -21,8 +21,8 @@ These are proposed dispositions for final owner self-review, not completed appro
 | R02: volatile state | Retain single-instance budgets, caller labels and masking handles; restart loses process-local state. No distributed quota or identity guarantee. | Confirm these residual limits meet the intended workflow, or require persistent/portable state work. |
 | R03: cancellation | Preserve the already accepted client scope: Claude's tested control path delivers matching cancellation; tested Codex/Cursor paths omit it. No forced policy preemption, rollback or retraction of already-writing replies. | Record the final risk disposition; do not reinterpret recovery as cancellation delivery or automatically replay consuming calls. |
 | R04: platforms and deployment | Retain Linux wheel/stdio scope with tested Python versions. Native Windows/macOS/UI, public TLS and multi-tenant deployment are excluded. | Check final candidate claims stay inside the accepted scope. New platform claims require native installer or recognized package and disposable native lifecycle evidence. |
-| R05: workload and storage | Use defaults as admission bounds, not performance promises: 600 tool invocations/minute, 100,000 audit rows, 64 MiB database pages and 4 MiB WAL admission threshold. Fail closed at capacity; one writer. Finite stress campaigns are evidence, not an indefinite SLA. | Specify intended sustained/burst workload and duration, acceptable recovery behavior, archive/retention period, backup owner/storage and a retrieval schedule. Decide whether further soak/disk/power-loss evidence is necessary. |
-| R06: distribution | Keep the companion skill draft and use exact checksums/provenance. Preserve the complete bundle, not only source archives. Final claim/changelog/package review must bind the designated candidate. | Confirm archive custody and backup requirements; approve the exact final distribution and claims after applicable evidence passes. |
+| R05: workload and storage | Use defaults as admission bounds, not performance promises: 600 tool invocations/minute, 100,000 audit rows, 64 MiB database pages and 4 MiB WAL admission threshold. Fail closed at capacity; one writer. Finite stress campaigns are evidence, not an indefinite SLA. | Review the measured campaign and disclosed default bounds within the accepted scope. Require further tests for a concrete claim or defect, not an unspecified production SLA, new backup plan or physical power-loss guarantee. |
+| R06: distribution | Keep the companion skill draft and use exact checksums/provenance. Preserve the complete bundle, not only source archives. Final claim/changelog/package review must bind the designated candidate. | Verify the complete candidate bundle remains available and retrieved bytes match; use existing backup arrangements. Approve the exact final distribution and claims after applicable evidence passes. |
 | R07: recommendation | Technical evidence supports reviewing the limited pre-1.0 scope; no official candidate or publication approval is asserted here. | Record owner name, date, exact source/artifact, findings and severity, each disposition, and recommendation: approved, approved with limitations, or not approved. Disclose absent independent human review. |
 
 Defaults above describe configured admission ceilings, not exact combined-disk quotas or sustained throughput. No external audit anchor, automatic rotation, rollback, power-loss durability or historical migration guarantee is implied. Do not use an arbitrary successful stress rate as the production workload target: the successful-write probe raises its invocation allowance deliberately.
@@ -33,8 +33,8 @@ Leave these fields unfilled until the owner has actually reviewed the evidence:
 
 - Owner/reviewer and date:
 - Exact designated candidate version (below 1.0), source, artifact run/ref and digests:
-- Workload/duration and recovery expectations:
-- Audit/archive retention, backup owner/storage and retrieval plan (private paths stay private):
+- Accepted scope, measured workload/recovery limits and any concrete additional requirements:
+- Artifact availability/retrieval evidence and applicable existing backup arrangements (do not expose private paths or imply off-device durability):
 - R01–R07 findings, severity and resolution/explicit risk acceptance:
 - Remaining excluded claims and review limitations:
 - Recommendation:

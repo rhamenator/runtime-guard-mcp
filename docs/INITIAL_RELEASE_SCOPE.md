@@ -9,7 +9,7 @@ Owner decision: 2026-10-27. This defines intended scope, not production approval
 - Codex CLI 0.151.0 app-server and Cursor 2026.10.19-6bbf2c4 ACP have tested advisory calls and recovery, but omit MCP cancellation in their tested interrupt paths. Cancellation delivery is unsupported for those paths. An interrupted call may complete, reply and change budget/masker/audit state. Never automatically replay consuming calls; restart is not rollback. Claude Code 2.1.301 delivered matching cancellation in its tested modern control path. None is a desktop Stop/Escape or every-version guarantee.
 - Cancellation does not forcibly preempt Python policy work, retract an already-writing frame or undo committed state. See CLIENT_CANCELLATION.md for recovery.
 
-The owner accepted this limited compatibility scope and requested clear cancellation documentation. This is not acceptance of undiscovered defects, every R01–R07 residual risk or a particular production workload. Workload/retention sizing, final candidate evidence and owner self-review disposition remain required under RELEASE-READINESS-REVIEW.md.
+The owner accepted this limited compatibility scope and requested clear cancellation documentation. This is not acceptance of undiscovered defects, every R01–R07 residual risk or a particular production workload. Final candidate evidence and the single owner self-review disposition remain required; measured workload limits are disclosed and existing backup arrangements apply under RELEASE-READINESS-REVIEW.md.
 
 ## Separate model review
 
