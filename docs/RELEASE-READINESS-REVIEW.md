@@ -2,15 +2,11 @@
 
 ## Purpose
 
-Independent human review is a release-readiness activity for this solo-maintained repository, not a required approval on every development pull request.
+Policy update received 2026-10-27: official candidates remain below 1.0 and must meet the same technical, security, compatibility, documentation, artifact, adversarial and owner self-review gates as a production release. Independent human review is recommended but is not a hard blocker for Runtime Guard. Disclose explicitly when it has not occurred; model review is not human review. Earlier immutable review reports retain their historical policy statements.
 
-Complete this review before either:
+Before publication, record the owner's self-review and disposition of every applicable release gate. Do not publish stable v1 or a latest designation. A pre-1.0 version alone does not establish readiness or authorize publication.
 
-- the first stable release;
-- declaring the project complete for its intended scope; or
-- representing the software as independently reviewed for downstream or production use.
-
-Until then, development records may cite self-review and automated verification but must state that independent human review is pending.
+Every claimed supported platform needs a native installer or recognized package artifact; portable archives alone are insufficient. The initial scope claims Linux only, with Python wheel packaging. Qualify clean install, launch, upgrade, uninstall and residue in a disposable Linux environment before an official candidate. Windows/macOS remain outside the claimed scope; adding either requires corresponding installer and native disposable-system evidence. Clearly label unsigned installer candidates, supply checksums and provenance where available. Commercial Windows/macOS signing and notarization may await funding; installer implementation may not.
 
 ## Review packet
 
@@ -29,7 +25,7 @@ Provide the reviewer with:
 
 Archive the following in a release issue, release notes, or another durable repository record:
 
-- reviewer name and relevant qualifications;
+- reviewer name and relevant qualifications, identifying owner self-review, model review and independent human review separately;
 - review date, scope, source revision, and release candidate;
 - findings and their severity;
 - resolution or explicit risk acceptance for each finding;

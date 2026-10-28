@@ -1,0 +1,243 @@
+{
+  "source_commit": "2fe923267dd6648b999b94e3f58a1ed600625943",
+  "source_ref": "refs/heads/codex/legacy-handshake-json-masking",
+  "artifact_workflow_run": 40595971974,
+  "workflow_created_utc": "2026-10-27T22:35:24Z",
+  "package_started_utc": "2026-10-27T22:37:56Z",
+  "package_completed_utc": "2026-10-27T22:39:15Z",
+  "package_seconds": 79,
+  "workflow_seconds_including_queue": 232,
+  "artifacts": {
+    "SHA256SUMS": "413887353cf37a3095df9d17ac0478ccad258b6fda567a0bc24902f15e27c5a4",
+    "installed-api-review.json": "dc8490ce02fbdf17be1623376064f483a64e2c5aec0681034804289dcd32b2a5",
+    "provenance.jsonl": "b8a05cbaa31da86136dbd7fd2675a78bdc018af2452a4813c94ddcd9ef5fa836",
+    "runtime_guard_mcp-0.1.0-py3-none-any.whl": "625472727e2bc950d3d7a6400f28e8aba10b3cc433ff330b4c0ffdab9ce808b5",
+    "runtime_guard_mcp-0.1.0.tar.gz": "d1e42385ab7eacdbd9217ecf3603377d4a146771560b5aa5aaaeed3407943e5c",
+    "source-inspection.json": "cffe576f7630b1e1de7f83e535713e46c7f5400cfec24deab1fa645ba58ecd4a",
+    "wheel-inspection.json": "6983e64e524cf7641b81f138db6f4f6b109aaaf9776da42591bc6921160dbd6a"
+  },
+  "full_tests": 123,
+  "full_test_wall_seconds": 11.87,
+  "wheel_build_seconds": 2.19,
+  "signatures": {
+    "positive": [
+      {
+        "subject": "runtime_guard_mcp-0.1.0-py3-none-any.whl",
+        "sha256": "625472727e2bc950d3d7a6400f28e8aba10b3cc433ff330b4c0ffdab9ce808b5",
+        "verified": true
+      },
+      {
+        "subject": "runtime_guard_mcp-0.1.0.tar.gz",
+        "sha256": "d1e42385ab7eacdbd9217ecf3603377d4a146771560b5aa5aaaeed3407943e5c",
+        "verified": true
+      },
+      {
+        "subject": "source-inspection.json",
+        "sha256": "cffe576f7630b1e1de7f83e535713e46c7f5400cfec24deab1fa645ba58ecd4a",
+        "verified": true
+      },
+      {
+        "subject": "wheel-inspection.json",
+        "sha256": "6983e64e524cf7641b81f138db6f4f6b109aaaf9776da42591bc6921160dbd6a",
+        "verified": true
+      },
+      {
+        "subject": "installed-api-review.json",
+        "sha256": "dc8490ce02fbdf17be1623376064f483a64e2c5aec0681034804289dcd32b2a5",
+        "verified": true
+      }
+    ],
+    "negative": [
+      {
+        "case": "--source-digest",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryDigest to be 0000000000000000000000000000000000000000, got 2fe923267dd6648b999b94e3f58a1ed600625943"
+      },
+      {
+        "case": "--source-ref",
+        "rejected": true,
+        "reason": "Error: expected SourceRepositoryRef to be refs/heads/untrusted, got refs/heads/codex/legacy-handshake-json-masking"
+      },
+      {
+        "case": "--signer-workflow",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      },
+      {
+        "case": "modified bytes",
+        "rejected": true,
+        "reason": "Error: verifying with issuer \"sigstore.dev\""
+      }
+    ],
+    "tls_interception": false,
+    "custom_trust_root": false
+  },
+  "lifecycle": {
+    "status": "PASS",
+    "rejected_legacy_tools": 8,
+    "audit_decisions": 3,
+    "budget_masker_invocation_state_preserved": true,
+    "modern_interleaving": true,
+    "malformed_early_modern_and_duplicate_notifications": true,
+    "scope": "stdio worker admission; legacy HTTP remains custom JSON-RPC; no policy rollback or transport delivery acknowledgement guarantee"
+  },
+  "api_checks": 83,
+  "wfuzz": {
+    "resources": {
+      "baseline": {
+        "status": "measured",
+        "rss_kib": 28056,
+        "peak_rss_kib": 28056,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "saturated": {
+        "status": "measured",
+        "rss_kib": 29880,
+        "peak_rss_kib": 29880,
+        "threads": 65,
+        "file_descriptors": 39
+      },
+      "final": {
+        "status": "measured",
+        "rss_kib": 28964,
+        "peak_rss_kib": 28964,
+        "threads": 1,
+        "file_descriptors": 7
+      },
+      "audit_bytes": 255256
+    },
+    "status": "PASS",
+    "scanner": "Wfuzz 3.1.0",
+    "target": "installed entry point on ephemeral loopback HTTP",
+    "scanner_requests": 21,
+    "path_statuses": {
+      "mcp": 200,
+      "metrics": 404,
+      "admin": 404,
+      ".env": 404
+    },
+    "auth_statuses": {
+      "invalid": 401,
+      "generated-valid-token": 200
+    },
+    "origin_statuses": {
+      "http://localhost": 200,
+      "ftp://localhost": 400,
+      "https://evil.example": 403,
+      "http://localhost:bad": 400
+    },
+    "host_statuses": {
+      "localhost": 200,
+      "localhost:bad": 400,
+      "evil.example": 403
+    },
+    "rpc_cases": [
+      "truncated JSON",
+      "duplicate method",
+      "non-finite number",
+      "invalid ID type",
+      "null consuming ID",
+      "fractional consuming ID",
+      "integral-float consuming ID",
+      "valid ping"
+    ],
+    "handler_saturation": "503 then 200",
+    "command_injection": "2 blocked, 1 needs confirmation, fixtures unchanged",
+    "budget_exhaustion": "10 safe, 2 blocked",
+    "secret_stream": "redacted",
+    "audit_tamper": "BLOCKED/AUDIT_UNAVAILABLE",
+    "recovery": 200
+  },
+  "native_clients": {
+    "claude": {
+      "status": "PASS_OBSERVATION",
+      "client": "claude",
+      "client_version": "2.1.301 (Claude Code)",
+      "control_path": "stream-json interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": true,
+      "cancelled_call_replied": false,
+      "cancel_notifications": 1,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2026-07-28"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "codex": {
+      "status": "PASS_OBSERVATION",
+      "client": "codex",
+      "client_version": "codex-cli 0.151.0",
+      "control_path": "app-server turn/interrupt",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.314,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    },
+    "cursor": {
+      "status": "PASS_OBSERVATION",
+      "client": "cursor",
+      "client_version": "2026.10.19-6bbf2c4",
+      "control_path": "ACP session/cancel",
+      "live_client": true,
+      "client_control_acknowledged": true,
+      "matching_wire_cancellation": false,
+      "cancelled_call_replied": true,
+      "cancel_notifications": 0,
+      "tool_calls": 2,
+      "fixture_processes": 1,
+      "protocol_versions": [
+        "2025-06-18"
+      ],
+      "policy_finished_after_seconds": 0.311,
+      "recovery_safe": true,
+      "audit_decisions": 2,
+      "scope": "real client control API; installed dispatcher/policy with test-only delayed first call; not desktop/terminal UI, preemption or saturated queue"
+    }
+  },
+  "model_reviews": {
+    "requested_model": "gpt-daybreak-blue-latest",
+    "requested_effort": "xhigh",
+    "accepted_core_head": "96cafe2c303326183e08da786617e69133836ccf",
+    "accepted_punctuation_head": "2fe923267dd6648b999b94e3f58a1ed600625943",
+    "verdict": "Prior fix findings and punctuation regression resolved; no new findings within focused scope; not human approval"
+  },
+  "integration_commit": "a0c084654ce5cd5d4f4fa3a9a2d06ced8c193b2d",
+  "integration_ci_runs": [
+    40597190992,
+    40597190828,
+    40597024396
+  ],
+  "model_review_reports": {
+    "docs/reviews/DAYBREAK_BLUE_FIXES_2026-10-27.md": "b60f6104041235a1e676e51431dc6d687bf9f83f79e5abf889c54885f0d40528",
+    "docs/reviews/DAYBREAK_BLUE_PUNCTUATION_2026-10-27.md": "920f913c58aa332ab352e03e83bea955a71e434eee63304f96461355aaa05df6"
+  },
+  "runtime_module_sha256": {
+    "src/runtime_guard_mcp/__init__.py": "eb750cd101e5546421dda639405ffb4ccdea9401f0fb184d07a966cad604f67d",
+    "src/runtime_guard_mcp/audit.py": "756a3c44a4da62af1681afa55ae6769d74a2c683f8fa049060bd6839a217e7ce",
+    "src/runtime_guard_mcp/policy.py": "80ed17c33eac5a771ea0e393dc3806d2b0d393fc4bf4349a61a9657f03ee1ec9",
+    "src/runtime_guard_mcp/server.py": "a9cc1d50b445f4e4ecd3815b6895c687be1d4eb7fde97f123d5a536a6f4042bd",
+    "src/runtime_guard_mcp/stdio.py": "81aea4300625a1dd552d6b768d278e55e50bd5ddc70bd58853fbd4fa4883c74f"
+  },
+  "limitations": [
+    "Human approval pending; model review is separate.",
+    "Historical ten-minute resource evidence predates these runtime fixes; not exact-runtime or exact-artifact evidence.",
+    "No production workload or archive custody acceptance is implied."
+  ]
+}
