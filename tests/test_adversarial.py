@@ -27,7 +27,7 @@ class AdversarialPolicyTests(unittest.TestCase):
         for command in commands:
             with self.subTest(command=command):
                 self.assertEqual(dry_run_command(command)["status"], "NEEDS_CONFIRMATION")
-        for command in ("git diff", "git log -1", "find . -print", "rg pattern ."):
+        for command in ("git diff --no-ext-diff --no-textconv", "git log --no-ext-diff --no-textconv -1", "find . -print", "rg pattern ."):
             with self.subTest(command=command):
                 self.assertEqual(dry_run_command(command)["status"], "SAFE")
 
