@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Require review for Git diff/log/show helper execution unless external diff and text conversion are explicitly disabled; preserve output/sensitive-path checks, including quoted output options.
+
 - Keep official candidates below 1.0; production-quality gates and owner self-review apply, with absence of independent human review disclosed.
 - Bound stdio output and input admission, version-aware modern/legacy protocol handling and cancellation recovery; Codex/Cursor tested control paths omit MCP cancellation.
 - Enforce completed legacy stdio initialization before tool dispatch and preserve quoted/unquoted credential masking across streaming boundaries.
