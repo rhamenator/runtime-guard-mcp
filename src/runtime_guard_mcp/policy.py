@@ -110,23 +110,20 @@ def dry_run_command(command: str, shell: str = "bash") -> dict[str, Any]:
     if option_names & side_effect_options.get(tokens[0], set()):
         return verdict("NEEDS_CONFIRMATION", "COMMAND_SIDE_EFFECT_OPTION", "Review file-output and subprocess options and their targets before execution.")
     if tokens[0] == "git" and len(tokens) > 1 and tokens[1] in {"diff", "log", "show"}:
-        # Git can run configured conversion/diff helpers even without an
-        # explicit enable option. Require both disables, before the pathspec
-        # separator, and never let a later enable override them unnoticed.
+        # Require the disables first: otherwise an option such as --src-prefix
+        # can consume one as its value. Do not attempt Git's full option parser.
         options = [token.strip("\"'") for token in tokens[2:]]
         options = options[:options.index("--")] if "--" in options else options
-        disabled = {"ext-diff": False, "textconv": False}
+        disabled = set(options[:2]) == {"--no-ext-diff", "--no-textconv"}
         for option in options:
-            if option in {"--no-ext-diff", "--no-textconv"}:
-                disabled[option[5:]] = True
-            elif option.startswith("--") and len(option) > 2:
+            if option.startswith("--") and len(option) > 2:
                 # Git accepts unambiguous long-option abbreviations. Treat
                 # potential enable prefixes conservatively, even if ambiguous.
-                for helper in disabled:
+                for helper in ("ext-diff", "textconv"):
                     if ("--" + helper).startswith(option):
-                        disabled[helper] = False
-        if not all(disabled.values()):
-            return verdict("NEEDS_CONFIRMATION", "GIT_EXTERNAL_HELPERS", "Review Git configuration and helpers, or explicitly disable both with --no-ext-diff --no-textconv before any -- path separator.")
+                        disabled = False
+        if not disabled:
+            return verdict("NEEDS_CONFIRMATION", "GIT_EXTERNAL_HELPERS", "Review Git configuration and helpers, or put --no-ext-diff --no-textconv immediately after the Git subcommand with no helper-enable options.")
     key = " ".join(tokens[:2]) if tokens[0] == "git" else tokens[0]
     if key in READ_ONLY:
         return verdict("SAFE", "READ_ONLY_COMMAND", "No remediation needed.")

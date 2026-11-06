@@ -13,8 +13,10 @@ These observations are a snapshot, not proof that users have encountered no bugs
    `git diff --ext-diff`, `git log --ext-diff -p`, and
    `git show --textconv HEAD:README.md` on 0.1.0. Git can execute configured
    helpers; conversion can also be implicit. The current patch requires both
-   explicit disables for diff/log/show before a path separator, respecting later
-   enables. It also closes quoted PowerShell output-option classification.
+   disables as the first two arguments after diff/log/show and rejects later
+   enables, including abbreviations. A separate automated review found that
+   options such as --src-prefix can consume apparent disable flags as values;
+   requiring the disables first closes that ambiguity without a full Git parser. It also closes quoted PowerShell output-option classification.
    Focused tests cover all three accepted shells, incomplete disables, ordering,
    path separators, structured handler replies, and recovery. Commands are only
    classified, never executed. This does not certify all Git configuration,

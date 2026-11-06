@@ -159,6 +159,7 @@ def run(server: str | None = None) -> dict:
                 ("git implicit conversion helper", "git diff", "NEEDS_CONFIRMATION"),
                 ("git explicit conversion helper", "git show --textconv HEAD:README.md", "NEEDS_CONFIRMATION"),
                 ("git abbreviated helper override", "git log --no-ext-diff --no-textconv --ext-dif -p", "NEEDS_CONFIRMATION"),
+                ("git consumed disable operand", "git diff --src-prefix --no-textconv --no-ext-diff", "NEEDS_CONFIRMATION"),
                 ("git helper-disable recovery", "git diff --no-ext-diff --no-textconv -- README.md", "SAFE"),
                 ("find output option", "find . -fprint names.txt", "NEEDS_CONFIRMATION"),
                 ("ripgrep subprocess option", "rg --pre=formatter pattern .", "NEEDS_CONFIRMATION"),

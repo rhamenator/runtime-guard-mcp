@@ -14,6 +14,9 @@ class GitHelperTests(unittest.TestCase):
                                 '--no-ext-diff --no-textconv --textconv',
                                 '--no-ext-diff --no-textconv --textcon',
                                 '--no-ext-diff --no-textconv --ext-dif',
+                                '--src-prefix --no-textconv --no-ext-diff',
+                                '--dst-prefix --no-ext-diff --no-textconv',
+                                '--no-ext-diff --no-textconv --textconv --src-prefix --no-textconv',
                                 '--no-ext-diff --no-textconv "--ext-diff"'):
                     with self.subTest(shell=shell, subcommand=subcommand, options=options):
                         result = dry_run_command(f'git {subcommand} {options}', shell)
